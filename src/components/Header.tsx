@@ -56,8 +56,8 @@ export function Header() {
     <>
       <motion.header
         className={`site-header ${scrolled ? 'scrolled' : ''}`}
-        initial={{ y: -30, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
+        initial={{ x: '-50%', y: -30, opacity: 0 }}
+        animate={{ x: '-50%', y: 0, opacity: 1 }}
         transition={{ duration: 0.8, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
       >
         <div className="header-inner">

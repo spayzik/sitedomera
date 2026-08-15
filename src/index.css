@@ -198,7 +198,7 @@ h4 { font-size: 1.25rem; font-weight: 500; }
 
 /* === HEADER === */
 .site-header {
-  position: fixed; top: 1.5rem; left: 0; right: 0; margin-inline: auto;
+  position: fixed; top: 1.5rem; left: 50%; transform: translateX(-50%);
   width: min(1440px, calc(100% - 2rem)); z-index: 100; transition: all 0.4s var(--ease-out);
 }
 .header-inner {
