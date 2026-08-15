@@ -1,10 +1,22 @@
-import { useRef, type MouseEvent as ReactMouseEvent, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type ReactNode } from 'react'
 import { motion, useMotionTemplate, useMotionValue, useSpring, useTransform } from 'framer-motion'
 
 export function TiltCard({ children, max = 8, className = '' }: { children: ReactNode; max?: number; className?: string }) {
   const ref = useRef<HTMLDivElement>(null)
+  const [coarse, setCoarse] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false
+    return window.matchMedia('(pointer: coarse)').matches
+  })
   const px = useMotionValue(0.5)
   const py = useMotionValue(0.5)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(pointer: coarse)')
+    const update = () => setCoarse(mq.matches)
+    update()
+    mq.addEventListener?.('change', update)
+    return () => mq.removeEventListener?.('change', update)
+  }, [])
 
   const rotateX = useSpring(useTransform(py, [0, 1], [max, -max]), { stiffness: 160, damping: 20 })
   const rotateY = useSpring(useTransform(px, [0, 1], [-max, max]), { stiffness: 160, damping: 20 })
@@ -14,6 +26,7 @@ export function TiltCard({ children, max = 8, className = '' }: { children: Reac
   const glare = useMotionTemplate`radial-gradient(560px circle at ${glareX} ${glareY}, rgba(255,255,255,0.16), transparent 45%)`
 
   const onMove = (e: ReactMouseEvent) => {
+    if (coarse) return
     const r = ref.current?.getBoundingClientRect()
     if (!r) return
     px.set((e.clientX - r.left) / r.width)
@@ -22,6 +35,14 @@ export function TiltCard({ children, max = 8, className = '' }: { children: Reac
   const onLeave = () => {
     px.set(0.5)
     py.set(0.5)
+  }
+
+  if (coarse) {
+    return (
+      <div className={`tilt-wrap ${className}`}>
+        <div className="tilt-inner">{children}</div>
+      </div>
+    )
   }
 
   return (

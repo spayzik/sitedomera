@@ -5,7 +5,7 @@ import { useCart } from '../context/CartContext'
 import { ProductModal } from '../components/ProductModal'
 import { TiltCard } from '../components/TiltCard'
 import { Counter } from '../components/Counter'
-import { ArrowUpRight, ArrowDown, Ruler, Scale } from 'lucide-react'
+import { ArrowUpRight, ArrowDown, Ruler, Scale, ShoppingBag } from 'lucide-react'
 
 export function CatalogPage() {
   const [filter, setFilter] = useState<CollectionId | 'all'>('all')
@@ -134,7 +134,7 @@ export function CatalogPage() {
                         onClick={(e) => { e.stopPropagation(); add(p) }}
                         aria-label="Добавить в заказ"
                       >
-                        +
+                        <ShoppingBag size={18} />
                       </button>
                     </div>
                   </div>

@@ -198,7 +198,7 @@ h4 { font-size: 1.25rem; font-weight: 500; }
 
 /* === HEADER === */
 .site-header {
-  position: fixed; top: 1.5rem; left: 50%; transform: translateX(-50%);
+  position: fixed; top: 1.5rem; left: 0; right: 0; margin-inline: auto;
   width: min(1440px, calc(100% - 2rem)); z-index: 100; transition: all 0.4s var(--ease-out);
 }
 .header-inner {
@@ -478,7 +478,7 @@ h4 { font-size: 1.25rem; font-weight: 500; }
   .gocek-box { height: 100dvh; min-height: 0; max-height: none; }
   .gocek-content { overflow-y: auto; overflow-x: hidden; padding: 6rem 1.5rem 2rem; display: flex; flex-direction: column; }
   .gocek-top-left, .gocek-top-right, .gocek-dock { position: relative; top: 0; left: 0; right: 0; bottom: 0; width: 100%; max-width: 100%; margin-bottom: 3rem; transform: none; }
-  .gocek-dock { overflow-x: auto; padding-bottom: 0.75rem; scroll-snap-type: x mandatory; }
+  .gocek-dock { overflow-x: auto; padding-bottom: 0.75rem; scroll-snap-type: x mandatory; flex-shrink: 0; align-items: center; }
   .gocek-dock-item { flex-shrink: 0; height: 52px; width: auto; scroll-snap-align: center; }
   .gocek-dock-item img { width: 52px; height: 52px; }
   .gocek-dock-item span {
@@ -681,7 +681,7 @@ h4 { font-size: 1.25rem; font-weight: 500; }
 }
 
 /* === CATALOG PAGE === */
-.catalog-page-hero { position: relative; min-height: 100svh; display: flex; flex-direction: column; justify-content: center; color: #fff; overflow: hidden; }
+.catalog-page-hero { position: relative; min-height: 100svh; display: flex; flex-direction: column; justify-content: center; color: #fff; overflow: hidden; padding-bottom: 120px; }
 .catalog-page-hero-bg { position: absolute; inset: 0; }
 .catalog-page-hero-bg img { width: 100%; height: 100%; object-fit: cover; }
 .catalog-page-veil {
@@ -690,6 +690,7 @@ h4 { font-size: 1.25rem; font-weight: 500; }
               linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 45%);
 }
 .catalog-page-content { position: relative; z-index: 2; padding-top: 6rem; }
+@media (max-width: 768px) { .catalog-page-hero { padding-bottom: 270px; } }
 .catalog-page-content h1 { text-shadow: 0 4px 40px rgba(0,0,0,0.5); }
 .catalog-page-lead { color: rgba(255,255,255,0.8); margin-top: 2rem; max-width: 48ch; font-size: 1.15rem; line-height: 1.7; }
 .catalog-page-cta { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 2.5rem; }
@@ -780,6 +781,26 @@ h4 { font-size: 1.25rem; font-weight: 500; }
 }
 .tg-fab:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 16px 40px rgba(42,171,238,0.45); }
 @media (max-width: 768px) { .tg-fab { right: 1.25rem; } }
+
+/* === FLOATING CART === */
+.floating-cart {
+  position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);
+  z-index: 290; display: flex; align-items: center; gap: 1rem;
+  background: rgba(10, 10, 10, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.15); border-radius: 100px;
+  padding: 0.65rem 1.5rem 0.65rem 0.65rem; color: #fff;
+  box-shadow: 0 14px 40px rgba(0,0,0,0.55); cursor: pointer; transition: all 0.3s var(--ease-out);
+}
+.floating-cart:hover { border-color: var(--accent); transform: translateX(-50%) translateY(-3px); }
+.floating-cart-icon { position: relative; width: 40px; height: 40px; border-radius: 50%; background: var(--ink); color: var(--bg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.floating-cart-badge {
+  position: absolute; top: -4px; right: -4px; background: var(--accent); color: #000;
+  min-width: 18px; height: 18px; display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; font-size: 0.65rem; font-weight: 700; padding: 0 4px;
+}
+.floating-cart-text { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.25; }
+.floating-cart-text strong { font-size: 0.95rem; letter-spacing: 0.02em; }
+.floating-cart-text small { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.55); }
 
 /* === LIGHTBOX === */
 .lightbox { position: fixed; inset: 0; z-index: 2000; display: flex; align-items: center; justify-content: center; }

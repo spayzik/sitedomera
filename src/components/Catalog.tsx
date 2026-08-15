@@ -4,7 +4,7 @@ import { collections, products, type CollectionId, type Product } from '../data/
 import { useCart } from '../context/CartContext'
 import { ProductModal } from './ProductModal'
 import { TiltCard } from './TiltCard'
-import { ArrowUpRight } from 'lucide-react'
+import { ArrowUpRight, ShoppingBag } from 'lucide-react'
 
 const FEATURED = ['919-4', '962-1', '002-A229', '006-2', 'ryab-3d', '002-A235']
 
@@ -79,7 +79,7 @@ export function Catalog() {
                         onClick={(e) => { e.stopPropagation(); add(p) }}
                         aria-label="Добавить в заказ"
                       >
-                        +
+                        <ShoppingBag size={18} />
                       </button>
                     </div>
                   </div>

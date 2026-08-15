@@ -10,6 +10,7 @@ import { Quiz } from './components/Quiz'
 import { Reviews } from './components/Reviews'
 import { Showroom } from './components/Showroom'
 import { CartDrawer } from './components/CartDrawer'
+import { FloatingCart } from './components/FloatingCart'
 import { ChatBot } from './components/ChatBot'
 import { CategoriesTeaser } from './components/CategoriesTeaser'
 import { Manifest } from './components/Manifest'
@@ -142,6 +143,7 @@ function Wrapper({ children }: { children: ReactNode }) {
       <main>{children}</main>
       <Footer />
       <CartDrawer />
+      <FloatingCart />
       <ChatBot />
       <TelegramFab />
       <BackToTop />

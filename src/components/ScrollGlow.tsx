@@ -3,8 +3,25 @@ import { useEffect, useState } from 'react'
 
 export function ScrollGlow() {
   const [mouse, setMouse] = useState({ x: 0, y: 0 })
+  const [reduced, setReduced] = useState(false)
 
   useEffect(() => {
+    const coarse = window.matchMedia('(pointer: coarse)')
+    const motionOk = window.matchMedia('(prefers-reduced-motion: no-preference)')
+    const update = () => {
+      setReduced(coarse.matches || !motionOk.matches)
+    }
+    update()
+    coarse.addEventListener?.('change', update)
+    motionOk.addEventListener?.('change', update)
+    return () => {
+      coarse.removeEventListener?.('change', update)
+      motionOk.removeEventListener?.('change', update)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (reduced) return
     const onMouseMove = (e: MouseEvent) => {
       // Инерционное следование за мышью
       setMouse({
@@ -14,7 +31,7 @@ export function ScrollGlow() {
     }
     window.addEventListener('mousemove', onMouseMove, { passive: true })
     return () => window.removeEventListener('mousemove', onMouseMove)
-  }, [])
+  }, [reduced])
 
   return (
     <div 
@@ -30,14 +47,14 @@ export function ScrollGlow() {
     >
       {/* Более богатый основной градиент: добавляем теплые медные/янтарные оттенки */}
       <motion.div
-        animate={{
+        animate={reduced ? undefined : {
           y: ['-10%', '10%', '-10%'],
           opacity: [0.6, 0.9, 0.6],
           scale: [1, 1.1, 1]
         }}
         transition={{
           duration: 16,
-          repeat: Infinity,
+          repeat: reduced ? 0 : Infinity,
           ease: 'easeInOut'
         }}
         style={{
@@ -54,14 +71,14 @@ export function ScrollGlow() {
       
       {/* 2. Блуждающая сфера 1 (Верхний правый угол) */}
       <motion.div
-        animate={{
+        animate={reduced ? undefined : {
           x: ['-5%', '10%', '-5%'],
           y: ['0%', '15%', '0%'],
           scale: [1, 1.2, 1]
         }}
         transition={{
           duration: 22,
-          repeat: Infinity,
+          repeat: reduced ? 0 : Infinity,
           ease: 'easeInOut'
         }}
         style={{
@@ -85,20 +102,22 @@ export function ScrollGlow() {
           borderRadius: '50%',
           background: 'radial-gradient(circle, rgba(223, 186, 143, 0.06) 0%, transparent 60%)',
           filter: 'blur(100px)',
-          transform: `translate(calc(${mouse.x}vw - 20vw), calc(${mouse.y}vh - 20vw))`,
+          transform: reduced
+            ? 'translate(50vw, 50vh)'
+            : `translate(calc(${mouse.x}vw - 20vw), calc(${mouse.y}vh - 20vw))`,
           transition: 'transform 1.5s cubic-bezier(0.22, 1, 0.36, 1)'
         }}
       />
 
       {/* 4. Блуждающая сфера 2 (Нижний левый угол) */}
       <motion.div
-        animate={{
+        animate={reduced ? undefined : {
           x: ['5%', '-10%', '5%'],
           y: ['10%', '-15%', '10%'],
         }}
         transition={{
           duration: 28,
-          repeat: Infinity,
+          repeat: reduced ? 0 : Infinity,
           ease: 'easeInOut'
         }}
         style={{
