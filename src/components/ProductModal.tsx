@@ -114,22 +114,13 @@ export function ProductModal({
                   return (
                     <motion.button
                       key={p.id}
-                      layout
                       className={`gocek-dock-item ${isActive ? 'active' : ''}`}
                       onClick={() => onSelect?.(p)}
                       whileHover={{ scale: 1.05, y: -4 }}
                       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                     >
-                      <motion.img layout src={p.image} alt={p.name} />
-                      {isActive && (
-                        <motion.span
-                          initial={{ opacity: 0, width: 0 }}
-                          animate={{ opacity: 1, width: 'auto' }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          {p.name}
-                        </motion.span>
-                      )}
+                      <img src={p.image} alt={p.name} />
+                      {isActive && <span>{p.name}</span>}
                     </motion.button>
                   )
                 })}

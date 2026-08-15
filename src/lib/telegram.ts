@@ -1,5 +1,4 @@
 import type { CartItem } from '../context/CartContext'
-import { CONTACTS } from '../data/products'
 
 export interface LeadPayload {
   name: string
@@ -58,8 +57,7 @@ export async function sendLead(data: LeadPayload): Promise<{ ok: boolean; fallba
     }
   }
 
-  // Fallback: open Telegram share / tel / mailto-like deep link via wa.me style tg
-  const plain = text.replace(/<\/?b>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
-  const tg = `https://t.me/share/url?url=${encodeURIComponent(CONTACTS.phone)}&text=${encodeURIComponent(plain)}`
+  // Fallback: открыть профиль менеджера в Telegram
+  const tg = 'https://t.me/nikita_girsh'
   return { ok: false, fallback: tg }
 }
