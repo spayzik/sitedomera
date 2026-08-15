@@ -53,7 +53,8 @@ export const CONTACTS = {
   site: 'domera.ru',
   telegramBot: '', // set VITE_TELEGRAM_BOT_TOKEN in .env
   telegramChat: '', // set VITE_TELEGRAM_CHAT_ID in .env
-  telegram: 'https://t.me/nikita_girsh',
+  telegram: 'https://t.me/domeraru',
+  telegramChannel: 'https://t.me/domerarf',
   address: 'Москва, Алтуфьевское ш., 37с1',
   hours: 'Ежедневно 11:00–20:00 (без записи)',
   delivery: 'Самовывоз или отправка в день заказа',

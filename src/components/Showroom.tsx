@@ -61,6 +61,14 @@ export function Showroom() {
                 <strong style={{ fontSize: '1.5rem', fontFamily: 'var(--font-display)', marginBottom: '0.5rem' }}>Магазин на Авито</strong>
                 <span>Отзывы и дополнительный ассортимент</span>
               </a>
+              <a className="info-item" href={CONTACTS.telegram} target="_blank" rel="noreferrer" style={{ display: 'block', textDecoration: 'none' }}>
+                <strong style={{ fontSize: '1.5rem', fontFamily: 'var(--font-display)', marginBottom: '0.5rem' }}>Telegram: @domeraru</strong>
+                <span>Пишите — отвечаем в течение дня</span>
+              </a>
+              <a className="info-item" href={CONTACTS.telegramChannel} target="_blank" rel="noreferrer" style={{ display: 'block', textDecoration: 'none' }}>
+                <strong style={{ fontSize: '1.5rem', fontFamily: 'var(--font-display)', marginBottom: '0.5rem' }}>Телеграм-канал: @domerarf</strong>
+                <span>Новинки коллекций и фото в интерьерах</span>
+              </a>
               {[
                 { title: CONTACTS.address, sub: 'Ждем вас без записи' },
                 { title: CONTACTS.hours, sub: 'Ежедневно и без выходных' },

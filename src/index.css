@@ -213,7 +213,7 @@ h4 { font-size: 1.25rem; font-weight: 500; }
 }
 .logo { font-size: 1.15rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #fff; }
 .nav-desktop { display: flex; gap: 2.5rem; }
-.nav-desktop a { font-size: 0.85rem; font-weight: 500; letter-spacing: 0.02em; transition: color 0.2s; color: rgba(255,255,255,0.8); position: relative; }
+.nav-desktop a { font-size: 0.85rem; font-weight: 500; letter-spacing: 0.02em; transition: color 0.2s; color: rgba(255,255,255,0.8); position: relative; white-space: nowrap; }
 .nav-desktop a:hover { color: var(--accent); }
 .nav-desktop a.active { color: var(--accent-light); }
 .nav-desktop a.active::after {
@@ -229,14 +229,16 @@ h4 { font-size: 1.25rem; font-weight: 500; }
 .cart-btn .badge { position: absolute; top: -8px; right: -15px; background: var(--accent); color: #000; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 0.65rem; font-weight: 700; }
 
 .mobile-toggle { display: none; }
+@media (max-width: 1440px) { .nav-desktop { gap: 2rem; } }
 @media (max-width: 1280px) {
-  .nav-desktop { gap: 1.5rem; }
+  .nav-desktop { gap: 1.25rem; }
   .nav-desktop a { font-size: 0.8rem; }
-  .logo { font-size: 1.05rem; }
+  .logo { font-size: 1rem; }
+  .header-actions { gap: 1.25rem; }
 }
 @media (max-width: 1100px) { .header-phone { display: none; } }
-@media (max-width: 980px) {
-  .nav-desktop, .header-phone { display: none; }
+@media (max-width: 1024px) {
+  .nav-desktop { display: none; }
   .mobile-toggle { display: flex; align-items: center; justify-content: center; }
 }
 

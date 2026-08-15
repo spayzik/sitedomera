@@ -57,7 +57,7 @@ export async function sendLead(data: LeadPayload): Promise<{ ok: boolean; fallba
     }
   }
 
-  // Fallback: открыть профиль менеджера в Telegram
-  const tg = 'https://t.me/nikita_girsh'
+  // Fallback: открыть профиль в Telegram
+  const tg = 'https://t.me/domeraru'
   return { ok: false, fallback: tg }
 }
