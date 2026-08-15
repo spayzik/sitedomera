@@ -5,7 +5,7 @@ export interface LeadPayload {
   name: string
   phone: string
   message?: string
-  type: 'contact' | 'showroom' | 'order' | 'tryon'
+  type: 'contact' | 'showroom' | 'order'
   cart?: CartItem[]
   productName?: string
 }

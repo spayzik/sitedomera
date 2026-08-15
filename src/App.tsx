@@ -4,13 +4,11 @@ import { Header } from './components/Header'
 import { Hero } from './components/Hero'
 import { Specs } from './components/Specs'
 import { Catalog } from './components/Catalog'
-import { TryOn } from './components/TryOn'
 import { Installation } from './components/Installation'
 import { Calculator } from './components/Calculator'
 import { Quiz } from './components/Quiz'
 import { Reviews } from './components/Reviews'
 import { Showroom } from './components/Showroom'
-import { Contacts } from './components/Contacts'
 import { CartDrawer } from './components/CartDrawer'
 import { ChatBot } from './components/ChatBot'
 import { CategoriesTeaser } from './components/CategoriesTeaser'
@@ -38,7 +36,7 @@ function Footer() {
       <div className="container">
         <div className="footer-top">
           <div className="footer-col">
-            <span className="logo-mark">D</span>
+            <img src="favicon.svg" alt="Домэра" className="footer-logo" />
             <p className="footer-desc">
               Архитектурные стеновые панели из бамбукового композита.
               <br/>Премиальные фактуры для современных интерьеров.
@@ -49,7 +47,7 @@ function Footer() {
               <strong>Навигация</strong>
               <a href="#/catalog">Каталог 2026</a>
               <a href="#specs">Технологии</a>
-              <a href="#tryon">Студия текстур</a>
+              <a href="#interiors">Интерьеры</a>
               <a href="#installation">Монтаж под ключ</a>
             </div>
             <div className="footer-nav-col">
@@ -102,7 +100,6 @@ function Home({ route }: { route: string }) {
       <CategoriesTeaser />
       <Catalog />
       <GradientLine />
-      <TryOn />
       <Quiz />
       <Installation />
       <Interiors />
@@ -110,8 +107,7 @@ function Home({ route }: { route: string }) {
       <Compare />
       <Calculator />
       <GradientLine />
-      <Showroom />
-      <Contacts />
+<Showroom />
       <FAQ />
     </>
   )

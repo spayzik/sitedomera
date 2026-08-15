@@ -8,7 +8,7 @@ const links = [
   { href: '#specs', label: 'Технологии' },
   { href: '#why', label: 'Почему мы' },
   { href: '#/catalog', label: 'Каталог' },
-  { href: '#tryon', label: 'Примерка' },
+  { href: '#interiors', label: 'Интерьеры' },
   { href: '#installation', label: 'Монтаж' },
   { href: '#showroom', label: 'Шоурум' },
 ]
@@ -45,7 +45,7 @@ export function Header() {
 
   // Scroll-spy: highlight the section link currently in view
   useEffect(() => {
-    const ids = ['specs', 'why', 'tryon', 'installation', 'showroom']
+    const ids = ['specs', 'why', 'interiors', 'installation', 'showroom']
     const els = ids
       .map((id) => document.getElementById(id))
       .filter((el): el is HTMLElement => Boolean(el))

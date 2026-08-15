@@ -38,7 +38,7 @@ export function CategoriesTeaser() {
   const [hovered, setHovered] = useState<string | null>(null)
 
   return (
-    <section className="section" style={{ padding: 0, height: '80vh', minHeight: '600px', display: 'flex' }}>
+    <section className="cat-teaser" style={{ padding: 0, height: '80vh', minHeight: '600px', display: 'flex' }}>
       {categories.map((c) => {
         const isHovered = hovered === c.id
         const isMuted = hovered !== null && !isHovered
@@ -104,6 +104,7 @@ export function CategoriesTeaser() {
               </h3>
 
               <motion.div
+                className="cat-card-text"
                 initial={false}
                 animate={{
                   height: isHovered ? 'auto' : 0,
