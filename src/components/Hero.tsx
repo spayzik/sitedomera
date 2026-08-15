@@ -44,7 +44,7 @@ export function Hero() {
         style={{ y, opacity, scale }}
       >
         <motion.img 
-          src="/catalog/hero/hero-soft-new.jpg" 
+          src="catalog/hero/hero-soft-new.jpg" 
           alt="Домэра интерьер"
           initial={{ scale: 1.25 }}
           animate={{ scale: 1 }}

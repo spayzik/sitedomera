@@ -5,31 +5,31 @@ const categories = [
   {
     id: 'wood',
     title: 'Бамбуковые панели',
-    bg: '/catalog/rooms/room-wood.jpg',
+    bg: 'catalog/rooms/room-wood.jpg',
     text: 'Основа коллекции — древесно-бамбуковый композит с точной имитацией натурального шпона. Идеально для теплых интерьеров.'
   },
   {
     id: 'stone',
     title: 'Гибкий камень',
-    bg: '/catalog/hero/hero-new.jpg',
+    bg: 'catalog/hero/hero-new.jpg',
     text: 'Эффект декоративной штукатурки и камня. Масштабные цельные полотна без мокрых процессов и грязи.'
   },
   {
     id: 'fabric',
     title: 'Тканевые фактуры',
-    bg: '/catalog/rooms/room-fabric.jpg',
+    bg: 'catalog/rooms/room-fabric.jpg',
     text: 'Уютные текстильные фактуры, переплетение нитей и мягкий матовый блеск. Домашний уют в прочном исполнении.'
   },
   {
     id: 'soft',
     title: 'Soft-touch',
-    bg: '/catalog/hero/hero-soft-new.jpg',
+    bg: 'catalog/hero/hero-soft-new.jpg',
     text: 'Глубокая бархатистая поверхность. Идеально матовое покрытие, невероятно приятное на ощупь.'
   },
   {
     id: 'slats',
     title: 'Реечные панели',
-    bg: '/catalog/hero/banner-slats.jpg',
+    bg: 'catalog/hero/banner-slats.jpg',
     text: 'Объемные 3D рейки для акцентных стен. Монтируются встык, создавая непрерывный рельеф.'
   }
 ]

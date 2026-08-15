@@ -7,7 +7,7 @@ const reviews = [
     city: 'Москва',
     text: 'Заказывала дуб натуральный для гостиной. Сама сомневалась, какой оттенок — менеджер посоветовал, и не прогадали. Панели идеально ровные, приклеили за один день. Выглядит дороже, чем ожидала.',
     product: 'Дуб натуральный 919-4',
-    photo: '/catalog/rooms/room-wood.jpg',
+    photo: 'catalog/rooms/room-wood.jpg',
     rating: 5,
   },
   {
@@ -15,7 +15,7 @@ const reviews = [
     city: 'Химки',
     text: 'Взял soft-touch для спальни. Бархатная, тёплая стена — теперь это любимое место в квартире. Отгрузка в день заказа, самовывоз со склада без записи, всё чётко.',
     product: 'Песочный soft-touch',
-    photo: '/catalog/hero/hero-soft-new.jpg',
+    photo: 'catalog/hero/hero-soft-new.jpg',
     rating: 5,
   },
   {
@@ -23,7 +23,7 @@ const reviews = [
     city: 'Долгопрудный',
     text: 'Делали ресепшн в салоне красоты — выбрали сталь шлифованную. Коллеги-клиенты думают, что это настоящий металл. Отличная геометрия стыков, монтаж быстрый.',
     product: 'Сталь шлифованная 006-2',
-    photo: '/catalog/rooms/room-metal.jpg',
+    photo: 'catalog/rooms/room-metal.jpg',
     rating: 5,
   },
 ]

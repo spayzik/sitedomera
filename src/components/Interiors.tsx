@@ -19,7 +19,7 @@ const rooms: Room[] = [
 ]
 
 function roomSrc(r: Room) {
-  return `/catalog/${r.image === 'hero-soft-new' ? 'hero' : 'rooms'}/${r.image}.jpg`
+  return `catalog/${r.image === 'hero-soft-new' ? 'hero' : 'rooms'}/${r.image}.jpg`
 }
 
 const lightboxImages: LightboxImage[] = rooms.map((r) => ({ src: roomSrc(r), caption: r.caption, tag: r.tag }))

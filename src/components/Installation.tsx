@@ -55,7 +55,7 @@ export function Installation() {
             style={{ position: 'relative', aspectRatio: '4/5', borderRadius: '8px', overflow: 'hidden' }}
           >
             <img 
-              src="/catalog/rooms/room-metal.jpg" 
+              src="catalog/rooms/room-metal.jpg" 
               alt="Панели после монтажа" 
               style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
             />

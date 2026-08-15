@@ -33,7 +33,7 @@ export function CatalogPage() {
       <section className="catalog-page-hero" id="catalog">
         <div className="catalog-page-hero-bg">
           <motion.img
-            src="/catalog/hero/hero-wide.jpg"
+            src="catalog/hero/hero-wide.jpg"
             alt="Каталог Домэра"
             initial={{ opacity: 0, scale: 1.05 }}
             animate={{ opacity: 1, scale: 1 }}

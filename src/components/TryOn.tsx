@@ -62,7 +62,7 @@ export function TryOn() {
             <div style={{
               position: 'absolute',
               inset: 0,
-              backgroundImage: 'url(/catalog/rooms/tryon-base-2.jpg)',
+              backgroundImage: 'url(catalog/rooms/tryon-base-2.jpg)',
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               pointerEvents: 'none',
