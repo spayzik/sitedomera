@@ -27,6 +27,7 @@ import { ScrollProgress } from './components/ScrollProgress'
 import { BackToTop } from './components/BackToTop'
 import { GradientLine } from './components/GradientLine'
 import { TelegramFab } from './components/TelegramFab'
+import { LogoIcon } from './components/Logo'
 import { useRoute, isPageRoute } from './router'
 import { CONTACTS } from './data/products'
 
@@ -36,7 +37,9 @@ function Footer() {
       <div className="container">
         <div className="footer-top">
           <div className="footer-col">
-            <img src="favicon.svg" alt="Домэра" className="footer-logo" />
+            <span className="footer-logo">
+              <LogoIcon size={42} />
+            </span>
             <p className="footer-desc">
               Архитектурные стеновые панели из бамбукового композита.
               <br/>Премиальные фактуры для современных интерьеров.
