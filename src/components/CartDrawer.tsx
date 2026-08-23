@@ -2,11 +2,13 @@ import { useCart } from '../context/CartContext'
 import { X, Minus, Plus, Trash2, ArrowRight } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { sendLead } from '../lib/telegram'
+import { CONTACTS } from '../data/products'
 import { AnimatePresence, motion } from 'framer-motion'
 
 export function CartDrawer() {
   const { open, setOpen, items, total, setQty, remove, clear } = useCart()
-  const [status, setStatus] = useState<'idle' | 'loading' | 'ok'>('idle')
+  const [status, setStatus] = useState<'idle' | 'loading' | 'ok' | 'err'>('idle')
+  const [fallback, setFallback] = useState<{ tg?: string; tel?: string }>({})
 
   const onOrder = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -20,11 +22,14 @@ export function CartDrawer() {
       message: String(fd.get('message') || ''),
       cart: items,
     })
-    if (res.ok || res.fallback) {
-      if (res.fallback) window.open(res.fallback, '_blank')
+    if (res.ok) {
       setStatus('ok')
       clear()
-    } else setStatus('idle')
+    } else {
+      // Заявка не ушла — даём человеку прямые контакты, корзину не чистим
+      setFallback({ tg: res.tg, tel: res.tel })
+      setStatus('err')
+    }
   }
 
   return (
@@ -101,13 +106,21 @@ export function CartDrawer() {
                 <div className="form-group">
                   <input name="phone" required type="tel" placeholder="Телефон" disabled={!items.length} />
                 </div>
+                {status === 'err' && (
+                  <p className="form-error">
+                    Не удалось отправить заказ. Позвоните нам:{' '}
+                    <a href={`tel:${fallback.tel}`}>{CONTACTS.phone}</a>
+                    {' '}или напишите в{' '}
+                    <a href={fallback.tg} target="_blank" rel="noreferrer">Telegram</a>.
+                  </p>
+                )}
                 <button
                   className="btn btn-primary btn-full"
                   type="submit"
                   disabled={!items.length || status === 'loading'}
                 >
-                  {status === 'loading' ? 'Оформление...' : status === 'ok' ? 'Успешно!' : 'Оформить заказ'}
-                  {status === 'idle' && items.length > 0 && <ArrowRight size={16} />}
+                  {status === 'loading' ? 'Оформление...' : status === 'ok' ? 'Успешно!' : status === 'err' ? 'Повторить' : 'Оформить заказ'}
+                  {(status === 'idle' || status === 'err') && items.length > 0 && <ArrowRight size={16} />}
                 </button>
               </form>
             </div>

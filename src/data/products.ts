@@ -67,7 +67,7 @@ export const collections: Collection[] = [
     nameEn: 'Wood Series',
     description:
       'Натуральная фактура дерева: тёплые тона и выразительный классический «шёлк».',
-    banner: 'catalog/hero/banner-wood.jpg',
+    banner: 'catalog/hero/banner-wood.webp',
     count: 10,
   },
   {
@@ -76,7 +76,7 @@ export const collections: Collection[] = [
     nameEn: 'Fabric Series',
     description:
       'Тканевая фактура: переплетение нитей и мягкий матовый блеск. Уют текстиля в прочной панели.',
-    banner: 'catalog/hero/banner-fabric.jpg',
+    banner: 'catalog/hero/banner-fabric.webp',
     count: 4,
   },
   {
@@ -84,7 +84,7 @@ export const collections: Collection[] = [
     name: 'Однотон',
     nameEn: 'Solid Series',
     description: 'Глубокие однотонные поверхности для минималистичных интерьеров.',
-    banner: 'catalog/hero/banner-solid.jpg',
+    banner: 'catalog/hero/banner-solid.webp',
     count: 2,
   },
   {
@@ -93,7 +93,7 @@ export const collections: Collection[] = [
     nameEn: 'Metal Series',
     description:
       'Металлический эффект: шлифованная сталь и серебристый рельеф. Холодный блеск, глубокий характер.',
-    banner: 'catalog/hero/banner-metal.jpg',
+    banner: 'catalog/hero/banner-metal.webp',
     count: 2,
   },
   {
@@ -102,7 +102,7 @@ export const collections: Collection[] = [
     nameEn: 'Soft Touch Series',
     description:
       'Бархатная матовая поверхность Soft-touch: глубокий цвет и приятная на ощупь фактура.',
-    banner: 'catalog/hero/banner-soft.jpg',
+    banner: 'catalog/hero/banner-soft.webp',
     count: 2,
   },
   {
@@ -111,7 +111,7 @@ export const collections: Collection[] = [
     nameEn: 'Plaster Series',
     description:
       'Эффект венецианской декоративной штукатурки: мягкие переливы и благородная глубина.',
-    banner: 'catalog/hero/banner-plaster.jpg',
+    banner: 'catalog/hero/banner-plaster.webp',
     count: 2,
   },
   {
@@ -119,7 +119,7 @@ export const collections: Collection[] = [
     name: 'Декор 3D «Рябь»',
     nameEn: 'Decor 3D',
     description: 'Объёмный 3D-декор «Рябь» с перламутровым свечением.',
-    banner: 'catalog/hero/banner-decor3d.jpg',
+    banner: 'catalog/hero/banner-decor3d.webp',
     count: 1,
   },
   {
@@ -128,7 +128,7 @@ export const collections: Collection[] = [
     nameEn: 'Decorative Slats',
     description:
       'Реечные панели шириной 15,5 см и высотой 3 м для объёмных акцентных стен.',
-    banner: 'catalog/hero/banner-slats.jpg',
+    banner: 'catalog/hero/banner-slats.webp',
     count: 3,
   },
 ]
@@ -139,8 +139,8 @@ const panel = (p: Omit<Product, 'price' | 'size' | 'thickness' | 'weight' | 'ima
     size: p.size ?? SPECS.size,
     thickness: SPECS.thickness,
     weight: SPECS.weight,
-    image: `catalog/products/${p.id}.jpg`,
-    swatch: `catalog/swatches/${p.id}.jpg`,
+    image: `catalog/products/${p.id}.webp`,
+    swatch: `catalog/swatches/${p.id}.webp`,
     unit: 'шт',
     ...p,
   }) as Product

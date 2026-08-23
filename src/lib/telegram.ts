@@ -1,4 +1,5 @@
 import type { CartItem } from '../context/CartContext'
+import { CONTACTS } from '../data/products'
 
 export interface LeadPayload {
   name: string
@@ -35,29 +36,54 @@ function escapeHtml(s: string) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
 
-export async function sendLead(data: LeadPayload): Promise<{ ok: boolean; fallback?: string }> {
+export interface LeadResult {
+  ok: boolean
+  /** Ссылка на Telegram, если автосообщение не ушло */
+  tg?: string
+  /** Телефон для связи, если автосообщение не ушло */
+  tel?: string
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
+async function postJson(url: string, body: unknown): Promise<boolean> {
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}
+
+export async function sendLead(data: LeadPayload): Promise<LeadResult> {
   const token = import.meta.env.VITE_TELEGRAM_BOT_TOKEN as string | undefined
   const chatId = import.meta.env.VITE_TELEGRAM_CHAT_ID as string | undefined
+  const fallbackUrl = import.meta.env.VITE_LEAD_FALLBACK_URL as string | undefined
   const text = formatMessage(data)
+  const tg = CONTACTS.telegram
+  const tel = CONTACTS.phoneRaw
 
   if (token && chatId) {
-    try {
-      const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: chatId,
-          text,
-          parse_mode: 'HTML',
-        }),
-      })
-      if (res.ok) return { ok: true }
-    } catch {
-      /* fall through */
+    // Две попытки: мгновенная и повтор через секунду (мигания сети / rate limit)
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const sent = await postJson(
+        `https://api.telegram.org/bot${token}/sendMessage`,
+        { chat_id: chatId, text, parse_mode: 'HTML' },
+      )
+      if (sent) return { ok: true }
+      if (attempt === 0) await sleep(1000)
     }
   }
 
-  // Fallback: открыть профиль в Telegram
-  const tg = 'https://t.me/domeraru'
-  return { ok: false, fallback: tg }
+  // Fallback 1: резервный эндпоинт (email/CRM), если настроен
+  if (fallbackUrl && (await postJson(fallbackUrl, data))) {
+    return { ok: true }
+  }
+
+  // Fallback 2: живой человек — телефон и Telegram
+  return { ok: false, tg, tel }
 }

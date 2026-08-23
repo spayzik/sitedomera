@@ -10,6 +10,7 @@ const mapDir = `https://yandex.ru/maps/?text=${encodeURIComponent(CONTACTS.addre
 
 export function Showroom() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'ok' | 'err'>('idle')
+  const [fallback, setFallback] = useState<{ tg?: string; tel?: string }>({})
   const { items, total } = useCart()
 
   const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -26,10 +27,11 @@ export function Showroom() {
     if (res.ok) {
       setStatus('ok')
       e.currentTarget.reset()
-    } else if (res.fallback) {
-      window.open(res.fallback, '_blank')
-      setStatus('ok')
-    } else setStatus('err')
+    } else {
+      // Не открываем сторонние вкладки молча — показываем контакты прямо в форме
+      setFallback({ tg: res.tg, tel: res.tel })
+      setStatus('err')
+    }
   }
 
   return (
@@ -124,7 +126,14 @@ export function Showroom() {
               </button>
 
               {status === 'ok' && <p className="status-msg ok">Заявка успешно отправлена!</p>}
-              {status === 'err' && <p className="status-msg err">Ошибка. Пожалуйста, позвоните нам.</p>}
+              {status === 'err' && (
+                <p className="status-msg err">
+                  Не удалось отправить заявку. Позвоните:{' '}
+                  <a href={`tel:${fallback.tel}`} style={{ color: 'inherit' }}>{CONTACTS.phone}</a>
+                  {' '}или напишите в{' '}
+                  <a href={fallback.tg} target="_blank" rel="noreferrer" style={{ color: 'inherit' }}>Telegram</a>.
+                </p>
+              )}
             </form>
           </motion.div>
 

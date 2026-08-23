@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# “€жЄлые локальные ассеты (остаютс€ на диске, не в репо)
+catalog.pdf
+*.local
