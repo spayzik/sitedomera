@@ -9,9 +9,22 @@ import { ArrowUpRight, ArrowDown, Ruler, Scale, ShoppingBag } from 'lucide-react
 
 export function CatalogPage() {
   const [filter, setFilter] = useState<CollectionId | 'all'>('all')
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const { add } = useCart()
   const [search, setSearch] = useState('')
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(() => {
+    // Диплинк вида #/catalog?sku=919-4 — сразу открываем панель
+    const raw = window.location.hash.split('?')[1] ?? ''
+    const id = new URLSearchParams(raw).get('sku')
+    return id ? products.find((p) => p.id === id) ?? null : null
+  })
+
+  // Синхронизируем URL с открытой панелью (replaceState — без скачков скролла)
+  const openProduct = (p: Product | null) => {
+    setSelectedProduct(p)
+    const base = window.location.hash.split('?')[0] || '#/catalog'
+    const next = p ? `${base}?sku=${p.id}` : base
+    history.replaceState(null, '', next)
+  }
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })
@@ -116,7 +129,7 @@ export function CatalogPage() {
                   exit={{ opacity: 0, scale: 0.95, y: 20 }}
                   viewport={{ once: true, amount: 0.1 }}
                   transition={{ duration: 0.8, delay: (i % 4) * 0.08, ease: [0.22, 1, 0.36, 1] }}
-                  onClick={() => setSelectedProduct(p)}
+                  onClick={() => openProduct(p)}
                 >
                   <div className="card-arch-img">
                     <TiltCard>
@@ -172,7 +185,7 @@ export function CatalogPage() {
         </div>
       </section>
 
-      <ProductModal selected={selectedProduct} onSelect={setSelectedProduct} onClose={() => setSelectedProduct(null)} />
+      <ProductModal selected={selectedProduct} onSelect={openProduct} onClose={() => openProduct(null)} />
     </>
   )
 }

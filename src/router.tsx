@@ -2,14 +2,20 @@ import { useEffect, useState } from 'react'
 
 export const pageRoutes = ['/catalog', '/privacy', '/offer'] as const
 
-function parseHash(hash: string): string {
-  return hash.replace(/^#/, '') || '/'
+export function parseHashRoute(hash: string): { path: string; params: URLSearchParams } {
+  const raw = hash.replace(/^#/, '')
+  const [pathPart, queryPart] = raw.split('?')
+  return { path: pathPart || '/', params: new URLSearchParams(queryPart ?? '') }
+}
+
+function currentPath(): string {
+  return parseHashRoute(window.location.hash).path
 }
 
 export function useRoute(): string {
-  const [route, setRoute] = useState<string>(() => parseHash(window.location.hash))
+  const [route, setRoute] = useState<string>(currentPath)
   useEffect(() => {
-    const onHash = () => setRoute(parseHash(window.location.hash))
+    const onHash = () => setRoute(currentPath())
     window.addEventListener('hashchange', onHash)
     return () => window.removeEventListener('hashchange', onHash)
   }, [])

@@ -3,6 +3,7 @@ import { X, Minus, Plus, Trash2, ArrowRight } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { sendLead } from '../lib/telegram'
 import { CONTACTS } from '../data/products'
+import { PhoneInput } from './PhoneInput'
 import { AnimatePresence, motion } from 'framer-motion'
 
 export function CartDrawer() {
@@ -104,7 +105,7 @@ export function CartDrawer() {
                   <input name="name" required placeholder="Имя" disabled={!items.length} />
                 </div>
                 <div className="form-group">
-                  <input name="phone" required type="tel" placeholder="Телефон" disabled={!items.length} />
+                  <PhoneInput required disabled={!items.length} />
                 </div>
                 {status === 'err' && (
                   <p className="form-error">

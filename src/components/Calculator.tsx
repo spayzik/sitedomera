@@ -1,7 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type FormEvent } from 'react'
 import { motion } from 'framer-motion'
-import { products } from '../data/products'
+import { products, CONTACTS } from '../data/products'
 import { useCart } from '../context/CartContext'
+import { sendLead } from '../lib/telegram'
+import { PhoneInput } from './PhoneInput'
 import { Counter } from './Counter'
 import { ArrowRight, ArrowUpRight } from 'lucide-react'
 
@@ -12,6 +14,8 @@ export function Calculator() {
   const [length, setLength] = useState('10')
   const [height, setHeight] = useState('2.5')
   const [openings, setOpenings] = useState('0')
+  const [leadStatus, setLeadStatus] = useState<'idle' | 'loading' | 'ok' | 'err'>('idle')
+  const [leadFallback, setLeadFallback] = useState<{ tg?: string; tel?: string }>({})
 
   const res = useMemo(() => {
     const l = parseFloat(length.replace(',', '.')) || 0
@@ -24,6 +28,24 @@ export function Calculator() {
   }, [length, height, openings])
 
   const price = res.sheets * res.panel.price
+
+  const onLeadSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setLeadStatus('loading')
+    const fd = new FormData(e.currentTarget)
+    const res2 = await sendLead({
+      type: 'contact',
+      name: String(fd.get('name') || ''),
+      phone: String(fd.get('phone') || ''),
+      message: `Расчёт из калькулятора: ${Math.round(res.area)} м² → ${res.sheets} панелей (${res.panel.name}, ${res.panel.sku}), ориентир ${price.toLocaleString('ru-RU')} ₽`,
+    })
+    if (res2.ok) {
+      setLeadStatus('ok')
+    } else {
+      setLeadFallback({ tg: res2.tg, tel: res2.tel })
+      setLeadStatus('err')
+    }
+  }
 
   const input = (
     w: string,
@@ -106,9 +128,34 @@ export function Calculator() {
               >
                 Добавить {res.sheets} панелей в заказ <ArrowRight size={16} />
               </button>
-              <a href="#showroom" className="btn btn-white interactive" style={{ justifyContent: 'center' }}>
-                Получить точный расчёт с профилями <ArrowUpRight size={16} />
-              </a>
+
+              <form className="modern-form" onSubmit={onLeadSubmit} style={{ gap: '1rem', marginTop: '0.5rem' }}>
+                <p className="eyebrow" style={{ margin: 0 }}>
+                  Точный расчёт с профилями — бесплатно
+                </p>
+                <input name="name" required placeholder="Имя" />
+                <PhoneInput required />
+                {leadStatus === 'ok' && (
+                  <p className="status-msg ok">Заявка отправлена! Менеджер пришлёт расчёт.</p>
+                )}
+                {leadStatus === 'err' && (
+                  <p className="form-error">
+                    Не удалось отправить. Позвоните:{' '}
+                    <a href={`tel:${leadFallback.tel}`}>{CONTACTS.phone}</a> или напишите в{' '}
+                    <a href={leadFallback.tg} target="_blank" rel="noreferrer">Telegram</a>.
+                  </p>
+                )}
+                <button
+                  className="btn btn-white interactive"
+                  type="submit"
+                  disabled={leadStatus === 'loading' || leadStatus === 'ok'}
+                  style={{ justifyContent: 'center' }}
+                >
+                  {leadStatus === 'loading' ? 'Отправляем...' : leadStatus === 'ok' ? 'Отправлено' : (
+                    <>Получить точный расчёт <ArrowUpRight size={16} /></>
+                  )}
+                </button>
+              </form>
             </div>
           </motion.div>
         </div>

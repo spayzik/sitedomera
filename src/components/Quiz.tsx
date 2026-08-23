@@ -1,7 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type FormEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { products, collections, type Product } from '../data/products'
 import { useCart } from '../context/CartContext'
+import { sendLead } from '../lib/telegram'
+import { PhoneInput } from './PhoneInput'
+import { CONTACTS } from '../data/products'
 import { ArrowRight, RotateCcw, Check } from 'lucide-react'
 
 const Q = [
@@ -49,6 +52,8 @@ export function Quiz() {
   const { add } = useCart()
   const [step, setStep] = useState(0)
   const [answers, setAnswers] = useState<Partial<Answer>>({})
+  const [leadStatus, setLeadStatus] = useState<'idle' | 'loading' | 'ok' | 'err'>('idle')
+  const [leadFallback, setLeadFallback] = useState<{ tg?: string; tel?: string }>({})
 
   const done = step >= Q.length
 
@@ -71,6 +76,29 @@ export function Quiz() {
   const restart = () => {
     setStep(0)
     setAnswers({})
+    setLeadStatus('idle')
+  }
+
+  const quizLabel = (key: keyof Answer) =>
+    Q.find((q) => q.key === key)?.options.find((o) => o.id === answers[key])?.label ?? ''
+
+  const onLeadSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setLeadStatus('loading')
+    const fd = new FormData(e.currentTarget)
+    const res = await sendLead({
+      type: 'contact',
+      name: String(fd.get('name') || ''),
+      phone: String(fd.get('phone') || ''),
+      message: `Квиз: ${quizLabel('room')} / ${quizLabel('style')} / ${quizLabel('budget')}. Подобрано: ${product.name} (${product.sku})`,
+      productName: product.name,
+    })
+    if (res.ok) {
+      setLeadStatus('ok')
+    } else {
+      setLeadFallback({ tg: res.tg, tel: res.tel })
+      setLeadStatus('err')
+    }
   }
 
   const collection = collections.find((c) => c.id === product.collection)?.name
@@ -146,6 +174,38 @@ export function Quiz() {
                       Пройти заново <RotateCcw size={16} />
                     </button>
                   </div>
+
+                  <form
+                    className="modern-form quiz-lead"
+                    onSubmit={onLeadSubmit}
+                    style={{ marginTop: '2rem', gap: '1.25rem' }}
+                  >
+                    <p className="eyebrow" style={{ margin: 0 }}>
+                      Пришлём подборку под вашу задачу и точный расчёт
+                    </p>
+                    <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
+                      <input name="name" required placeholder="Имя" style={{ flex: '1 1 140px' }} />
+                      <PhoneInput required style={{ flex: '1 1 180px' }} />
+                    </div>
+                    {leadStatus === 'ok' && (
+                      <p className="status-msg ok">Готово! Менеджер свяжется с вами с подборкой.</p>
+                    )}
+                    {leadStatus === 'err' && (
+                      <p className="form-error">
+                        Не удалось отправить. Позвоните:{' '}
+                        <a href={`tel:${leadFallback.tel}`}>{CONTACTS.phone}</a> или напишите в{' '}
+                        <a href={leadFallback.tg} target="_blank" rel="noreferrer">Telegram</a>.
+                      </p>
+                    )}
+                    <button
+                      className="btn btn-outline interactive"
+                      type="submit"
+                      disabled={leadStatus === 'loading' || leadStatus === 'ok'}
+                      style={{ borderColor: 'rgba(255,255,255,0.25)', color: '#fff', justifyContent: 'center' }}
+                    >
+                      {leadStatus === 'loading' ? 'Отправляем...' : leadStatus === 'ok' ? 'Отправлено' : 'Получить подборку'}
+                    </button>
+                  </form>
                 </div>
               </motion.div>
             )}
