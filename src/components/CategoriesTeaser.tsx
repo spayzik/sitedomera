@@ -5,31 +5,31 @@ const categories = [
   {
     id: 'wood',
     title: 'Бамбуковые панели',
-    bg: 'catalog/rooms/room-wood.webp',
+    bg: 'catalog/categories/carusel-bamboo.webp',
     text: 'Основа коллекции — древесно-бамбуковый композит с точной имитацией натурального шпона. Идеально для тёплых интерьеров.',
   },
   {
     id: 'stone',
     title: 'Гибкий камень',
-    bg: 'catalog/rooms/room-plaster.webp',
+    bg: 'catalog/categories/carusel-stone.webp',
     text: 'Эффект декоративной штукатурки и камня. Масштабные цельные полотна без мокрых процессов и грязи.',
   },
   {
     id: 'fabric',
     title: 'Тканевые фактуры',
-    bg: 'catalog/rooms/room-fabric.webp',
+    bg: 'catalog/categories/carusel-cotton.webp',
     text: 'Уютные текстильные фактуры, переплетение нитей и мягкий матовый блеск. Домашний уют в прочном исполнении.',
   },
   {
     id: 'soft',
     title: 'Soft-touch',
-    bg: 'catalog/hero/hero-soft-new.webp',
+    bg: 'catalog/categories/carusel-softtouch.webp',
     text: 'Глубокая бархатистая поверхность. Идеально матовое покрытие, невероятно приятное на ощупь.',
   },
   {
     id: 'slats',
     title: 'Реечные панели',
-    bg: 'catalog/hero/banner-slats.webp',
+    bg: 'catalog/categories/carusel-reech.webp',
     text: 'Объёмные 3D рейки для акцентных стен. Монтируются встык, создавая непрерывный рельеф.',
   },
 ]
@@ -58,7 +58,7 @@ export function CategoriesTeaser() {
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.75, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
           >
-            <img className="cat-panel-img" src={category.bg} alt={category.title} />
+            <img className="cat-panel-img" src={category.bg} alt={category.title} loading="lazy" decoding="async" />
             <div className="cat-panel-shade" />
 
             <div className="cat-panel-content">
