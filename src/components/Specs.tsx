@@ -78,7 +78,7 @@ export function Specs() {
             viewport={{ once: true, margin: '-40px' }}
             transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           >
-            <div className="specs-stack-ghost" aria-hidden="true">ТЕХНОЛОГИИ</div>
+            <div className="specs-stack-ghost" aria-hidden="true">СТРУКТУРА ПАНЕЛИ</div>
             <p className="eyebrow" style={{ marginBottom: '1rem' }}>Структура панели</p>
             <div className="stack-total">
               <span className="stack-big">13</span>
