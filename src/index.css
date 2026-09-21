@@ -1128,8 +1128,7 @@ h4 { font-size: 1.25rem; font-weight: 500; }
 }
 .reviews-avito-link:hover, .review-source:hover { color: var(--accent); border-color: var(--accent); }
 .reviews-carousel { position: relative; }
-.reviews-controls { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
-.reviews-count { color: var(--muted); font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; }
+.reviews-controls { display: flex; justify-content: flex-end; margin-bottom: 1.25rem; }
 .reviews-arrows { display: flex; gap: 0.5rem; }
 .reviews-arrows button {
   width: 42px; height: 42px; display: grid; place-items: center; border: 1px solid var(--line);

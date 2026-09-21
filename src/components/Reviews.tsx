@@ -140,7 +140,6 @@ export function Reviews() {
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
         >
           <div className="reviews-controls" aria-label="Управление каруселью отзывов">
-            <span className="reviews-count">{reviews.length} отзывов с апреля</span>
             <div className="reviews-arrows">
               <button type="button" onClick={() => move(-1)} aria-label="Предыдущий отзыв">
                 <ChevronLeft size={18} />
