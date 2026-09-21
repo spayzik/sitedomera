@@ -709,7 +709,7 @@ h4 { font-size: 1.25rem; font-weight: 500; }
 .manifest-text { max-width: 1000px; margin-bottom: 4rem; }
 .manifest-title em { font-style: normal; color: var(--accent-light); }
 .manifest-lead { max-width: 60ch; color: var(--muted); font-size: 1.2rem; line-height: 1.7; margin: 2rem 0 0; font-weight: 300; }
-.manifest-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; padding-top: 3rem; }
+.manifest-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; border-top: 0 !important; padding-top: 3rem; }
 .manifest-stat { display: flex; flex-direction: column; gap: 0.75rem; }
 .manifest-stat-num {
   font-family: var(--font-num); font-size: clamp(2.5rem, 5vw, 4rem); line-height: 1; color: var(--ink);
