@@ -46,6 +46,7 @@ export function ScrollGlow() {
       {/* Оба слоя статичны на слабых устройствах и телефонах. */}
       <div className="sg-base" />
       <div className="sg-aurora" />
+      <div className="sg-light-sweep" />
 
       {enhanced && (
         <>
