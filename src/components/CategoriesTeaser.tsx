@@ -11,7 +11,7 @@ const categories = [
   {
     id: 'stone',
     title: 'Гибкий камень',
-    bg: 'catalog/hero/hero-new.webp',
+    bg: 'catalog/rooms/room-plaster.webp',
     text: 'Эффект декоративной штукатурки и камня. Масштабные цельные полотна без мокрых процессов и грязи.',
   },
   {
