@@ -432,9 +432,9 @@ h4 { font-size: 1.25rem; font-weight: 500; }
   overflow: hidden;
 }
 .specs-stack-ghost {
-  position: absolute; top: 50%; right: -14%; z-index: 0; transform: translateY(-50%);
-  font-family: var(--font-display); font-size: clamp(5rem, 12vw, 12rem); line-height: 1;
-  color: rgba(223,186,143,0.006); -webkit-text-stroke: 1px rgba(223,186,143,0.12);
+  position: absolute; right: 50%; bottom: -20%; z-index: 0; transform: translateX(50%);
+  font-family: var(--font-display); font-size: clamp(8rem, 24vw, 16rem); line-height: 1;
+  color: transparent; -webkit-text-stroke: 1px rgba(255,255,255,0.045);
   white-space: nowrap; pointer-events: none; user-select: none; letter-spacing: 0.02em;
 }
 .specs-stack > :not(.specs-stack-ghost) { position: relative; z-index: 1; }
@@ -759,14 +759,11 @@ h4 { font-size: 1.25rem; font-weight: 500; }
 .installation, .showroom, .faq { position: relative; overflow: hidden; }
 .installation .container, .showroom .container, .faq .container { position: relative; z-index: 1; }
 .section-ghost {
-  position: absolute; left: 50%; top: 46%; z-index: 0; transform: translate(-50%, -50%);
-  font-family: var(--font-display); font-size: clamp(9rem, 23vw, 23rem); line-height: 1;
-  color: rgba(223,186,143,0.006); -webkit-text-stroke: clamp(1px, 0.06vw, 2px) rgba(223,186,143,0.12);
+  position: absolute; left: 50%; bottom: -12%; z-index: 0; transform: translateX(-50%);
+  font-family: var(--font-display); font-size: clamp(14rem, 36vw, 32rem); line-height: 1;
+  color: transparent; -webkit-text-stroke: 1px rgba(255,255,255,0.045);
   white-space: nowrap; pointer-events: none; user-select: none; letter-spacing: 0.02em;
 }
-.section-ghost--installation { top: 52%; }
-.section-ghost--showroom { top: 32%; }
-.section-ghost--faq { top: 44%; }
 .contacts {
   border-bottom: 1px solid var(--line);
   background: rgba(255,255,255,0.018);
@@ -1128,13 +1125,12 @@ h4 { font-size: 1.25rem; font-weight: 500; }
 /* === MANIFEST GHOST TEXT === */
 .manifest { position: relative; overflow: hidden; }
 .manifest-ghost {
-  position: absolute; top: 42%; right: -3%; transform: translateY(-50%);
-  font-family: var(--font-display); font-size: clamp(8rem, 22vw, 20rem); line-height: 1;
-  color: transparent; -webkit-text-stroke: 1px rgba(255,255,255,0.066);
+  position: absolute; left: 50%; bottom: -12%; transform: translateX(-50%);
+  font-family: var(--font-display); font-size: clamp(14rem, 36vw, 32rem); line-height: 1;
+  color: transparent; -webkit-text-stroke: 1px rgba(255,255,255,0.045);
   white-space: nowrap; pointer-events: none; user-select: none; letter-spacing: 0.02em;
   text-transform: uppercase; z-index: 0;
 }
-@media (max-width: 768px) { .manifest-ghost { right: -12%; } }
 
 /* === GRADIENT LINE (section borders) === */
 .grad-line { height: 1px; position: relative; overflow: hidden; background: rgba(255,255,255,0.08); }
