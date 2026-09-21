@@ -11,6 +11,7 @@ const features = [
 export function Installation() {
   return (
     <section className="section installation" id="installation" style={{ backgroundColor: '#0a0a0a', borderTop: '1px solid var(--line)' }}>
+      <div className="section-ghost section-ghost--installation" aria-hidden="true">МОНТАЖ</div>
       <div className="container">
         <div className="split-grid" style={{ alignItems: 'center' }}>
           

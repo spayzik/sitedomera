@@ -13,7 +13,7 @@ export function Manifest() {
   return (
     <section className="section manifest" id="manifest">
       <div className="container">
-        <div className="manifest-ghost">Фактуры</div>
+        <div className="manifest-ghost" aria-hidden="true">АРХИТЕКТУРА</div>
         <div className="manifest-text">
           <motion.p
             className="eyebrow"
