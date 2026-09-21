@@ -654,11 +654,11 @@ h4 { font-size: 1.25rem; font-weight: 500; }
 .footer { padding: 6rem 0 2rem; border-top: 1px solid var(--line); color: var(--muted); background: var(--bg); position: relative; overflow: hidden; z-index: 10; }
 .footer .container { position: relative; z-index: 1; }
 .footer-ghost {
-  position: absolute; left: 50%; bottom: -8%; transform: translateX(-50%);
+  position: absolute; left: 50%; bottom: -12%; transform: translateX(-50%);
   font-family: var(--font-display); font-size: clamp(14rem, 36vw, 32rem); line-height: 1;
-  color: rgba(223,186,143,0.008); -webkit-text-stroke: clamp(1px, 0.07vw, 2px) rgba(223,186,143,0.09);
+  color: transparent; -webkit-text-stroke: 1px rgba(255,255,255,0.045);
   white-space: nowrap; pointer-events: none; user-select: none; z-index: 0;
-  letter-spacing: 0.02em; text-shadow: 2px 2px 0 rgba(116,70,35,0.08), 5px 5px 0 rgba(116,70,35,0.035);
+  letter-spacing: 0.02em;
 }
 .footer-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 4rem; margin-bottom: 6rem; flex-wrap: wrap; }
 .footer-logo { width: 60px; height: 60px; border-radius: 14px; border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem; }
@@ -833,17 +833,16 @@ h4 { font-size: 1.25rem; font-weight: 500; }
   width: 100%; padding: 1.5rem; text-align: center;
 }
 .preloader-ghost-wrap {
-  position: absolute; left: 50%; top: 50%; z-index: 0; transform: translate(-50%, -50%);
+  position: absolute; left: 50%; bottom: -11%; z-index: 0; transform: translateX(-50%);
   white-space: nowrap; pointer-events: none; user-select: none;
 }
 .preloader-ghost {
   font-family: var(--font-display); font-size: clamp(13rem, 38vw, 37rem); line-height: 1;
-  color: rgba(223,186,143,0.015); -webkit-text-stroke: clamp(1px, 0.08vw, 2px) rgba(239,190,120,0.16);
-  letter-spacing: 0.02em; text-shadow: 2px 2px 0 rgba(129,76,35,0.13), 5px 5px 0 rgba(129,76,35,0.065), 8px 8px 0 rgba(129,76,35,0.025);
+  color: transparent; -webkit-text-stroke: 1px rgba(255,255,255,0.055); letter-spacing: 0.02em;
 }
 .preloader-logo {
   font-family: var(--font-display); font-size: clamp(5.2rem, 16vw, 17rem); line-height: 0.78; letter-spacing: -0.035em;
-  color: #fff; background: linear-gradient(160deg, #fff 12%, #f0ddc3 52%, #bd8141 100%);
+  color: #fff; background: linear-gradient(135deg, #fff 20%, var(--accent) 100%);
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 .preloader-tag { font-size: 0.7rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); }
@@ -854,7 +853,7 @@ h4 { font-size: 1.25rem; font-weight: 500; }
 @media (max-width: 640px) {
   .preloader-content { gap: 1.1rem; }
   .preloader-logo { font-size: clamp(4.4rem, 20vw, 7rem); }
-  .preloader-ghost-wrap { top: 47%; }
+  .preloader-ghost-wrap { bottom: 2%; }
   .preloader-ghost { font-size: 48vw; }
   .preloader-tag { font-size: 0.6rem; letter-spacing: 0.2em; }
 }
@@ -1109,14 +1108,13 @@ h4 { font-size: 1.25rem; font-weight: 500; }
 /* === MANIFEST GHOST TEXT === */
 .manifest { position: relative; overflow: hidden; }
 .manifest-ghost {
-  position: absolute; top: 43%; left: 50%; transform: translate(-50%, -50%);
-  font-family: var(--font-display); font-size: clamp(7rem, 18vw, 18rem); line-height: 1;
-  color: rgba(223,186,143,0.009); -webkit-text-stroke: clamp(1px, 0.06vw, 2px) rgba(223,186,143,0.095);
+  position: absolute; top: 42%; right: -3%; transform: translateY(-50%);
+  font-family: var(--font-display); font-size: clamp(8rem, 22vw, 20rem); line-height: 1;
+  color: transparent; -webkit-text-stroke: 1px rgba(255,255,255,0.06);
   white-space: nowrap; pointer-events: none; user-select: none; letter-spacing: 0.02em;
-  text-transform: uppercase; z-index: 0; text-shadow: 2px 2px 0 rgba(116,70,35,0.07), 5px 5px 0 rgba(116,70,35,0.03);
+  text-transform: uppercase; z-index: 0;
 }
-.manifest-text, .manifest-stats { position: relative; z-index: 1; }
-@media (max-width: 768px) { .manifest-ghost { top: 38%; font-size: 30vw; } }
+@media (max-width: 768px) { .manifest-ghost { right: -12%; } }
 
 /* === GRADIENT LINE (section borders) === */
 .grad-line { height: 1px; position: relative; overflow: hidden; background: rgba(255,255,255,0.08); }
