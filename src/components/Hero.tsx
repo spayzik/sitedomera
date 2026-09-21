@@ -44,8 +44,8 @@ export function Hero() {
         style={{ y, opacity, scale }}
       >
         <motion.img 
-          src="catalog/hero/hero-soft-new.webp" 
-          alt="Домэра интерьер"
+          src="catalog/hero/hero.webp" 
+          alt="Интерьер спальни с панелями Домэра"
           fetchPriority="high"
           decoding="async"
           initial={{ scale: 1.25 }}

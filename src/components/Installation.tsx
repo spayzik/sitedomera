@@ -55,8 +55,8 @@ export function Installation() {
             style={{ position: 'relative', aspectRatio: '4/5', borderRadius: '8px', overflow: 'hidden' }}
           >
             <img 
-              src="catalog/rooms/room-metal.webp" 
-              alt="Панели после монтажа" 
+              src="catalog/rooms/montage.webp" 
+              alt="Профессиональный монтаж панелей Домэра" 
               style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
             />
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)' }} />
