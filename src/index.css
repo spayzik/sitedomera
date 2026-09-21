@@ -435,7 +435,7 @@ h4 { font-size: 1.25rem; font-weight: 500; }
   position: absolute; right: 50%; bottom: -20%; z-index: 0; transform: translateX(50%);
   font-family: var(--font-display); font-size: clamp(8rem, 24vw, 16rem); line-height: 1;
   color: transparent; -webkit-text-stroke: 1px rgba(255,255,255,0.025);
-  white-space: nowrap; pointer-events: none; user-select: none; letter-spacing: 0.02em;
+  white-space: nowrap; pointer-events: none; user-select: none; letter-spacing: 0.02em; opacity: 0.4;
 }
 .specs-stack > :not(.specs-stack-ghost) { position: relative; z-index: 1; }
 .specs-stack::after {
@@ -762,7 +762,7 @@ h4 { font-size: 1.25rem; font-weight: 500; }
   position: absolute; left: 50%; bottom: -12%; z-index: 0; transform: translateX(-50%);
   font-family: var(--font-display); font-size: clamp(14rem, 36vw, 32rem); line-height: 1;
   color: transparent; -webkit-text-stroke: 1px rgba(255,255,255,0.025);
-  white-space: nowrap; pointer-events: none; user-select: none; letter-spacing: 0.02em;
+  white-space: nowrap; pointer-events: none; user-select: none; letter-spacing: 0.02em; opacity: 0.4;
 }
 .contacts {
   border-bottom: 1px solid var(--line);
@@ -1128,7 +1128,7 @@ h4 { font-size: 1.25rem; font-weight: 500; }
   position: absolute; left: 50%; bottom: -12%; transform: translateX(-50%);
   font-family: var(--font-display); font-size: clamp(14rem, 36vw, 32rem); line-height: 1;
   color: transparent; -webkit-text-stroke: 1px rgba(255,255,255,0.025);
-  white-space: nowrap; pointer-events: none; user-select: none; letter-spacing: 0.02em;
+  white-space: nowrap; pointer-events: none; user-select: none; letter-spacing: 0.02em; opacity: 0.4;
   text-transform: uppercase; z-index: 0;
 }
 
