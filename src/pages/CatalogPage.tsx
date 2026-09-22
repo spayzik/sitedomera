@@ -46,8 +46,8 @@ export function CatalogPage() {
       <section className="catalog-page-hero" id="catalog">
         <div className="catalog-page-hero-bg">
           <motion.img
-            src="catalog/hero/hero-wide.webp"
-            alt="Каталог Домэра"
+            src="catalog/hero/hero-catalog.webp"
+            alt="Интерьер с панелями Домэра"
             initial={{ opacity: 0, scale: 1.05 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1.2, ease: 'easeOut' }}
