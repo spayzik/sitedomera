@@ -8,7 +8,6 @@ export function FAQ() {
 
   return (
     <section className="section faq" id="faq">
-      <div className="section-ghost section-ghost--faq" aria-hidden="true">ВОПРОСЫ</div>
       <div className="container">
         <div className="section-head-flex">
           <div>

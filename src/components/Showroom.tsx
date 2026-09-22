@@ -36,7 +36,6 @@ export function Showroom() {
 
   return (
     <section className="section showroom" id="showroom">
-      <div className="section-ghost section-ghost--showroom" aria-hidden="true">КОНТАКТЫ</div>
       <div className="container">
         <div className="split-grid">
 

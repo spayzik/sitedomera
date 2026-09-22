@@ -69,8 +69,8 @@ export function CatalogPage() {
             <a href="#products" className="btn btn-white interactive">
               Посмотреть артикулы <ArrowDown size={16} />
             </a>
-            <a href="#showroom" className="btn btn-outline interactive" style={{ borderColor: 'rgba(255,255,255,0.25)', color: '#fff' }}>
-              Записаться в шоурум
+            <a href="#calculator" className="btn btn-outline interactive" style={{ borderColor: 'rgba(255,255,255,0.25)', color: '#fff' }}>
+              Рассчитать проект
             </a>
           </motion.div>
         </div>

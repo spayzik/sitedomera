@@ -8,26 +8,27 @@ export function Preloader({ done }: { done: boolean }) {
           className="preloader"
           exit={{ y: '-100%', transition: { duration: 0.9, ease: [0.83, 0, 0.17, 1] } }}
         >
-          <div className="preloader-ghost-wrap" aria-hidden="true">
-            <motion.div
-              className="preloader-ghost"
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-            >
-              ДОМЭРА
-            </motion.div>
-          </div>
-
           <div className="preloader-content">
-            <motion.div
-              className="preloader-logo"
-              initial={{ opacity: 0, y: 42, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
-            >
-              ДОМЭРА
-            </motion.div>
+            <div className="preloader-logo-stage">
+              <div className="preloader-ghost-wrap" aria-hidden="true">
+                <motion.div
+                  className="preloader-ghost"
+                  initial={{ opacity: 0, scale: 0.96 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  ДОМЭРА
+                </motion.div>
+              </div>
+              <motion.div
+                className="preloader-logo"
+                initial={{ opacity: 0, y: 42, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
+              >
+                ДОМЭРА
+              </motion.div>
+            </div>
             <motion.p
               className="preloader-tag"
               initial={{ opacity: 0, y: 12 }}
