@@ -1,8 +1,9 @@
 import { useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { collections, products, type Product } from '../data/products'
+import { collections, products, CONTACTS, type Product } from '../data/products'
 import { useCart } from '../context/CartContext'
 import { X } from 'lucide-react'
+import { buildTelegramDraftUrl, formatProductTelegramMessage } from '../lib/telegramLink'
 
 export function ProductModal({
   selected,
@@ -22,6 +23,11 @@ export function ProductModal({
     const pool = closelyRelated.length ? closelyRelated : products
     return pool.filter(p => p.collection === selected.collection)
   }, [selected, closelyRelated])
+
+  const collection = selected ? collections.find(c => c.id === selected.collection)?.name ?? '' : ''
+  const telegramDraftUrl = selected
+    ? buildTelegramDraftUrl(CONTACTS.telegram, formatProductTelegramMessage(selected, collection))
+    : null
 
   return (
     <AnimatePresence>
@@ -77,7 +83,7 @@ export function ProductModal({
 
                 <div className="gocek-glass-list">
                   {[
-                    ['Коллекция', collections.find(c => c.id === selected.collection)?.name || ''],
+                    ['Коллекция', collection],
                     ['Артикул', selected.sku],
                     ['Размеры', selected.size],
                     ['Толщина', selected.thickness],
@@ -100,6 +106,12 @@ export function ProductModal({
                   <span>ДОБАВИТЬ В ПОДБОРКУ</span>
                   <span style={{ fontSize: '1.25rem', lineHeight: 1 }}>+</span>
                 </button>
+                {telegramDraftUrl && (
+                  <a className="gocek-telegram-link" href={telegramDraftUrl} target="_blank" rel="noreferrer">
+                    <span>СПРОСИТЬ В TELEGRAM</span>
+                    <span aria-hidden="true">↗</span>
+                  </a>
+                )}
               </motion.div>
 
               {/* Bottom Dock Thumbnails */}

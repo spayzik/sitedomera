@@ -525,29 +525,36 @@ h4 { font-size: 1.25rem; font-weight: 500; }
 .gocek-top-left h2 { font-family: var(--font-display); font-size: clamp(3rem, 6vw, 5rem); margin-bottom: 1.5rem; line-height: 1; }
 .gocek-top-left p { font-size: 1.05rem; line-height: 1.7; color: rgba(255,255,255,0.7); margin-bottom: 2rem; }
 
-.gocek-top-right { position: absolute; top: 15%; right: 5%; width: 400px; }
+.gocek-top-right { position: absolute; top: 6%; right: 5%; width: 400px; }
 .gocek-glass {
   background: rgba(10,10,10,0.6); backdrop-filter: blur(40px);
-  border: 1px solid rgba(255,255,255,0.1); padding: 2.25rem; color: #fff;
+  border: 1px solid rgba(255,255,255,0.1); padding: 1.5rem; color: #fff;
 }
-.gocek-glass-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1.5rem; }
+.gocek-glass-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem; }
 .gocek-glass-header h3 { font-size: 1.5rem; margin: 0; }
-.gocek-glass-list { margin-bottom: 1.5rem; }
+.gocek-glass-list { margin-bottom: 0.75rem; }
 .gocek-price-pill {
   display: inline-block; background: rgba(255,255,255,0.1); backdrop-filter: blur(12px);
   border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 100px;
   padding: 0.75rem 1.5rem; font-size: 1.1rem; font-weight: 500;
 }
-.gocek-row { display: flex; justify-content: space-between; padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; }
-.gocek-row:last-child { border: none; margin-bottom: 2rem; }
+.gocek-row { display: flex; justify-content: space-between; padding: 0.65rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.gocek-row:last-child { border: none; margin-bottom: 1rem; }
 .gocek-row span:first-child { color: rgba(255,255,255,0.4); }
 
 .gocek-tech-btn {
-  width: 100%; padding: 1.25rem; background: #fff; color: #000;
+  width: 100%; padding: 1rem; background: #fff; color: #000;
   font-weight: 500; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em;
   border: none; transition: all 0.3s; display: flex; align-items: center; justify-content: space-between;
 }
 .gocek-tech-btn:hover { background: var(--accent); }
+.gocek-telegram-link {
+  display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+  margin-top: 0.75rem; padding: 0.6rem 0; color: #fff; text-decoration: none;
+  border-bottom: 1px solid rgba(255,255,255,0.25); font-size: 0.8rem;
+  letter-spacing: 0.08em; transition: color 0.2s;
+}
+.gocek-telegram-link:hover { color: var(--accent); }
 
 .gocek-dock { position: absolute; bottom: 5%; left: 50%; transform: translateX(-50%); display: flex; gap: 0.5rem; background: rgba(0,0,0,0.4); padding: 0.5rem; backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); max-width: 92vw; overflow-x: auto; scrollbar-width: none; }
 .gocek-dock::-webkit-scrollbar { display: none; }

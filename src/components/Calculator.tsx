@@ -4,6 +4,7 @@ import { products, CONTACTS } from '../data/products'
 import { useCart } from '../context/CartContext'
 import { Counter } from './Counter'
 import { ArrowRight, ArrowUpRight } from 'lucide-react'
+import { buildTelegramDraftUrl, formatCalculatorTelegramMessage } from '../lib/telegramLink'
 
 const PANEL_AREA = 1.22 * 3 // лист 1220×3000 мм = 3.66 м²
 
@@ -24,6 +25,11 @@ export function Calculator() {
   }, [length, height, openings])
 
   const price = res.sheets * res.panel.price
+  const telegramDraftUrl = res.sheets > 0
+    ? buildTelegramDraftUrl(CONTACTS.telegram, formatCalculatorTelegramMessage({
+      area: res.area, sheets: res.sheets, panel: res.panel, total: price,
+    }))
+    : null
 
   const input = (
     w: string,
@@ -109,10 +115,12 @@ export function Calculator() {
 
               <div className="contact-inline">
                 <p className="eyebrow" style={{ margin: 0 }}>Точный расчёт с профилями</p>
-                <p>Менеджер уточнит детали проекта. Значения калькулятора останутся только в этом браузере.</p>
-                <a className="btn btn-white btn-full interactive" href={CONTACTS.telegram} target="_blank" rel="noreferrer">
-                  Уточнить расчёт в Telegram <ArrowUpRight size={16} />
-                </a>
+                <p>Менеджер уточнит детали проекта. Расчёт попадёт в черновик Telegram только после вашего нажатия; сообщение вы отправите сами.</p>
+                {telegramDraftUrl && (
+                  <a className="btn btn-white btn-full interactive" href={telegramDraftUrl} target="_blank" rel="noreferrer">
+                    Уточнить расчёт в Telegram <ArrowUpRight size={16} />
+                  </a>
+                )}
                 <a className="contact-inline-phone interactive" href={`tel:${CONTACTS.phoneRaw}`}>
                   Позвонить: {CONTACTS.phone}
                 </a>

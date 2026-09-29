@@ -4,6 +4,7 @@ import { products, collections, type Product } from '../data/products'
 import { useCart } from '../context/CartContext'
 import { CONTACTS } from '../data/products'
 import { ArrowRight, RotateCcw, Check } from 'lucide-react'
+import { buildTelegramDraftUrl, formatQuizTelegramMessage } from '../lib/telegramLink'
 
 const Q = [
   {
@@ -149,10 +150,10 @@ export function Quiz() {
                   </div>
 
                   <div className="quiz-contact">
-                    <p>Результат подбора останется на этой странице. Обсудить материал можно напрямую с менеджером.</p>
+                    <p>Результат подбора не отправляется автоматически. Вы сами решите, отправлять ли черновик менеджеру.</p>
                     <a
                       className="btn btn-outline interactive"
-                      href={CONTACTS.telegram}
+                      href={buildTelegramDraftUrl(CONTACTS.telegram, formatQuizTelegramMessage(product, collection ?? ''))}
                       target="_blank"
                       rel="noreferrer"
                       style={{ borderColor: 'rgba(255,255,255,0.25)', color: '#fff' }}
