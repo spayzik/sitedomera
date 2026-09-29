@@ -75,7 +75,7 @@ function Footer() {
           <p>&copy; {new Date().getFullYear()} {CONTACTS.brand}. Все права защищены.</p>
           <div className="footer-legal">
             <a href="#/privacy">Политика конфиденциальности</a>
-            <a href="#/offer">Договор оферты</a>
+            <a href="#/offer">Условия приобретения</a>
           </div>
         </div>
       </div>
