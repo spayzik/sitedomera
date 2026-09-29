@@ -1288,7 +1288,10 @@ h4 { font-size: 1.25rem; font-weight: 500; }
 }
 .reviews-avito-link:hover, .review-source:hover { color: var(--accent); border-color: var(--accent); }
 .reviews-carousel { position: relative; }
-.reviews-controls { display: flex; justify-content: flex-end; margin-bottom: 1.25rem; }
+.reviews-controls { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1.25rem; }
+.reviews-summary { display: flex; align-items: center; gap: 0.55rem; color: var(--accent-light); }
+.reviews-summary strong { font-family: var(--font-num); font-size: 1.5rem; font-weight: 500; }
+.reviews-summary span { color: var(--muted); font-size: 0.83rem; }
 .reviews-arrows { display: flex; gap: 0.5rem; }
 .reviews-arrows button {
   width: 42px; height: 42px; display: grid; place-items: center; border: 1px solid var(--line);
@@ -1317,17 +1320,30 @@ h4 { font-size: 1.25rem; font-weight: 500; }
 .review-topline span { display: block; margin-top: 0.2rem; color: var(--muted); font-size: 0.76rem; }
 .review-rating { display: flex; gap: 0.12rem; color: var(--accent); flex-shrink: 0; }
 .review-rating .muted { color: rgba(194,163,120,0.24); }
-.review-deal { grid-column: 1 / -1; margin: 1.5rem 0 0.8rem; color: var(--muted); font-size: 0.76rem; line-height: 1.45; }
-.review-text { grid-column: 1 / -1; color: var(--ink); line-height: 1.7; font-size: 0.94rem; margin: 0; }
+.review-text { grid-column: 1 / -1; color: var(--ink); line-height: 1.7; font-size: 0.94rem; margin: 1.5rem 0 0; }
 .review-source { grid-column: 1 / -1; width: fit-content; margin-top: auto; padding-top: 1.5rem; font-size: 0.68rem; }
+.reviews-empty {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 2rem;
+  border: 1px solid var(--line); background: var(--surface-glass); padding: clamp(1.5rem, 4vw, 3rem);
+}
+.reviews-empty-mark { width: 4.5rem; height: 4.5rem; display: grid; place-items: center; border: 1px solid var(--line); color: var(--accent-light); }
+.reviews-empty .eyebrow { margin-bottom: 0.65rem; }
+.reviews-empty h3 { margin: 0 0 0.5rem; font-size: clamp(1.3rem, 2vw, 1.8rem); font-weight: 500; }
+.reviews-empty p:not(.eyebrow) { margin: 0; color: var(--muted); line-height: 1.6; }
+.reviews-empty .btn { white-space: nowrap; }
 @media (max-width: 1024px) {
   .reviews-head-side { flex-direction: column; gap: 1rem; }
   .review-card { flex-basis: calc((100% - 1.25rem) / 2); }
+  .reviews-empty { grid-template-columns: auto 1fr; }
+  .reviews-empty .btn { grid-column: 2; width: fit-content; }
 }
 @media (max-width: 640px) {
   .reviews-controls { margin-bottom: 1rem; }
   .review-card { flex-basis: min(88vw, 24rem); min-height: 0; }
   .reviews-head-side { width: 100%; }
+  .reviews-summary { flex-wrap: wrap; }
+  .reviews-empty { grid-template-columns: 1fr; gap: 1.25rem; }
+  .reviews-empty .btn { grid-column: 1; white-space: normal; width: fit-content; }
 }
 
 /* === WHY US === */

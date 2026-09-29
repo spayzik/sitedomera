@@ -1,0 +1,22 @@
+{
+  "info": {
+    "isEnabled": true,
+    "rating": { "score": 4.8, "reviewsCount": 23, "reviewsWithScoreCount": 20 }
+  },
+  "list": {
+    "total": 23,
+    "reviews": [
+      {
+        "id": 123456,
+        "score": 5,
+        "text": "Тестовый отзыв о панелях. Почта test@example.com и телефон +7 999 123-45-67 скрываются.",
+        "createdAt": 1780000000,
+        "sender": { "name": "Тестовый автор" },
+        "item": { "id": 98765, "title": "Тестовое объявление" },
+        "stage": "done",
+        "usedInScore": true,
+        "canAnswer": false
+      }
+    ]
+  }
+}
