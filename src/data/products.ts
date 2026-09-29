@@ -45,18 +45,27 @@ export const SPECS = {
   applications: ['Гостиная', 'Спальня', 'Прихожая', 'Офис', 'Отель', 'Ресторан'],
 }
 
+const hostname = 'xn--80ahyhl1f.xn--p1ai'
+const city = 'Москва'
+const streetAddress = 'Алтуфьевское ш., 37с1'
+
 export const CONTACTS = {
   brand: 'Домэра',
   phone: '+7 977 476-08-88',
   phoneRaw: '+79774760888',
   avito: 'https://www.avito.ru/brands/i344978249',
-  site: 'domera.ru',
+  site: 'домэра.рф',
+  hostname,
+  origin: `https://${hostname}`,
   telegramBot: '', // set VITE_TELEGRAM_BOT_TOKEN in .env
   telegramChat: '', // set VITE_TELEGRAM_CHAT_ID in .env
   telegram: 'https://t.me/domeraru',
   telegramChannel: 'https://t.me/domerarf',
-  address: 'Москва, Алтуфьевское ш., 37с1',
+  city,
+  streetAddress,
+  address: `${city}, ${streetAddress}`,
   hours: 'Ежедневно 11:00–20:00 (без записи)',
+  openingHours: 'Mo-Su 11:00-20:00',
   delivery: 'Самовывоз или отправка в день заказа',
 }
 

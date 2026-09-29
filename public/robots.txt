@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://domera.ru/sitemap.xml
+Sitemap: https://xn--80ahyhl1f.xn--p1ai/sitemap.xml

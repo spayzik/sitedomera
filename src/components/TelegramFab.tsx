@@ -4,7 +4,7 @@ import { CONTACTS } from '../data/products'
 export function TelegramFab() {
   const href =
     CONTACTS.telegram ||
-    `https://t.me/share/url?url=${encodeURIComponent(`https://${CONTACTS.site}`)}&text=${encodeURIComponent(
+    `https://t.me/share/url?url=${encodeURIComponent(CONTACTS.origin)}&text=${encodeURIComponent(
       'Здравствуйте! Хочу получить консультацию по панелям Домэра.',
     )}`
 

@@ -58,8 +58,8 @@ function Footer() {
             </div>
             <div className="footer-nav-col">
               <strong>Шоурум</strong>
-              <span>Москва, Алтуфьевское ш., 37с1</span>
-              <span>Ежедневно 11:00–20:00, без записи</span>
+              <span>{CONTACTS.address}</span>
+              <span>{CONTACTS.hours}</span>
               <a href={`tel:${CONTACTS.phoneRaw}`} className="footer-phone">{CONTACTS.phone}</a>
             </div>
           </div>
