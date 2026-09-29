@@ -2,9 +2,13 @@ import { useCart } from '../context/CartContext'
 import { X, Minus, Plus, Trash2, ArrowRight } from 'lucide-react'
 import { CONTACTS } from '../data/products'
 import { AnimatePresence, motion } from 'framer-motion'
+import { buildTelegramDraftUrl, formatCartTelegramMessage } from '../lib/telegramLink'
 
 export function CartDrawer() {
   const { open, setOpen, items, total, setQty, remove } = useCart()
+  const telegramDraftUrl = items.length > 0
+    ? buildTelegramDraftUrl(CONTACTS.telegram, formatCartTelegramMessage(items))
+    : null
 
   return (
     <AnimatePresence>
@@ -75,9 +79,11 @@ export function CartDrawer() {
               </div>
               <p className="drawer-contact-note">Подборка хранится в этом браузере и не отправляется автоматически.</p>
               <div className="drawer-contact-actions">
-                <a className="btn btn-primary btn-full interactive" href={CONTACTS.telegram} target="_blank" rel="noreferrer">
-                  Обсудить подборку в Telegram <ArrowRight size={16} />
-                </a>
+                {telegramDraftUrl && (
+                  <a className="btn btn-primary btn-full interactive" href={telegramDraftUrl} target="_blank" rel="noreferrer">
+                    Обсудить подборку в Telegram <ArrowRight size={16} />
+                  </a>
+                )}
                 <a className="contact-inline-phone interactive" href={`tel:${CONTACTS.phoneRaw}`}>
                   Позвонить: {CONTACTS.phone}
                 </a>

@@ -9,7 +9,8 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "sync:avito": "node scripts/sync-avito-reviews.mjs",
-    "test:avito": "node --test scripts/avito-reviews.test.mjs"
+    "test:avito": "node --test scripts/avito-reviews.test.mjs",
+    "test:telegram": "node --test scripts/telegram-link.test.mjs"
   },
   "dependencies": {
     "framer-motion": "^13.0.0",
