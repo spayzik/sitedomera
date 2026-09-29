@@ -814,10 +814,12 @@ h4 { font-size: 1.25rem; font-weight: 500; }
 .catalog-page-body { padding-top: 5rem; }
 #products, #calculator { scroll-margin-top: 9rem; }
 .catalog-toolbar {
-  position: sticky; top: 6.5rem; z-index: 20; display: flex; flex-direction: column; gap: 1.25rem;
-  border-bottom: 1px solid var(--line); padding: 1.25rem 0; margin-bottom: 2rem; background: rgba(5,5,5,0.94);
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+  align-items: end; gap: 1rem 2rem; border-bottom: 1px solid var(--line);
+  padding-bottom: 1rem; margin-bottom: 1.75rem;
 }
-.catalog-toolbar .filters-arch { margin: 0; }
+.catalog-toolbar .filters-arch { min-width: 0; margin: 0; gap: 0.75rem 1rem; }
+.catalog-toolbar .search-input { width: 100%; max-width: 420px; justify-self: end; }
 .search-input { max-width: 480px; }
 .search-input input {
   width: 100%; padding: 1rem 0; border: none; border-bottom: 1px solid var(--line); background: transparent;
@@ -828,7 +830,11 @@ h4 { font-size: 1.25rem; font-weight: 500; }
 .catalog-count { color: var(--muted); font-size: 0.85rem; margin-bottom: 3rem; }
 .catalog-count strong { color: var(--ink); font-weight: 600; }
 .catalog-page-grid { grid-template-columns: repeat(3, 1fr); gap: 3.5rem 2rem; }
-@media (max-width: 1200px) { .catalog-page-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 1200px) {
+  .catalog-toolbar { grid-template-columns: minmax(0, 1fr); }
+  .catalog-toolbar .search-input { max-width: 480px; justify-self: start; }
+  .catalog-page-grid { grid-template-columns: repeat(2, 1fr); }
+}
 @media (max-width: 720px) { .catalog-page-grid { grid-template-columns: 1fr; } }
 
 .catalog-page-cta-strip {
@@ -1425,7 +1431,7 @@ h4 { font-size: 1.25rem; font-weight: 500; }
   .catalog-page-cta .btn { flex: 1 1 12rem; justify-content: center; }
   .catalog-page-metrics { backdrop-filter: none; background: rgba(0,0,0,0.58); }
   .metrics-row { padding: 1.25rem 0; gap: 0.7rem; }
-  .catalog-toolbar { top: 5.25rem; gap: 0.75rem; padding: 0.9rem 0; }
+  .catalog-toolbar { gap: 0.75rem; padding-bottom: 1rem; }
   .catalog-toolbar .filters-arch {
     flex-wrap: nowrap; overflow-x: auto; width: 100%; gap: 1.1rem; padding-bottom: 0.4rem;
     scrollbar-width: none;

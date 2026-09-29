@@ -66,7 +66,10 @@ export function CatalogPage() {
             {collectionMeta.desc}
           </motion.p>
           <motion.div className="catalog-page-cta" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.4 }}>
-            <a href="#products" className="btn btn-white interactive">
+            <a href="#/catalog" className="btn btn-white interactive" onClick={(event) => {
+              event.preventDefault()
+              document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })
+            }}>
               Посмотреть артикулы <ArrowDown size={16} />
             </a>
             <a href="#calculator" className="btn btn-outline interactive" style={{ borderColor: 'rgba(255,255,255,0.25)', color: '#fff' }}>
