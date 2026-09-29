@@ -29,6 +29,7 @@ interface CartCtx {
 const Ctx = createContext<CartCtx | null>(null)
 
 const STORAGE_KEY = 'domera-cart-v1'
+const MAX_QTY = 9999
 
 const byId = new Map(products.map((p) => [p.id, p]))
 
@@ -37,18 +38,26 @@ function loadStored(): CartItem[] {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return []
     const parsed: unknown = JSON.parse(raw)
-    if (!Array.isArray(parsed)) return []
+    if (!Array.isArray(parsed) || parsed.length > byId.size) return []
     const restored: CartItem[] = []
+    const seen = new Set<string>()
     for (const entry of parsed) {
       if (
         entry &&
         typeof entry === 'object' &&
+        !Array.isArray(entry) &&
+        Object.keys(entry).length === 2 &&
         typeof (entry as { id?: unknown }).id === 'string' &&
-        typeof (entry as { qty?: unknown }).qty === 'number' &&
-        (entry as { qty: number }).qty > 0
+        Number.isSafeInteger((entry as { qty?: unknown }).qty) &&
+        (entry as { qty: number }).qty > 0 &&
+        (entry as { qty: number }).qty <= MAX_QTY
       ) {
-        const p = byId.get((entry as { id: string }).id)
-        if (p) restored.push({ product: p, qty: (entry as { qty: number }).qty })
+        const id = (entry as { id: string }).id
+        const p = byId.get(id)
+        if (p && !seen.has(id)) {
+          restored.push({ product: p, qty: (entry as { qty: number }).qty })
+          seen.add(id)
+        }
       }
     }
     return restored
@@ -78,25 +87,30 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const api = useMemo<CartCtx>(() => {
     const add = (p: Product, qty = 1) => {
+      const product = byId.get(p.id)
+      if (!product || !Number.isSafeInteger(qty) || qty < 1) return
       setItems((prev) => {
-        const i = prev.findIndex((x) => x.product.id === p.id)
+        const i = prev.findIndex((x) => x.product.id === product.id)
         if (i >= 0) {
           const next = [...prev]
-          next[i] = { ...next[i], qty: next[i].qty + qty }
+          next[i] = { ...next[i], qty: Math.min(MAX_QTY, next[i].qty + qty) }
           return next
         }
-        return [...prev, { product: p, qty }]
+        return [...prev, { product, qty: Math.min(MAX_QTY, qty) }]
       })
       setOpen(true)
     }
     const remove = (id: string) =>
       setItems((prev) => prev.filter((x) => x.product.id !== id))
-    const setQty = (id: string, qty: number) =>
+    const setQty = (id: string, qty: number) => {
+      if (!Number.isSafeInteger(qty)) return
+      const boundedQty = Math.max(0, Math.min(MAX_QTY, qty))
       setItems((prev) =>
         prev
-          .map((x) => (x.product.id === id ? { ...x, qty } : x))
+          .map((x) => (x.product.id === id ? { ...x, qty: boundedQty } : x))
           .filter((x) => x.qty > 0),
       )
+    }
     const clear = () => setItems([])
     const count = items.reduce((s, x) => s + x.qty, 0)
     const total = items.reduce((s, x) => s + x.qty * x.product.price, 0)

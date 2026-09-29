@@ -26,3 +26,7 @@ dist-ssr
 # “€жЄлые локальные ассеты (остаютс€ на диске, не в репо)
 catalog.pdf
 *.local
+
+.env
+.env.*
+!.env.example

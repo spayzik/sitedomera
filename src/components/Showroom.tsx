@@ -111,7 +111,7 @@ export function Showroom() {
                 src={mapSrc}
                 title="Склад и шоурум Домэра на карте"
                 loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
+                referrerPolicy="strict-origin-when-cross-origin"
                 allowFullScreen
               />
             ) : <div className="map-placeholder" aria-hidden="true" />}

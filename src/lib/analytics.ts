@@ -13,6 +13,10 @@ let scriptState: 'idle' | 'loading' | 'ready' | 'failed' = 'idle'
 let allowed = false
 let lastHitUrl = ''
 
+export function isAnalyticsConfigured(): boolean {
+  return counterId !== null
+}
+
 export function readAnalyticsConsent(): AnalyticsConsent {
   try {
     const value = localStorage.getItem(consentKey)

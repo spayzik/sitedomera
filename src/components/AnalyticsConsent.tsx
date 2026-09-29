@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import { readAnalyticsConsent, saveAnalyticsConsent, startAnalytics, stopAnalytics, trackAnalyticsPage, type AnalyticsConsent } from '../lib/analytics'
+import { isAnalyticsConfigured, readAnalyticsConsent, saveAnalyticsConsent, startAnalytics, stopAnalytics, trackAnalyticsPage, type AnalyticsConsent } from '../lib/analytics'
 
 type ConsentContextValue = {
   consent: AnalyticsConsent
@@ -41,7 +41,7 @@ export function PrivacyProvider({ children }: { children: ReactNode }) {
 
 export function AnalyticsBanner() {
   const { consent, choose } = useConsent()
-  if (consent !== 'unknown') return null
+  if (!isAnalyticsConfigured() || consent !== 'unknown') return null
 
   return (
     <aside className="analytics-banner" aria-label="Выбор аналитики">
@@ -58,6 +58,14 @@ export function AnalyticsBanner() {
 
 export function AnalyticsSettings() {
   const { consent, choose } = useConsent()
+  if (!isAnalyticsConfigured()) {
+    return (
+      <div className="analytics-settings">
+        <h2>Настройки аналитики</h2>
+        <p>В этой версии сайта аналитика не настроена.</p>
+      </div>
+    )
+  }
   const status = consent === 'accepted' ? 'разрешена' : consent === 'rejected' ? 'отключена' : 'решение не принято'
 
   return (
