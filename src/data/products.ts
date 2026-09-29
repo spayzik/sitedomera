@@ -57,8 +57,6 @@ export const CONTACTS = {
   site: 'домэра.рф',
   hostname,
   origin: `https://${hostname}`,
-  telegramBot: '', // set VITE_TELEGRAM_BOT_TOKEN in .env
-  telegramChat: '', // set VITE_TELEGRAM_CHAT_ID in .env
   telegram: 'https://t.me/domeraru',
   telegramChannel: 'https://t.me/domerarf',
   city,

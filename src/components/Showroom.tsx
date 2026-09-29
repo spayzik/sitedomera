@@ -1,38 +1,13 @@
-import { useState, type FormEvent } from 'react'
 import { CONTACTS } from '../data/products'
-import { sendLead } from '../lib/telegram'
-import { PhoneInput } from './PhoneInput'
 import { useCart } from '../context/CartContext'
 import { motion } from 'framer-motion'
+import { ArrowUpRight, Phone } from 'lucide-react'
 
 const mapSrc = `https://yandex.ru/map-widget/v1/?text=${encodeURIComponent(CONTACTS.address)}&z=16`
 const mapDir = `https://yandex.ru/maps/?text=${encodeURIComponent(CONTACTS.address)}`
 
 export function Showroom() {
-  const [status, setStatus] = useState<'idle' | 'loading' | 'ok' | 'err'>('idle')
-  const [fallback, setFallback] = useState<{ tg?: string; tel?: string }>({})
   const { items, total } = useCart()
-
-  const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setStatus('loading')
-    const fd = new FormData(e.currentTarget)
-    const res = await sendLead({
-      type: items.length ? 'order' : 'showroom',
-      name: String(fd.get('name') || ''),
-      phone: String(fd.get('phone') || ''),
-      message: String(fd.get('note') || ''),
-      cart: items,
-    })
-    if (res.ok) {
-      setStatus('ok')
-      e.currentTarget.reset()
-    } else {
-      // Не открываем сторонние вкладки молча — показываем контакты прямо в форме
-      setFallback({ tg: res.tg, tel: res.tel })
-      setStatus('err')
-    }
-  }
 
   return (
     <section className="section showroom" id="showroom">
@@ -50,7 +25,7 @@ export function Showroom() {
             <h2>Свяжитесь<br/>с нами</h2>
             <p className="lead" style={{ marginBottom: '3rem' }}>
               Готовы ответить на вопросы, рассчитать логистику
-              и помочь с оформлением заказа. В шоуруме ждём без записи —
+              и помочь с выбором материалов. В шоуруме ждём без записи —
               все фактуры в наличии на складе.
             </p>
 
@@ -64,7 +39,7 @@ export function Showroom() {
                 <span>Отзывы и дополнительный ассортимент</span>
               </a>
               <a className="info-item" href={CONTACTS.telegram} target="_blank" rel="noreferrer" style={{ display: 'block', textDecoration: 'none' }}>
-                <strong style={{ fontSize: '1.5rem', fontFamily: 'var(--font-display)', marginBottom: '0.5rem' }}>Telegram: @domeraru</strong>
+                <strong style={{ fontSize: '1.5rem', fontFamily: 'var(--font-display)', marginBottom: '0.5rem' }}>Написать в Telegram</strong>
                 <span>Пишите — отвечаем в течение дня</span>
               </a>
               <a className="info-item" href={CONTACTS.telegramChannel} target="_blank" rel="noreferrer" style={{ display: 'block', textDecoration: 'none' }}>
@@ -92,49 +67,31 @@ export function Showroom() {
             viewport={{ once: true, margin: '-50px' }}
             transition={{ duration: 0.9, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
           >
-            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.75rem', marginBottom: '1rem' }}>Рассчитать материалы</h3>
-            <p style={{ color: 'var(--muted)', marginBottom: '3rem', fontSize: '0.9rem' }}>
-              Оставьте контакты, и мы сделаем точный расчёт панелей и профилей под ваш проект.
+            <p className="eyebrow">На связи</p>
+            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.75rem', marginBottom: '1rem' }}>Обсудим ваш проект</h3>
+            <p className="contact-panel-copy">
+              Расскажите менеджеру о задаче напрямую в Telegram — поможем выбрать фактуру,
+              уточнить наличие и рассчитать материалы.
             </p>
 
             {items.length > 0 && (
-              <p style={{ marginBottom: '3rem', color: 'var(--accent)', fontSize: '0.9rem' }}>
-                В корзине {items.length} поз. на {total.toLocaleString('ru-RU')} ₽
+              <p className="contact-selection">
+                В вашей подборке {items.length} поз. на {total.toLocaleString('ru-RU')} ₽
               </p>
             )}
 
-            <form className="modern-form" onSubmit={onSubmit}>
-              <div className="form-group">
-                <input name="name" required placeholder="ВАШЕ ИМЯ" />
-              </div>
-              <div className="form-group">
-                <PhoneInput required placeholder="+7 (___) ___-__-__" />
-              </div>
-              <div className="form-group">
-                <textarea name="note" rows={2} placeholder="КАКОЙ ОБЪЕМ ИЛИ ПЛОЩАДЬ НУЖНА? (ОПЦИОНАЛЬНО)" />
-              </div>
-
-              <div className="form-group">
-                <label className="consent">
-                  <input type="checkbox" required />
-                  <span>Соглашаюсь с <a href="#/privacy" onClick={(e) => e.stopPropagation()}>политикой конфиденциальности</a> и <a href="#/offer" onClick={(e) => e.stopPropagation()}>офертой</a></span>
-                </label>
-              </div>
-
-              <button className="btn btn-primary btn-full interactive" type="submit" disabled={status === 'loading'} style={{ marginTop: '1rem' }}>
-                {status === 'loading' ? 'ОТПРАВКА...' : 'ОСТАВИТЬ ЗАЯВКУ'}
-              </button>
-
-              {status === 'ok' && <p className="status-msg ok">Заявка успешно отправлена!</p>}
-              {status === 'err' && (
-                <p className="status-msg err">
-                  Не удалось отправить заявку. Позвоните:{' '}
-                  <a href={`tel:${fallback.tel}`} style={{ color: 'inherit' }}>{CONTACTS.phone}</a>
-                  {' '}или напишите в{' '}
-                  <a href={fallback.tg} target="_blank" rel="noreferrer" style={{ color: 'inherit' }}>Telegram</a>.
-                </p>
-              )}
-            </form>
+            <div className="contact-panel-actions">
+              <a className="btn btn-primary btn-full interactive" href={CONTACTS.telegram} target="_blank" rel="noreferrer">
+                Написать в Telegram <ArrowUpRight size={16} />
+              </a>
+              <a className="btn btn-white btn-full interactive" href={CONTACTS.avito} target="_blank" rel="noreferrer">
+                Открыть магазин на Авито <ArrowUpRight size={16} />
+              </a>
+            </div>
+            <a className="contact-panel-phone interactive" href={`tel:${CONTACTS.phoneRaw}`}>
+              <Phone size={18} /> {CONTACTS.phone}
+            </a>
+            <p className="contact-panel-note">Подборка останется в этом браузере; мы увидим её, только если вы сами расскажете о ней.</p>
           </motion.div>
 
         </div>
@@ -158,7 +115,7 @@ export function Showroom() {
           <div className="map-card">
             <p className="eyebrow">Как добраться</p>
             <h3>{CONTACTS.address}</h3>
-            <p>Склад и шоурум — без записи, ежедневно {CONTACTS.hours.replace('Ежедневно ', '')}.</p>
+            <p>Склад и шоурум — {CONTACTS.hours.toLowerCase()}.</p>
             <a className="btn btn-white interactive" href={mapDir} target="_blank" rel="noreferrer">
               Построить маршрут
             </a>

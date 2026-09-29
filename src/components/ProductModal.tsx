@@ -97,7 +97,7 @@ export function ProductModal({
                     onClose()
                   }}
                 >
-                  <span>ДОБАВИТЬ В ЗАКАЗ</span>
+                  <span>ДОБАВИТЬ В ПОДБОРКУ</span>
                   <span style={{ fontSize: '1.25rem', lineHeight: 1 }}>+</span>
                 </button>
               </motion.div>

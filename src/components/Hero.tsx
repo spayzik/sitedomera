@@ -100,7 +100,7 @@ export function Hero() {
               Смотреть каталог <ArrowDown size={16} />
             </a>
             <a href="#showroom" className="btn btn-outline interactive" style={{ borderColor: 'rgba(255,255,255,0.25)', color: '#fff' }}>
-              Записаться в шоурум
+              Посетить шоурум
             </a>
           </motion.div>
         </motion.div>

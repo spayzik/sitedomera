@@ -23,7 +23,7 @@ export function FloatingCart() {
           </span>
           <span className="floating-cart-text">
             <strong>{total.toLocaleString('ru-RU')} ₽</strong>
-            <small>Перейти к заказу</small>
+            <small>Открыть подборку</small>
           </span>
         </motion.button>
       )}

@@ -1,37 +1,10 @@
 import { useCart } from '../context/CartContext'
 import { X, Minus, Plus, Trash2, ArrowRight } from 'lucide-react'
-import { useState, type FormEvent } from 'react'
-import { sendLead } from '../lib/telegram'
 import { CONTACTS } from '../data/products'
-import { PhoneInput } from './PhoneInput'
 import { AnimatePresence, motion } from 'framer-motion'
 
 export function CartDrawer() {
-  const { open, setOpen, items, total, setQty, remove, clear } = useCart()
-  const [status, setStatus] = useState<'idle' | 'loading' | 'ok' | 'err'>('idle')
-  const [fallback, setFallback] = useState<{ tg?: string; tel?: string }>({})
-
-  const onOrder = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    if (!items.length) return
-    setStatus('loading')
-    const fd = new FormData(e.currentTarget)
-    const res = await sendLead({
-      type: 'order',
-      name: String(fd.get('name') || ''),
-      phone: String(fd.get('phone') || ''),
-      message: String(fd.get('message') || ''),
-      cart: items,
-    })
-    if (res.ok) {
-      setStatus('ok')
-      clear()
-    } else {
-      // Заявка не ушла — даём человеку прямые контакты, корзину не чистим
-      setFallback({ tg: res.tg, tel: res.tel })
-      setStatus('err')
-    }
-  }
+  const { open, setOpen, items, total, setQty, remove } = useCart()
 
   return (
     <AnimatePresence>
@@ -53,7 +26,7 @@ export function CartDrawer() {
             transition={{ type: 'spring', damping: 28, stiffness: 220 }}
           >
             <div className="drawer-head">
-              <h3>Ваш заказ</h3>
+              <h3>Ваша подборка</h3>
               <button className="icon-btn" onClick={() => setOpen(false)} aria-label="Закрыть">
                 <X size={20} />
               </button>
@@ -100,30 +73,18 @@ export function CartDrawer() {
                 <span>Итого</span>
                 <strong>{total.toLocaleString('ru-RU')} ₽</strong>
               </div>
-              <form className="modern-form" onSubmit={onOrder}>
-                <div className="form-group">
-                  <input name="name" required placeholder="Имя" disabled={!items.length} />
-                </div>
-                <div className="form-group">
-                  <PhoneInput required disabled={!items.length} />
-                </div>
-                {status === 'err' && (
-                  <p className="form-error">
-                    Не удалось отправить заказ. Позвоните нам:{' '}
-                    <a href={`tel:${fallback.tel}`}>{CONTACTS.phone}</a>
-                    {' '}или напишите в{' '}
-                    <a href={fallback.tg} target="_blank" rel="noreferrer">Telegram</a>.
-                  </p>
-                )}
-                <button
-                  className="btn btn-primary btn-full"
-                  type="submit"
-                  disabled={!items.length || status === 'loading'}
-                >
-                  {status === 'loading' ? 'Оформление...' : status === 'ok' ? 'Успешно!' : status === 'err' ? 'Повторить' : 'Оформить заказ'}
-                  {(status === 'idle' || status === 'err') && items.length > 0 && <ArrowRight size={16} />}
-                </button>
-              </form>
+              <p className="drawer-contact-note">Подборка хранится в этом браузере и не отправляется автоматически.</p>
+              <div className="drawer-contact-actions">
+                <a className="btn btn-primary btn-full interactive" href={CONTACTS.telegram} target="_blank" rel="noreferrer">
+                  Обсудить подборку в Telegram <ArrowRight size={16} />
+                </a>
+                <a className="contact-inline-phone interactive" href={`tel:${CONTACTS.phoneRaw}`}>
+                  Позвонить: {CONTACTS.phone}
+                </a>
+                <a className="contact-inline-phone interactive" href={CONTACTS.avito} target="_blank" rel="noreferrer">
+                  Открыть магазин на Авито
+                </a>
+              </div>
             </div>
           </motion.aside>
         </>

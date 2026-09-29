@@ -77,7 +77,7 @@ export function Catalog() {
                       <button
                         className="btn-mini-add interactive"
                         onClick={(e) => { e.stopPropagation(); add(p) }}
-                        aria-label="Добавить в заказ"
+                        aria-label="Добавить в подборку"
                       >
                         <ShoppingBag size={18} />
                       </button>

@@ -594,6 +594,15 @@ h4 { font-size: 1.25rem; font-weight: 500; }
 .info-item strong { display: block; font-size: 1.1rem; margin-bottom: 0.25rem; font-weight: 400; }
 .info-item span { font-size: 0.9rem; color: var(--muted); }
 
+.contact-panel-copy { color: var(--muted); font-size: 0.95rem; line-height: 1.7; margin: 0 0 2rem; max-width: 44ch; }
+.contact-selection { color: var(--accent-light); font-size: 0.9rem; padding: 1rem 1.25rem; margin: 0 0 2rem; border: 1px solid rgba(194,163,120,0.3); background: rgba(194,163,120,0.06); }
+.contact-panel-actions, .drawer-contact-actions { display: grid; gap: 0.9rem; }
+.contact-panel-phone { display: inline-flex; align-items: center; gap: 0.75rem; color: var(--accent-light); font-family: var(--font-display); font-size: 1.2rem; margin-top: 2rem; }
+.contact-panel-note { color: var(--muted); font-size: 0.78rem; line-height: 1.6; margin: 1.25rem 0 0; }
+.contact-inline { display: grid; gap: 1rem; border-top: 1px solid var(--line); padding-top: 1.75rem; }
+.contact-inline p:not(.eyebrow), .drawer-contact-note, .quiz-contact p { color: var(--muted); font-size: 0.85rem; line-height: 1.6; margin: 0; }
+.contact-inline-phone { color: var(--accent-light); font-size: 0.85rem; text-align: center; text-decoration: underline; text-underline-offset: 0.3em; }
+
 .modern-form { display: flex; flex-direction: column; gap: 2rem; }
 .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
 .form-group label { font-size: 0.75rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
@@ -635,6 +644,7 @@ h4 { font-size: 1.25rem; font-weight: 500; }
 .total-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
 .total-row span { font-size: 0.85rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
 .total-row strong { font-size: 1.5rem; font-family: var(--font-display); }
+.drawer-contact-note { margin-bottom: 1.25rem; }
 
 /* === CHATBOT === */
 .chatbot { position: fixed; bottom: 2rem; right: 2rem; z-index: 300; display: flex; flex-direction: column; align-items: flex-end; gap: 1rem; }
@@ -1228,6 +1238,7 @@ h4 { font-size: 1.25rem; font-weight: 500; }
 .quiz-result-price { font-size: 2rem; font-family: var(--font-num); font-weight: 400; margin-bottom: 2rem; }
 .quiz-result-price span { font-family: var(--font); font-size: 0.85rem; color: var(--muted); }
 .quiz-result-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+.quiz-contact { display: grid; justify-items: start; gap: 1.25rem; border-top: 1px solid var(--line); padding-top: 1.75rem; margin-top: 2rem; }
 @media (max-width: 768px) { .quiz-result { grid-template-columns: 1fr; } }
 
 /* === REVIEWS === */

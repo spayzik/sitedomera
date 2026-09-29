@@ -23,10 +23,10 @@ function answer(input: string): string {
     return 'Монтаж на клей без видимого крепежа. Панели легко режутся, стыкуются алюминиевыми профилями.'
   }
   if (/достав|отправ|город|росси/.test(q)) {
-    return 'Доставляем по всей России. Напишите город — менеджер рассчитает логистику.'
+    return `Доставляем по всей России. Для расчёта логистики напишите город менеджеру в Telegram: ${CONTACTS.telegram} или позвоните ${CONTACTS.phone}.`
   }
   if (/шоурум|офис|адрес|приехать|образц/.test(q)) {
-    return `Шоурум — по записи. Телефон ${CONTACTS.phone}. Можно оставить заявку в форме на сайте.`
+    return `Шоурум по адресу ${CONTACTS.address} открыт ${CONTACTS.hours.toLowerCase()}. Уточнить детали можно по телефону ${CONTACTS.phone} или в Telegram: ${CONTACTS.telegram}.`
   }
   if (/коллекц|серия|фактур|дерево|ткан|металл|штукатур/.test(q)) {
     return `Коллекции: ${collections.map((c) => c.name).join(', ')}. Всего ${products.length} артикулов в каталоге 2026.`
@@ -35,7 +35,7 @@ function answer(input: string): string {
     return 'Основа — древесно-бамбуковый композит (ABA), плотность 0,7 г/см\u00B3. Сверху декоративная ПВХ/ПП пленка на PUR-клее.'
   }
   if (/телефон|связ|контакт|менедж/.test(q)) {
-    return `Телефон: ${CONTACTS.phone}. Напишите нам в Telegram: @domeraru. Также есть магазин на Авито.`
+    return `Телефон: ${CONTACTS.phone}. Telegram: ${CONTACTS.telegram}. Магазин на Авито: ${CONTACTS.avito}.`
   }
   if (/влаг|ванн|кухн|влажн/.test(q)) {
     return 'Панели устойчивы к влаге и перепадам температур — подходят для жилых и коммерческих зон.'
@@ -48,7 +48,7 @@ function answer(input: string): string {
   )
   if (hit) return hit.a
 
-  return `Могу рассказать про цены, размеры, монтаж, коллекции и шоурум. Или позвоните: ${CONTACTS.phone}`
+  return `Могу рассказать про цены, размеры, монтаж, коллекции и шоурум. Связаться с менеджером: ${CONTACTS.telegram} или ${CONTACTS.phone}.`
 }
 
 export function ChatBot() {
@@ -85,7 +85,7 @@ export function ChatBot() {
           <div className="chat-head">
             <div>
               <strong>Помощник Домэра</strong>
-              <span>онлайн</span>
+              <span>автоответы на сайте</span>
             </div>
             <button type="button" className="icon-btn" onClick={() => setOpen(false)} aria-label="Закрыть чат">
               <X size={16} />
@@ -116,9 +116,9 @@ export function ChatBot() {
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ваш вопрос..."
+              placeholder="Вопрос для автоответа..."
             />
-            <button type="submit" aria-label="Отправить">
+            <button type="submit" aria-label="Получить автоответ">
               <Send size={16} />
             </button>
           </form>

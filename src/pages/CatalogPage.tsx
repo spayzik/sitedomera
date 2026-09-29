@@ -145,7 +145,7 @@ export function CatalogPage() {
                       <button
                         className="btn-mini-add interactive"
                         onClick={(e) => { e.stopPropagation(); add(p) }}
-                        aria-label="Добавить в заказ"
+                        aria-label="Добавить в подборку"
                       >
                         <ShoppingBag size={18} />
                       </button>
@@ -179,7 +179,7 @@ export function CatalogPage() {
               <h2>Подберём материалы<br />под ваш интерьер</h2>
             </div>
             <a href="#showroom" className="btn btn-primary interactive">
-              Записаться в шоурум
+              Контакты шоурума
             </a>
           </div>
         </div>
