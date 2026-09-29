@@ -19,6 +19,7 @@ import { GradientLine } from './components/GradientLine'
 import { LogoIcon } from './components/Logo'
 import { useRoute, isPageRoute } from './router'
 import { CONTACTS } from './data/products'
+import { AnalyticsBanner, PrivacyProvider } from './components/AnalyticsConsent'
 
 const Quiz = lazy(() => import('./components/Quiz').then(m => ({ default: m.Quiz })))
 const Installation = lazy(() => import('./components/Installation').then(m => ({ default: m.Installation })))
@@ -154,6 +155,7 @@ function Wrapper({ children }: { children: ReactNode }) {
       <Header />
       <main>{children}</main>
       <Footer />
+      <AnalyticsBanner />
       {widgetsReady && (
         <Suspense fallback={null}>
           <CartDrawer />
@@ -179,8 +181,8 @@ export default function App() {
     : <Home route={route} />
 
   return (
-    <Wrapper>
-      {page}
-    </Wrapper>
+    <PrivacyProvider>
+      <Wrapper>{page}</Wrapper>
+    </PrivacyProvider>
   )
 }

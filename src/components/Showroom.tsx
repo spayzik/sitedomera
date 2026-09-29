@@ -2,12 +2,14 @@ import { CONTACTS } from '../data/products'
 import { useCart } from '../context/CartContext'
 import { motion } from 'framer-motion'
 import { ArrowUpRight, Phone } from 'lucide-react'
+import { useState } from 'react'
 
 const mapSrc = `https://yandex.ru/map-widget/v1/?text=${encodeURIComponent(CONTACTS.address)}&z=16`
 const mapDir = `https://yandex.ru/maps/?text=${encodeURIComponent(CONTACTS.address)}`
 
 export function Showroom() {
   const { items, total } = useCart()
+  const [showMap, setShowMap] = useState(false)
 
   return (
     <section className="section showroom" id="showroom">
@@ -104,21 +106,24 @@ export function Showroom() {
           transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
         >
           <div className="map-frame">
-            <iframe
-              src={mapSrc}
-              title="Склад и шоурум Домэра на карте"
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              allowFullScreen
-            />
+            {showMap ? (
+              <iframe
+                src={mapSrc}
+                title="Склад и шоурум Домэра на карте"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                allowFullScreen
+              />
+            ) : <div className="map-placeholder" aria-hidden="true" />}
           </div>
           <div className="map-card">
             <p className="eyebrow">Как добраться</p>
             <h3>{CONTACTS.address}</h3>
             <p>Склад и шоурум — {CONTACTS.hours.toLowerCase()}.</p>
-            <a className="btn btn-white interactive" href={mapDir} target="_blank" rel="noreferrer">
-              Построить маршрут
-            </a>
+            <div className="map-actions">
+              {!showMap && <button className="btn btn-primary interactive" type="button" onClick={() => setShowMap(true)}>Показать карту</button>}
+              <a className="btn btn-white interactive" href={mapDir} target="_blank" rel="noreferrer">Построить маршрут</a>
+            </div>
           </div>
         </motion.div>
       </div>

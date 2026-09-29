@@ -20,15 +20,6 @@ export function useRoute(): string {
     return () => window.removeEventListener('hashchange', onHash)
   }, [])
 
-  // Сообщаем Метрике о виртуальных переходах (hashchange не считается просмотром сам по себе)
-  useEffect(() => {
-    const ym = (window as unknown as { ym?: (...args: unknown[]) => void; __ymId?: number }).ym
-    const id = (window as unknown as { __ymId?: number }).__ymId
-    if (typeof ym === 'function' && id) {
-      ym(id, 'hit', window.location.href)
-    }
-  }, [route])
-
   return route
 }
 
