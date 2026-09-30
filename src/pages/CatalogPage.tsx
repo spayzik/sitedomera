@@ -48,6 +48,7 @@ export function CatalogPage() {
           <motion.img
             src="catalog/hero/hero-catalog.webp"
             alt="Интерьер с панелями Домэра"
+            fetchPriority="high"
             initial={{ opacity: 0, scale: 1.05 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1.2, ease: 'easeOut' }}

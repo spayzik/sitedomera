@@ -140,17 +140,19 @@ export const collections: Collection[] = [
   },
 ]
 
-const panel = (p: Omit<Product, 'price' | 'size' | 'thickness' | 'weight' | 'image' | 'swatch'> & { price?: number; size?: string }) =>
-  ({
+const panel = ({ swatch, ...p }: Omit<Product, 'price' | 'size' | 'thickness' | 'weight' | 'image' | 'swatch'> & { price?: number; size?: string; swatch?: string }) => {
+  const image = `catalog/products/${p.id}.webp`
+  return {
     price: p.price ?? 6000,
     size: p.size ?? SPECS.size,
     thickness: SPECS.thickness,
     weight: SPECS.weight,
-    image: `catalog/products/${p.id}.webp`,
-    swatch: `catalog/swatches/${p.id}.webp`,
+    image,
+    swatch: swatch ?? image,
     unit: 'шт',
     ...p,
-  }) as Product
+  } as Product
+}
 
 export const products: Product[] = [
   // Wood

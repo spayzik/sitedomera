@@ -1,6 +1,7 @@
 // Скачивает шрифты с Google Fonts (woff2, latin+cyrillic) и генерирует public/fonts/fonts.css
 // Запуск: node scripts/fetch-fonts.mjs
 import { mkdir, writeFile } from 'node:fs/promises'
+import { createHash } from 'node:crypto'
 import { join } from 'node:path'
 
 const CSS_URL =
@@ -25,6 +26,7 @@ await mkdir(OUT_DIR, { recursive: true })
 
 let index = 0
 const outRules = []
+const filenameByHash = new Map()
 for (const { rule } of kept) {
   const urlMatch = rule.match(/url\((https:[^)]+\.woff2)\)/)
   if (!urlMatch) continue
@@ -32,11 +34,17 @@ for (const { rule } of kept) {
   const family = (rule.match(/font-family:\s*'([^']+)'/) || [])[1] || 'font'
   const weight = (rule.match(/font-weight:\s*(\d+)/) || [])[1] || '400'
   const style = (rule.match(/font-style:\s*(\w+)/) || [])[1] || 'normal'
-  const fname = `${family.toLowerCase().replace(/\s+/g, '-')}-${weight}${style === 'italic' ? '-italic' : ''}-${index++}.woff2`
+  const candidate = `${family.toLowerCase().replace(/\s+/g, '-')}-${weight}${style === 'italic' ? '-italic' : ''}-${index++}.woff2`
   const buf = Buffer.from(await (await fetch(url, { headers: { 'User-Agent': UA } })).arrayBuffer())
-  await writeFile(join(OUT_DIR, fname), buf)
+  const hash = createHash('sha256').update(buf).digest('hex')
+  let fname = filenameByHash.get(hash)
+  if (!fname) {
+    fname = candidate
+    filenameByHash.set(hash, fname)
+    await writeFile(join(OUT_DIR, fname), buf)
+  }
   outRules.push(rule.replace(urlMatch[1], `./${fname}`))
-  console.log(`${fname}  ${(buf.length / 1024).toFixed(1)} KB`)
+  console.log(`${fname}  ${(buf.length / 1024).toFixed(1)} KB${fname === candidate ? '' : ' (reused)'}`)
 }
 
 await writeFile(
