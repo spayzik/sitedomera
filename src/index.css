@@ -1178,14 +1178,16 @@ h4 { font-size: 1.25rem; font-weight: 500; }
 .card-arch:hover .card-arch-img .img-hover { opacity: 1; transform: scale(1.02); }
 
 /* === MANIFEST GHOST TEXT === */
-.manifest { position: relative; overflow: hidden; }
+.manifest { position: relative; overflow: hidden; isolation: isolate; }
+.manifest > .container { position: relative; z-index: 1; }
 .manifest-ghost {
-  position: absolute; left: 50%; bottom: -12%; transform: translateX(-50%);
-  font-family: var(--font-display); font-size: clamp(14rem, 36vw, 32rem); line-height: 1;
+  position: absolute; left: 50%; top: 1rem; transform: translateX(-50%);
+  font-family: var(--font-display); font-size: clamp(4rem, 10vw, 11rem); line-height: 1;
   color: transparent; -webkit-text-stroke: 1px rgba(255,255,255,0.045);
   white-space: nowrap; pointer-events: none; user-select: none; letter-spacing: 0.02em;
   text-transform: uppercase; z-index: 0;
 }
+@media (max-width: 480px) { .manifest-ghost { display: none; } }
 
 /* === GRADIENT LINE (section borders) === */
 .grad-line { height: 1px; position: relative; overflow: hidden; background: rgba(255,255,255,0.08); }
