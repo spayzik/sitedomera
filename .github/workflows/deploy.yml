@@ -41,6 +41,8 @@ jobs:
         run: npm run test:avito
       - name: Test Telegram drafts
         run: npm run test:telegram
+      - name: Test SEO metadata
+        run: npm run test:seo
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact

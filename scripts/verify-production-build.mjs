@@ -2,9 +2,12 @@ import assert from 'node:assert/strict'
 import { readFile, readdir, stat } from 'node:fs/promises'
 import { extname, join, relative, resolve, sep } from 'node:path'
 import ts from 'typescript'
+import sharp from 'sharp'
+import { CONTACTS } from '../src/data/products.ts'
+import { SEO } from '../src/data/seo.ts'
 
 const dist = resolve('dist')
-const origin = 'https://xn--80ahyhl1f.xn--p1ai'
+const origin = CONTACTS.origin
 const canonical = `${origin}/`
 const ogImage = `${origin}/catalog/og-cover.jpg`
 const previewBase = 'https://example.github.io/sitedomera/'
@@ -72,15 +75,32 @@ async function filesUnder(directory) {
 async function verify() {
   const html = await readFile(await requireFile('index.html'), 'utf8')
   assert(!/__SITE_[A-Z_]+__/.test(html), 'Unresolved site metadata marker')
+  assert.equal(attribute(one(tags(html, 'html'), 'html element'), 'lang'), 'ru', 'HTML language mismatch')
+  const title = one([...html.matchAll(/<title>([\s\S]*?)<\/title>/gi)], 'title')[1]
+  assert.equal(title, SEO.home.title, 'Static title mismatch')
 
   const links = tags(html, 'link')
   const metas = tags(html, 'meta')
+  const namedMeta = (name) => attribute(one(metas.filter((tag) => attribute(tag, 'name') === name), name), 'content')
+  assert.equal(namedMeta('description'), SEO.home.description, 'Static description mismatch')
+  assert.equal(namedMeta('robots'), 'index, follow', 'Robots meta mismatch')
   const canonicalLink = one(links.filter((tag) => attribute(tag, 'rel') === 'canonical'), 'canonical link')
   assert.equal(attribute(canonicalLink, 'href'), canonical, 'Canonical URL mismatch')
   const meta = (property) => attribute(one(metas.filter((tag) => attribute(tag, 'property') === property), property), 'content')
+  assert.equal(meta('og:type'), 'website', 'Open Graph type mismatch')
+  assert.equal(meta('og:locale'), 'ru_RU', 'Open Graph locale mismatch')
+  assert.equal(meta('og:site_name'), CONTACTS.brand, 'Open Graph site name mismatch')
+  assert.equal(meta('og:title'), SEO.home.title, 'Open Graph title mismatch')
+  assert.equal(meta('og:description'), SEO.home.description, 'Open Graph description mismatch')
   assert.equal(meta('og:url'), canonical, 'Open Graph URL mismatch')
   assert.equal(meta('og:image'), ogImage, 'Open Graph image URL mismatch')
-  await requireFile('catalog/og-cover.jpg')
+  const image = await sharp(await requireFile('catalog/og-cover.jpg')).metadata()
+  assert.equal(Number(meta('og:image:width')), image.width, 'Open Graph image width mismatch')
+  assert.equal(Number(meta('og:image:height')), image.height, 'Open Graph image height mismatch')
+  assert.equal(namedMeta('twitter:card'), 'summary_large_image', 'Social card mismatch')
+  assert.equal(namedMeta('twitter:title'), SEO.home.title, 'Social title mismatch')
+  assert.equal(namedMeta('twitter:description'), SEO.home.description, 'Social description mismatch')
+  assert.equal(namedMeta('twitter:image'), ogImage, 'Social image mismatch')
 
   const jsonLd = one([...html.matchAll(/<script\b[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi)], 'JSON-LD script')
   const business = JSON.parse(jsonLd[1])
@@ -89,10 +109,11 @@ async function verify() {
 
   const robots = await readFile(await requireFile('robots.txt'), 'utf8')
   const sitemap = await readFile(await requireFile('sitemap.xml'), 'utf8')
+  assert(/^User-agent:\s*\*$/mi.test(robots) && /^Allow:\s*\/$/mi.test(robots) &&
+    !/^Disallow:/mi.test(robots), 'robots.txt must allow the document and assets')
   assert(robots.includes(`Sitemap: ${origin}/sitemap.xml`), 'robots.txt sitemap URL mismatch')
   const locations = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1])
-  assert(locations.length > 0 && locations.includes(canonical) &&
-    locations.every((url) => url.startsWith(canonical)), 'sitemap.xml location mismatch')
+  assert.deepEqual(locations, [canonical], 'Sitemap must list only the served canonical document')
 
   const assetLinks = links.filter((tag) => ['icon', 'preload', 'modulepreload', 'stylesheet'].includes(attribute(tag, 'rel')))
     .map((tag) => attribute(tag, 'href'))

@@ -19,6 +19,7 @@ import { GradientLine } from './components/GradientLine'
 import { LogoIcon } from './components/Logo'
 import { useRoute, isPageRoute } from './router'
 import { CONTACTS } from './data/products'
+import { metadataForRoute } from './data/seo'
 import { AnalyticsBanner, PrivacyProvider } from './components/AnalyticsConsent'
 
 const Quiz = lazy(() => import('./components/Quiz').then(m => ({ default: m.Quiz })))
@@ -84,17 +85,26 @@ function Footer() {
   )
 }
 
+const firstLazySectionIds = ['installation', 'interiors', 'calculator']
+const contactSectionIds = ['showroom']
+
+function SectionAnchor({ route, ids }: { route: string; ids: string[] }) {
+  useEffect(() => {
+    const id = route.replace('/', '')
+    if (!ids.includes(id)) return
+    const frame = requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ behavior: 'instant' }))
+    return () => cancelAnimationFrame(frame)
+  }, [route, ids])
+
+  return null
+}
+
 function Home({ route }: { route: string }) {
   useEffect(() => {
     const id = route.replace('/', '')
-    if (id && !isPageRoute(route)) {
-      const el = document.getElementById(id)
-      if (el) {
-        requestAnimationFrame(() => {
-          el.scrollIntoView({ behavior: 'smooth' })
-        })
-      }
-    }
+    if (!['top', 'specs', 'why', 'catalog'].includes(id)) return
+    const frame = requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }))
+    return () => cancelAnimationFrame(frame)
   }, [route])
 
   return (
@@ -114,11 +124,13 @@ function Home({ route }: { route: string }) {
         <Reviews />
         <Compare />
         <Calculator />
+        <SectionAnchor route={route} ids={firstLazySectionIds} />
       </Suspense>
       <GradientLine />
       <Suspense fallback={null}>
         <Showroom />
         <FAQ />
+        <SectionAnchor route={route} ids={contactSectionIds} />
       </Suspense>
     </>
   )
@@ -128,6 +140,12 @@ function Wrapper({ children }: { children: ReactNode }) {
   const route = useRoute()
   const [booted, setBooted] = useState(false)
   const [widgetsReady, setWidgetsReady] = useState(false)
+
+  useEffect(() => {
+    const metadata = metadataForRoute(route)
+    document.title = metadata.title
+    document.querySelector<HTMLMetaElement>('meta[name="description"]')?.setAttribute('content', metadata.description)
+  }, [route])
 
   useEffect(() => {
     let idle = 0

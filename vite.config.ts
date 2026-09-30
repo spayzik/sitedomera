@@ -3,13 +3,15 @@ import react from '@vitejs/plugin-react'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { CONTACTS } from './src/data/products.ts'
+import { SEO } from './src/data/seo.ts'
 
 // Keep the static SEO files aligned with the site data used by the app.
 function siteMetadata(): Plugin {
   const canonicalUrl = `${CONTACTS.origin}/`
   const replacements: Record<string, string> = {
     __SITE_BRAND__: CONTACTS.brand,
-    __SITE_ADDRESS__: CONTACTS.address,
+    __SITE_HOME_TITLE__: SEO.home.title,
+    __SITE_HOME_DESCRIPTION__: SEO.home.description,
     __SITE_CANONICAL_URL__: canonicalUrl,
     __SITE_OG_IMAGE_URL__: `${CONTACTS.origin}/catalog/og-cover.jpg`,
     __SITE_PHONE__: CONTACTS.phone,
@@ -27,8 +29,8 @@ function siteMetadata(): Plugin {
       const sitemap = readFileSync(resolve(config.root, 'public/sitemap.xml'), 'utf8')
       const locations = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1])
       if (!robots.includes(`Sitemap: ${CONTACTS.origin}/sitemap.xml`) ||
-          locations.length === 0 || locations.some((url) => !url.startsWith(canonicalUrl))) {
-        throw new Error('robots.txt and sitemap.xml must use the configured site origin')
+          locations.length !== 1 || locations[0] !== canonicalUrl) {
+        throw new Error('robots.txt and sitemap.xml must name only the served canonical document')
       }
     },
     transformIndexHtml(html) {

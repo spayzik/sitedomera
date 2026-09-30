@@ -91,6 +91,7 @@ export function CatalogPage() {
 
       <section className="catalog-page-body" id="products">
         <div className="container">
+          <h2 className="visually-hidden">Товары каталога</h2>
           {/* Toolbar */}
           <div className="catalog-toolbar">
             <div className="filters-arch">
@@ -111,6 +112,7 @@ export function CatalogPage() {
             <div className="search-input">
               <input
                 type="text"
+                aria-label="Поиск товаров по названию или артикулу"
                 placeholder="Поиск: название или артикул"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
