@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "verify:production": "node scripts/verify-production-build.mjs",
     "lint": "oxlint",
     "preview": "vite preview",
     "sync:avito": "node scripts/sync-avito-reviews.mjs",

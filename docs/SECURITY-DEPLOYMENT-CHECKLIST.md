@@ -27,13 +27,13 @@ These are candidate settings, not active configuration:
 - `Permissions-Policy` limiting unused features such as camera, microphone, and geolocation, after checking the embedded map.
 - Clickjacking protection: test `X-Frame-Options: DENY` or an equivalent `frame-ancestors` policy after confirming this site need not be embedded elsewhere.
 - `Strict-Transport-Security` only after the HTTPS check above.
-- Plan a Content Security Policy after recording the production network inventory for local assets, Yandex Metrika after consent, and Yandex Maps after a map click. Do not deploy a guessed CSP that blocks the site or its optional services.
+- Plan a Content Security Policy after recording the production network inventory for local assets, Yandex Metrika after consent, and the lazy Yandex Maps iframe as it approaches the viewport. Do not deploy a guessed CSP that blocks the site or its optional services.
 
 For each header, inspect the actual response on the canonical HTTPS host and on redirects/error pages. A repository file alone does not prove the header is served.
 
 ## Browser/network acceptance
 
-- [ ] Before analytics choice, verify no Yandex Metrika script or request; before map click, verify no Yandex Maps iframe or request.
-- [ ] After consent or map click, record all resulting third-party origins in browser Network tools. Use that inventory to design and test CSP.
+- [ ] Before analytics choice, verify no Yandex Metrika script or request; verify when the lazy Yandex Maps iframe starts loading as its section approaches the viewport.
+- [ ] After analytics consent and map loading, record all resulting third-party origins in browser Network tools. Use that inventory to design and test CSP.
 - [ ] Verify rejection, later consent changes, Telegram/Avito links, telephone link, map route, cart, and chatbot on desktop and mobile.
 - [ ] Verify no source maps or private build inputs are published, and inspect the final `dist/` for test URLs, secrets, and old-domain references.
