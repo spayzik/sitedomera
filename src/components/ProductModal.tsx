@@ -4,6 +4,7 @@ import { collections, products, CONTACTS, type Product } from '../data/products'
 import { useCart } from '../context/CartContext'
 import { X } from 'lucide-react'
 import { buildTelegramDraftUrl, formatProductTelegramMessage } from '../lib/telegramLink'
+import { useDialog } from '../lib/useDialog'
 
 export function ProductModal({
   selected,
@@ -17,6 +18,7 @@ export function ProductModal({
   onClose: () => void
 }) {
   const { add } = useCart()
+  const dialogRef = useDialog(Boolean(selected), onClose)
 
   const similarProducts = useMemo(() => {
     if (!selected) return []
@@ -42,6 +44,11 @@ export function ProductModal({
         >
           <motion.div
             className="gocek-box"
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label={selected.name}
+            tabIndex={-1}
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -49,6 +56,9 @@ export function ProductModal({
           >
             <img src={selected.image} alt={selected.name} className="gocek-bg" />
             <div className="gocek-gradient" />
+            <button className="gocek-close-mobile icon-btn" onClick={onClose} aria-label="Закрыть карточку">
+              <X size={20} />
+            </button>
 
             <div className="gocek-content">
               {/* Top Left: Title & Description */}

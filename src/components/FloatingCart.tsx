@@ -11,9 +11,9 @@ export function FloatingCart() {
         <motion.button
           className="floating-cart"
           onClick={() => setOpen(true)}
-          initial={{ y: 80, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 80, opacity: 0 }}
+          initial={{ x: '-50%', y: 80, opacity: 0 }}
+          animate={{ x: '-50%', y: 0, opacity: 1 }}
+          exit={{ x: '-50%', y: 80, opacity: 0 }}
           transition={{ type: 'spring', damping: 26, stiffness: 220 }}
           aria-label="Открыть корзину"
         >

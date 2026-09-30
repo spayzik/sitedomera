@@ -41,6 +41,7 @@ export function Specs() {
               <motion.button
                 key={f.num}
                 className={`specs-feature ${open === i ? 'active' : ''}`}
+                aria-expanded={open === i}
                 onMouseEnter={() => setOpen(i)}
                 onClick={() => setOpen(i)}
                 initial={{ opacity: 0, y: 24 }}
@@ -73,8 +74,8 @@ export function Specs() {
           {/* Layered structure visual */}
           <motion.div
             className="specs-stack"
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-40px' }}
             transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           >

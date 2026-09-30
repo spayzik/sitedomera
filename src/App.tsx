@@ -21,6 +21,7 @@ import { useRoute, isPageRoute } from './router'
 import { CONTACTS } from './data/products'
 import { metadataForRoute } from './data/seo'
 import { AnalyticsBanner, PrivacyProvider } from './components/AnalyticsConsent'
+import { MotionConfig } from 'framer-motion'
 
 const Quiz = lazy(() => import('./components/Quiz').then(m => ({ default: m.Quiz })))
 const Installation = lazy(() => import('./components/Installation').then(m => ({ default: m.Installation })))
@@ -199,8 +200,10 @@ export default function App() {
     : <Home route={route} />
 
   return (
-    <PrivacyProvider>
-      <Wrapper>{page}</Wrapper>
-    </PrivacyProvider>
+    <MotionConfig reducedMotion="user">
+      <PrivacyProvider>
+        <Wrapper>{page}</Wrapper>
+      </PrivacyProvider>
+    </MotionConfig>
   )
 }

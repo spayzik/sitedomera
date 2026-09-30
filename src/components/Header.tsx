@@ -4,6 +4,7 @@ import { useCart } from '../context/CartContext'
 import { CONTACTS } from '../data/products'
 import { LogoIcon } from './Logo'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useDialog } from '../lib/useDialog'
 
 const links = [
   { href: '#specs', label: 'Технологии' },
@@ -19,6 +20,7 @@ export function Header() {
   const [scrolled, setScrolled] = useState(false)
   const [mobile, setMobile] = useState(false)
   const [active, setActive] = useState('')
+  const menuRef = useDialog(mobile, () => setMobile(false))
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60)
@@ -27,30 +29,33 @@ export function Header() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // Scroll-spy: highlight the section link currently in view
+  // Resolve sections on scroll: lazy sections and returning Home replace DOM nodes.
   useEffect(() => {
     const ids = ['specs', 'why', 'interiors', 'installation', 'showroom']
-    const els = ids
-      .map((id) => document.getElementById(id))
-      .filter((el): el is HTMLElement => Boolean(el))
-    if (!els.length) return
-    const obs = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) setActive(`#${e.target.id}`)
-        })
-      },
-      { rootMargin: '-40% 0px -55% 0px' },
-    )
-    els.forEach((el) => obs.observe(el))
-    return () => obs.disconnect()
+    let frame = 0
+    const update = () => {
+      frame = 0
+      if (window.location.hash.startsWith('#/catalog')) {
+        setActive('#/catalog')
+        return
+      }
+      const point = window.innerHeight * 0.45
+      const id = ids.find(id => {
+        const bounds = document.getElementById(id)?.getBoundingClientRect()
+        return bounds && bounds.top <= point && bounds.bottom >= point
+      })
+      setActive(id ? `#${id}` : '')
+    }
+    const schedule = () => { if (!frame) frame = requestAnimationFrame(update) }
+    schedule()
+    window.addEventListener('scroll', schedule, { passive: true })
+    window.addEventListener('hashchange', schedule)
+    return () => {
+      cancelAnimationFrame(frame)
+      window.removeEventListener('scroll', schedule)
+      window.removeEventListener('hashchange', schedule)
+    }
   }, [])
-
-  // Lock body scroll when mobile menu is open
-  useEffect(() => {
-    document.body.style.overflow = mobile ? 'hidden' : ''
-    return () => { document.body.style.overflow = '' }
-  }, [mobile])
 
   return (
     <>
@@ -91,6 +96,8 @@ export function Header() {
               className="mobile-toggle"
               onClick={() => setMobile(true)}
               aria-label="Меню"
+              aria-expanded={mobile}
+              aria-controls="mobile-menu"
             >
               <Menu size={24} />
             </button>
@@ -102,6 +109,12 @@ export function Header() {
         {mobile && (
           <motion.div
             className="mobile-menu"
+            id="mobile-menu"
+            ref={menuRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Навигация"
+            tabIndex={-1}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -126,6 +139,7 @@ export function Header() {
               <motion.a
                 href={`tel:${CONTACTS.phoneRaw}`}
                 className="mobile-phone"
+                onClick={() => setMobile(false)}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}

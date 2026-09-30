@@ -1,4 +1,4 @@
-import { motion, useScroll, useTransform } from 'framer-motion'
+import { motion, useScroll, useTransform, useReducedMotion, useInView } from 'framer-motion'
 import { ArrowRight, ArrowDown } from 'lucide-react'
 import { useRef } from 'react'
 
@@ -26,6 +26,8 @@ const fadeUp = {
 
 export function Hero() {
   const ref = useRef(null)
+  const visible = useInView(ref)
+  const reducedMotion = useReducedMotion()
   
   // Parallax effect for the background
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] })
@@ -34,14 +36,14 @@ export function Hero() {
   const scale = useTransform(scrollYProgress, [0, 1], [1, 1.12])
 
   return (
-    <section ref={ref} className="hero-arch" id="top">
+    <section ref={ref} className={`hero-arch ${visible ? 'hero-in-view' : ''}`} id="top">
       {/* Background Mask Reveal + Parallax */}
       <motion.div 
         className="hero-arch-bg"
         initial={{ clipPath: 'inset(100% 0% 0% 0%)' }}
         animate={{ clipPath: 'inset(0% 0% 0% 0%)' }}
         transition={{ duration: 1.6, ease: [0.7, 0, 0.1, 1] }}
-        style={{ y, opacity, scale }}
+        style={{ y: reducedMotion ? 0 : y, opacity: reducedMotion ? 1 : opacity, scale: reducedMotion ? 1 : scale }}
       >
         <motion.img 
           src="catalog/hero/hero.webp" 

@@ -114,6 +114,8 @@ export function ChatBot() {
             }}
           >
             <input
+              aria-label="Вопрос для локального автоответа"
+              maxLength={1000}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Вопрос для автоответа..."

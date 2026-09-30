@@ -15,6 +15,7 @@ export function Installation() {
         <div className="split-grid" style={{ alignItems: 'center' }}>
           
           <motion.div
+            className="installation-copy"
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: '-50px' }}
@@ -29,6 +30,7 @@ export function Installation() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '3rem' }}>
               {features.map((f, i) => (
                 <motion.div 
+                  className="installation-feature"
                   key={i}
                   initial={{ opacity: 0, y: 10 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -48,6 +50,7 @@ export function Installation() {
           </motion.div>
 
           <motion.div
+            className="installation-image"
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true, margin: '-50px' }}
@@ -57,6 +60,7 @@ export function Installation() {
             <img 
               src="catalog/rooms/montage.webp" 
               alt="Профессиональный монтаж панелей Домэра" 
+              loading="lazy"
               style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
             />
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)' }} />

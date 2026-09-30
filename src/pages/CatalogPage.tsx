@@ -147,7 +147,7 @@ export function CatalogPage() {
                     </div>
                     <div className="card-arch-num">{(String(i + 1)).padStart(2, '0')}</div>
                     <div className="card-arch-overlay">
-                      <span className="btn-view">Смотреть детали <ArrowUpRight size={14} /></span>
+                      <button className="btn-view" aria-label={`Подробнее: ${p.name}`} onClick={(e) => { e.stopPropagation(); openProduct(p) }}>Смотреть детали <ArrowUpRight size={14} /></button>
                       <button
                         className="btn-mini-add interactive"
                         onClick={(e) => { e.stopPropagation(); add(p) }}

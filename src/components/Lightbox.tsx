@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { useDialog } from '../lib/useDialog'
 
 export interface LightboxImage {
   src: string
@@ -19,9 +20,9 @@ export function Lightbox({
   onClose: () => void
   onIndex: (i: number) => void
 }) {
+  const dialogRef = useDialog(true, onClose)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
       if (e.key === 'ArrowRight') onIndex((index + 1) % images.length)
       if (e.key === 'ArrowLeft') onIndex((index - 1 + images.length) % images.length)
     }
@@ -36,6 +37,11 @@ export function Lightbox({
       {img && (
         <motion.div
           className="lightbox"
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Интерьеры Домэра"
+          tabIndex={-1}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}

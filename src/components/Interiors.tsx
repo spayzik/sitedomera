@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { motion, useScroll, useTransform } from 'framer-motion'
+import { motion, useScroll, useTransform, useReducedMotion } from 'framer-motion'
 import { ZoomIn } from 'lucide-react'
 import { useRef } from 'react'
 import { Lightbox, type LightboxImage } from './Lightbox'
@@ -34,6 +34,7 @@ function ParallaxCard({
   onOpen: (i: number) => void
 }) {
   const ref = useRef(null)
+  const reducedMotion = useReducedMotion()
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] })
   // Изображение смещается по Y на 20% внутри контейнера во время скролла
   const y = useTransform(scrollYProgress, [0, 1], ['-10%', '10%'])
@@ -54,14 +55,14 @@ function ParallaxCard({
         alt={r.caption}
         loading="lazy"
         // Scale 1.2 нужен, чтобы при параллаксе не вылезали белые края картинки
-        style={{ y, scale: 1.2, position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+        style={{ y: reducedMotion ? 0 : y, scale: 1.2, position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
       />
       <div className="interior-veil" />
       <div className="interior-tag">{r.tag}</div>
       <p className="interior-caption">{r.caption}</p>
-      <div className="interior-zoom">
+      <button className="interior-zoom" aria-label={`Открыть интерьер: ${r.caption}`} onClick={(event) => { event.stopPropagation(); onOpen(i) }}>
         <ZoomIn size={18} />
-      </div>
+      </button>
     </motion.div>
   )
 }

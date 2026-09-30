@@ -12,7 +12,8 @@
     "sync:avito": "node scripts/sync-avito-reviews.mjs",
     "test:avito": "node --test scripts/avito-reviews.test.mjs",
     "test:telegram": "node --test scripts/telegram-link.test.mjs",
-    "test:seo": "node --test scripts/seo.test.mjs"
+    "test:seo": "node --test scripts/seo.test.mjs",
+    "test:calculator": "node --test scripts/calculator.test.mjs"
   },
   "dependencies": {
     "framer-motion": "^13.0.0",

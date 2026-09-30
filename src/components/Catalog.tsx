@@ -73,7 +73,7 @@ export function Catalog() {
                       {collections.find(c => c.id === p.collection)?.name}
                     </div>
                     <div className="card-arch-overlay">
-                      <span className="btn-view">Смотреть детали</span>
+                      <button className="btn-view" aria-label={`Подробнее: ${p.name}`} onClick={(e) => { e.stopPropagation(); setSelectedProduct(p) }}>Смотреть детали</button>
                       <button
                         className="btn-mini-add interactive"
                         onClick={(e) => { e.stopPropagation(); add(p) }}

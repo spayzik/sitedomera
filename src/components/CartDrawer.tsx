@@ -3,9 +3,11 @@ import { X, Minus, Plus, Trash2, ArrowRight } from 'lucide-react'
 import { CONTACTS } from '../data/products'
 import { AnimatePresence, motion } from 'framer-motion'
 import { buildTelegramDraftUrl, formatCartTelegramMessage } from '../lib/telegramLink'
+import { useDialog } from '../lib/useDialog'
 
 export function CartDrawer() {
   const { open, setOpen, items, total, setQty, remove } = useCart()
+  const dialogRef = useDialog(open, () => setOpen(false))
   const telegramDraftUrl = items.length > 0
     ? buildTelegramDraftUrl(CONTACTS.telegram, formatCartTelegramMessage(items))
     : null
@@ -22,8 +24,13 @@ export function CartDrawer() {
             transition={{ duration: 0.3 }}
             onClick={() => setOpen(false)}
           />
-          <motion.aside
+          <motion.div
             className="cart-drawer"
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Ваша подборка"
+            tabIndex={-1}
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
@@ -92,7 +99,7 @@ export function CartDrawer() {
                 </a>
               </div>
             </div>
-          </motion.aside>
+          </motion.div>
         </>
       )}
     </AnimatePresence>

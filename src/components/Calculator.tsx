@@ -5,8 +5,7 @@ import { useCart } from '../context/CartContext'
 import { Counter } from './Counter'
 import { ArrowRight, ArrowUpRight } from 'lucide-react'
 import { buildTelegramDraftUrl, formatCalculatorTelegramMessage } from '../lib/telegramLink'
-
-const PANEL_AREA = 1.22 * 3 // лист 1220×3000 мм = 3.66 м²
+import { calculatePanels, PANEL_AREA } from '../lib/calculator'
 
 export function Calculator() {
   const { add } = useCart()
@@ -15,13 +14,8 @@ export function Calculator() {
   const [openings, setOpenings] = useState('0')
 
   const res = useMemo(() => {
-    const l = parseFloat(length.replace(',', '.')) || 0
-    const h = parseFloat(height.replace(',', '.')) || 0
-    const o = parseFloat(openings.replace(',', '.')) || 0
-    const area = Math.max(l * h - o, 0)
-    const sheets = Math.ceil(area / PANEL_AREA)
     const panel = products.find((p) => p.id === '919-4') ?? products[0]
-    return { area, sheets, panel }
+    return { ...calculatePanels(length, height, openings), panel }
   }, [length, height, openings])
 
   const price = res.sheets * res.panel.price
@@ -43,6 +37,8 @@ export function Calculator() {
         <input
           type="text"
           inputMode="decimal"
+          aria-label={label}
+          maxLength={16}
           value={w}
           onChange={(e) => set(e.target.value)}
         />
@@ -77,6 +73,7 @@ export function Calculator() {
               {input(height, setHeight, 'Высота стен', 'м')}
               {input(openings, setOpenings, 'Окна и двери (вычитаем)', 'м²')}
             </div>
+            {!res.valid && <p role="status">Введите числа от 0 до 10 000; дробную часть можно отделять точкой или запятой.</p>}
 
             <div className="calc-note">
               <span className="calc-note-icon">i</span>
@@ -108,10 +105,12 @@ export function Calculator() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '2rem' }}>
               <button
                 className="btn btn-primary interactive"
+                disabled={res.sheets < 1 || res.sheets > 9999}
                 onClick={() => add(res.panel, res.sheets)}
               >
                 Добавить {res.sheets} панелей в подборку <ArrowRight size={16} />
               </button>
+              {res.sheets > 9999 && <p>Такой объём уточните у менеджера в Telegram: подборка ограничена 9 999 панелями одного артикула.</p>}
 
               <div className="contact-inline">
                 <p className="eyebrow" style={{ margin: 0 }}>Точный расчёт с профилями</p>

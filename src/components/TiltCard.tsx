@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type ReactNode } from 'react'
-import { motion, useMotionTemplate, useMotionValue, useSpring, useTransform } from 'framer-motion'
+import { motion, useMotionTemplate, useMotionValue, useSpring, useTransform, useReducedMotion } from 'framer-motion'
 
 export function TiltCard({ children, max = 8, className = '' }: { children: ReactNode; max?: number; className?: string }) {
   const ref = useRef<HTMLDivElement>(null)
+  const reducedMotion = useReducedMotion()
   const [coarse, setCoarse] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false
     return window.matchMedia('(pointer: coarse)').matches
@@ -26,7 +27,7 @@ export function TiltCard({ children, max = 8, className = '' }: { children: Reac
   const glare = useMotionTemplate`radial-gradient(560px circle at ${glareX} ${glareY}, rgba(255,255,255,0.16), transparent 45%)`
 
   const onMove = (e: ReactMouseEvent) => {
-    if (coarse) return
+    if (coarse || reducedMotion) return
     const r = ref.current?.getBoundingClientRect()
     if (!r) return
     px.set((e.clientX - r.left) / r.width)
@@ -37,7 +38,7 @@ export function TiltCard({ children, max = 8, className = '' }: { children: Reac
     py.set(0.5)
   }
 
-  if (coarse) {
+  if (coarse || reducedMotion) {
     return (
       <div className={`tilt-wrap ${className}`}>
         <div className="tilt-inner">{children}</div>
