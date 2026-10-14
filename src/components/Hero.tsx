@@ -1,6 +1,7 @@
 import { motion, useScroll, useTransform, useReducedMotion, useInView } from 'framer-motion'
 import { ArrowRight, ArrowDown } from 'lucide-react'
 import { useRef } from 'react'
+import { catalogSummary, formatRange } from '../data/products'
 
 const easeOutQuint = [0.22, 1, 0.36, 1] as const
 
@@ -116,16 +117,16 @@ export function Hero() {
       >
         <div className="container bottom-grid">
           <div className="bottom-stat">
-            <span className="label">Формат</span>
-            <span className="val">1220 × 3000 мм</span>
+            <span className="label">Каталог</span>
+            <span className="val">{catalogSummary.productCount} позиций · {catalogSummary.categoryCount} категорий</span>
           </div>
           <div className="bottom-stat">
-            <span className="label">Толщина</span>
-            <span className="val">5 мм · 13 кг</span>
+            <span className="label">Панели</span>
+            <span className="val">{formatRange(catalogSummary.panelThickness)} мм · {formatRange(catalogSummary.panelWeight)} кг</span>
           </div>
           <div className="bottom-stat">
-            <span className="label">Монтаж</span>
-            <span className="val">На клей, без крепежа</span>
+            <span className="label">Материалы</span>
+            <span className="val">Листы, рейки и профили</span>
           </div>
           <a href="#/catalog" className="btn-explore interactive">
             Открыть каталог <ArrowRight size={16} />

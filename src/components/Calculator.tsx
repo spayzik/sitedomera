@@ -1,25 +1,26 @@
 import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import { products, CONTACTS } from '../data/products'
+import { sheetProducts, CONTACTS, formatDimensions } from '../data/products'
 import { useCart } from '../context/CartContext'
 import { Counter } from './Counter'
 import { ArrowRight, ArrowUpRight } from 'lucide-react'
 import { buildTelegramDraftUrl, formatCalculatorTelegramMessage } from '../lib/telegramLink'
-import { calculatePanels, PANEL_AREA } from '../lib/calculator'
+import { calculatePanels, sheetArea } from '../lib/calculator'
 
 export function Calculator() {
   const { add } = useCart()
+  const [materialId, setMaterialId] = useState('')
+  const selectedPanel = sheetProducts.find(p => p.id === materialId) ?? null
   const [length, setLength] = useState('10')
   const [height, setHeight] = useState('2.5')
   const [openings, setOpenings] = useState('0')
 
   const res = useMemo(() => {
-    const panel = products.find((p) => p.id === '919-4') ?? products[0]
-    return { ...calculatePanels(length, height, openings), panel }
-  }, [length, height, openings])
+    return { ...calculatePanels(length, height, openings, selectedPanel), panel: selectedPanel }
+  }, [length, height, openings, selectedPanel])
 
-  const price = res.sheets * res.panel.price
-  const telegramDraftUrl = res.sheets > 0
+  const price = res.panel ? res.sheets * res.panel.priceRub : 0
+  const telegramDraftUrl = res.panel && res.valid && res.sheets > 0
     ? buildTelegramDraftUrl(CONTACTS.telegram, formatCalculatorTelegramMessage({
       area: res.area, sheets: res.sheets, panel: res.panel, total: price,
     }))
@@ -53,10 +54,10 @@ export function Calculator() {
         <div className="catalog-header" style={{ marginBottom: '3rem' }}>
           <div>
             <p className="eyebrow">Калькулятор</p>
-            <h2>Сколько панелей<br/>нужно?</h2>
+            <h2>Сколько листов<br/>нужно?</h2>
           </div>
           <p className="lead">
-            Посчитайте количество листов 1220 × 3000 мм и ориентировочную
+            Выберите листовой материал и посчитайте ориентировочную
             стоимость под ваши стены. Точный расчёт с профилями сделает менеджер.
           </p>
         </div>
@@ -69,17 +70,25 @@ export function Calculator() {
             transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
           >
             <div className="modern-form">
+              <div className="form-group">
+                <label htmlFor="calculator-material">Листовой материал</label>
+                <select id="calculator-material" className="catalog-select" value={materialId} onChange={e => setMaterialId(e.target.value)}>
+                  <option value="">Выберите материал</option>
+                  {sheetProducts.map(p => <option key={p.id} value={p.id}>{p.name} — {p.priceRub.toLocaleString('ru-RU')} ₽/{p.unit}</option>)}
+                </select>
+                {res.panel && <span>{formatDimensions(res.panel)}</span>}
+              </div>
               {input(length, setLength, 'Общая длина стен', 'м')}
               {input(height, setHeight, 'Высота стен', 'м')}
               {input(openings, setOpenings, 'Окна и двери (вычитаем)', 'м²')}
             </div>
-            {!res.valid && <p role="status">Введите числа от 0 до 10 000; дробную часть можно отделять точкой или запятой.</p>}
+            {res.panel && !res.valid && <p role="status">Введите числа от 0 до 10 000; дробную часть можно отделять точкой или запятой.</p>}
 
             <div className="calc-note">
               <span className="calc-note-icon">i</span>
               <p>
-                Один лист закрывает <strong>{PANEL_AREA.toFixed(2).replace('.', ',')} м²</strong>.
-                Рекомендуем брать запас 5–10% на подрезку.
+                {res.panel ? <>Один лист закрывает <strong>{sheetArea(res.panel).toLocaleString('ru-RU', { maximumFractionDigits: 3 })} м²</strong>.</> : 'Выберите материал: размер и цена будут взяты из его карточки.'}
+                {' '}Рекомендуем брать запас 5–10% на подрезку.
               </p>
             </div>
           </motion.div>
@@ -92,25 +101,25 @@ export function Calculator() {
             transition={{ duration: 0.9, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
           >
             <p className="eyebrow">Результат</p>
-            <div className="calc-big">
+            {res.panel && <div className="calc-big">
               <Counter to={res.sheets} />
-              <span>панелей</span>
-            </div>
-            <div className="calc-rows">
-              <div className="calc-row"><span>Площадь стен</span><strong>{Math.round(res.area)} м²</strong></div>
-              <div className="calc-row"><span>Цена панели</span><strong>{res.panel.price.toLocaleString('ru-RU')} ₽</strong></div>
+              <span>листов</span>
+            </div>}
+            {res.panel ? <div className="calc-rows">
+              <div className="calc-row"><span>Площадь стен</span><strong>{res.area.toLocaleString('ru-RU', { maximumFractionDigits: 2 })} м²</strong></div>
+              <div className="calc-row"><span>Цена материала</span><strong>{res.panel.priceRub.toLocaleString('ru-RU')} ₽/{res.panel.unit}</strong></div>
               <div className="calc-row total"><span>Стоимость</span><strong>{price.toLocaleString('ru-RU')} ₽</strong></div>
-            </div>
+            </div> : <p role="status">Выберите листовой материал для расчёта.</p>}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '2rem' }}>
               <button
                 className="btn btn-primary interactive"
-                disabled={res.sheets < 1 || res.sheets > 9999}
-                onClick={() => add(res.panel, res.sheets)}
+                disabled={!res.panel || !res.valid || res.sheets < 1 || res.sheets > 9999}
+                onClick={() => { if (res.panel && res.valid) add(res.panel, res.sheets) }}
               >
-                Добавить {res.sheets} панелей в подборку <ArrowRight size={16} />
+                Добавить {res.sheets} листов в подборку <ArrowRight size={16} />
               </button>
-              {res.sheets > 9999 && <p>Такой объём уточните у менеджера в Telegram: подборка ограничена 9 999 панелями одного артикула.</p>}
+              {res.sheets > 9999 && <p>Такой объём уточните у менеджера в Telegram: подборка ограничена 9 999 единицами одного товара.</p>}
 
               <div className="contact-inline">
                 <p className="eyebrow" style={{ margin: 0 }}>Точный расчёт с профилями</p>

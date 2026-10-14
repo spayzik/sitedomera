@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { collections, products, type CollectionId, type Product } from '../data/products'
+import { collections, products, type CollectionId, type Product, formatDimensions, filterProducts, catalogSummary } from '../data/products'
 import { useCart } from '../context/CartContext'
 import { ProductModal } from '../components/ProductModal'
 import { TiltCard } from '../components/TiltCard'
@@ -12,17 +12,17 @@ export function CatalogPage() {
   const { add } = useCart()
   const [search, setSearch] = useState('')
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(() => {
-    // Диплинк вида #/catalog?sku=919-4 — сразу открываем панель
+    // Deep link uses stable internal product ID; official SKU is optional.
     const raw = window.location.hash.split('?')[1] ?? ''
     const id = new URLSearchParams(raw).get('sku')
-    return id ? products.find((p) => p.id === id) ?? null : null
+    return id ? products.find((p) => p.id === id || p.sku === id) ?? null : null
   })
 
   // Синхронизируем URL с открытой панелью (replaceState — без скачков скролла)
   const openProduct = (p: Product | null) => {
     setSelectedProduct(p)
     const base = window.location.hash.split('?')[0] || '#/catalog'
-    const next = p ? `${base}?sku=${p.id}` : base
+    const next = p ? `${base}?sku=${encodeURIComponent(p.id)}` : base
     history.replaceState(null, '', next)
   }
 
@@ -30,15 +30,10 @@ export function CatalogPage() {
     window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })
   }, [])
 
-  const list = products.filter((p) => {
-    const colOk = filter === 'all' || p.collection === filter
-    const q = search.trim().toLowerCase()
-    const searchOk = !q || p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q)
-    return colOk && searchOk
-  })
+  const list = filterProducts(filter, search)
 
   const collectionMeta = filter === 'all'
-    ? { name: 'Все коллекции', nameEn: 'Full Catalog', desc: 'Полный ассортимент стеновых панелей и реек Домэра — фактуры дерева, ткани, металла, штукатурки и 3D-декора.' }
+    ? { name: 'Все коллекции', nameEn: 'Full Catalog', desc: 'Панели, гибкий камень, декоративные рейки и алюминиевые профили. Характеристики и цены — в карточках материалов.' }
     : { ...collections.find(c => c.id === filter)!, desc: collections.find(c => c.id === filter)!.description }
 
   return (
@@ -71,7 +66,7 @@ export function CatalogPage() {
               event.preventDefault()
               document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })
             }}>
-              Посмотреть артикулы <ArrowDown size={16} />
+              Посмотреть материалы <ArrowDown size={16} />
             </a>
             <a href="#calculator" className="btn btn-outline interactive" style={{ borderColor: 'rgba(255,255,255,0.25)', color: '#fff' }}>
               Рассчитать проект
@@ -81,10 +76,10 @@ export function CatalogPage() {
 
         <div className="catalog-page-metrics">
           <div className="container metrics-row">
-            <div className="metric"><span className="metric-num"><Counter to={products.length} /></span><span className="metric-label">артикулов в наличии</span></div>
+            <div className="metric"><span className="metric-num"><Counter to={products.length} /></span><span className="metric-label">позиций в каталоге</span></div>
             <div className="metric"><span className="metric-num"><Counter to={collections.length} /></span><span className="metric-label">коллекций и серий</span></div>
-            <div className="metric"><span className="metric-num"><Counter to={1220} suffix=" мм" /></span><span className="metric-label">ширина панели <Ruler size={12} /></span></div>
-            <div className="metric"><span className="metric-num"><Counter to={13} suffix=" кг" /></span><span className="metric-label">вес панели <Scale size={12} /></span></div>
+            <div className="metric"><span className="metric-num"><Counter to={catalogSummary.sheetWidth.max} suffix=" мм" /></span><span className="metric-label">ширина листа <Ruler size={12} /></span></div>
+            <div className="metric"><span className="metric-num"><span>{catalogSummary.panelWeight.min}–</span><Counter to={catalogSummary.panelWeight.max} suffix=" кг" /></span><span className="metric-label">вес панелей <Scale size={12} /></span></div>
           </div>
         </div>
       </section>
@@ -104,7 +99,7 @@ export function CatalogPage() {
                   className={filter === c.id ? 'active' : ''}
                   onClick={() => setFilter(c.id)}
                 >
-                  {c.name} ({products.filter(p => p.collection === c.id).length})
+                  {c.name} ({products.filter(p => p.categoryId === c.id).length})
                 </button>
               ))}
             </div>
@@ -121,7 +116,7 @@ export function CatalogPage() {
           </div>
 
           <p className="catalog-count">
-            Показано <strong>{list.length}</strong> из {products.length} артикулов
+            Показано <strong>{list.length}</strong> из {products.length} позиций
           </p>
 
           <motion.div className="grid-arch catalog-page-grid" layout>
@@ -143,7 +138,7 @@ export function CatalogPage() {
                       <img src={p.swatch} alt="" loading="lazy" className="img-hover" />
                     </TiltCard>
                     <div className="card-arch-tag">
-                      {collections.find(c => c.id === p.collection)?.name}
+                      {collections.find(c => c.id === p.categoryId)?.name}
                     </div>
                     <div className="card-arch-num">{(String(i + 1)).padStart(2, '0')}</div>
                     <div className="card-arch-overlay">
@@ -160,9 +155,9 @@ export function CatalogPage() {
                   <div className="card-arch-info">
                     <div>
                       <h3>{p.name}</h3>
-                      <p>{p.sku} · {p.size}</p>
+                      <p>{p.sku ? `${p.sku} · ` : ''}{formatDimensions(p)}</p>
                     </div>
-                    <p className="card-arch-price">{p.price.toLocaleString('ru-RU')} ₽</p>
+                    <p className="card-arch-price">{p.priceRub.toLocaleString('ru-RU')} ₽/{p.unit}</p>
                   </div>
                 </motion.div>
               ))}

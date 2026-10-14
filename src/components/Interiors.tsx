@@ -11,7 +11,7 @@ interface Room {
 }
 
 const rooms: Room[] = [
-  { image: 'room-wood', caption: 'Гостиная · Дуб натуральный', tag: 'Wood' },
+  { image: 'room-wood', caption: 'Гостиная · Деревянная фактура', tag: 'Wood' },
   { image: 'room-fabric', caption: 'Спальня · Тканевая фактура', tag: 'Fabric' },
   { image: 'room-metal', caption: 'Кабинет · Металл', tag: 'Metal' },
   { image: 'room-plaster', caption: 'Прихожая · Штукатурка', tag: 'Plaster' },
@@ -79,8 +79,8 @@ export function Interiors() {
             <h2>Домэра<br/>в пространстве</h2>
           </div>
           <p className="lead">
-            Как панели выглядят в реальных проектах: объём, свет
-            и характер фактур в гостиных, спальнях и лофтах.
+            Примеры оформления интерьера: объём, свет
+            и характер фактур. Изображения не подтверждают соответствие конкретному артикулу каталога.
           </p>
         </div>
 

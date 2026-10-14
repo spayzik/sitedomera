@@ -1,9 +1,8 @@
 import assert from 'node:assert/strict'
 import { readFile, readdir, stat } from 'node:fs/promises'
 import { extname, join, relative, resolve, sep } from 'node:path'
-import ts from 'typescript'
 import sharp from 'sharp'
-import { CONTACTS } from '../src/data/products.ts'
+import { CONTACTS, products, sourceInventory } from '../src/data/products.ts'
 import { SEO } from '../src/data/seo.ts'
 
 const dist = resolve('dist')
@@ -40,28 +39,6 @@ function localPath(ref, base, siteBase = base) {
   const path = decodeURIComponent(resolved.pathname.slice(root.pathname.length))
   assert(path && !path.split('/').includes('..'), `Invalid local asset path: ${ref}`)
   return path
-}
-
-function productIds(source) {
-  const ast = ts.createSourceFile('products.ts', source, ts.ScriptTarget.Latest, true)
-  const products = ast.statements
-    .filter(ts.isVariableStatement)
-    .flatMap((statement) => [...statement.declarationList.declarations])
-    .find((declaration) => ts.isIdentifier(declaration.name) && declaration.name.text === 'products')
-  assert(products && ts.isArrayLiteralExpression(products.initializer), 'Product catalog is not a static array')
-
-  const ids = products.initializer.elements.map((element) => {
-    assert(ts.isCallExpression(element) && ts.isIdentifier(element.expression) &&
-      element.expression.text === 'panel', 'Unexpected product catalog entry')
-    const item = element.arguments[0]
-    assert(ts.isObjectLiteralExpression(item), 'Product entry must be an object')
-    const id = item.properties.find((property) => ts.isPropertyAssignment(property) &&
-      ts.isIdentifier(property.name) && property.name.text === 'id')
-    assert(id && ts.isStringLiteral(id.initializer), 'Product id must be a string literal')
-    return id.initializer.text
-  })
-  assert(ids.length > 0 && new Set(ids).size === ids.length, 'Product IDs are missing or duplicated')
-  return ids
 }
 
 async function filesUnder(directory) {
@@ -136,11 +113,17 @@ async function verify() {
     }
   }
 
-  const ids = productIds(await readFile(resolve('src/data/products.ts'), 'utf8'))
+  assert.equal(sourceInventory.length, 46, 'Source inventory count mismatch')
+  assert(products.length > 0 && new Set(products.map(p => p.id)).size === products.length, 'Missing/duplicate published product IDs')
+  for (const p of products) {
+    const source = sourceInventory.find(item => item.id === p.id)
+    assert(source?.status === 'verified' && source.image === p.image, 'Product lacks verified source/image mapping: ' + p.id)
+    assert(Number.isFinite(p.priceRub) && p.priceRub > 0 && p.priceRub === source.priceRub, 'Invalid product price: ' + p.id)
+  }
   for (const base of [canonical, previewBase]) {
     await requireFile(localPath('catalog/hero/hero.webp', base))
     await requireFile(localPath('catalog/hero/hero-catalog.webp', base))
-    for (const id of ids) await requireFile(localPath(`catalog/products/${id}.webp`, base))
+    for (const p of products) await requireFile(localPath(p.image, base))
   }
 
   const avito = JSON.parse(await readFile(await requireFile('generated/avito-reviews.json'), 'utf8'))
@@ -165,7 +148,7 @@ async function verify() {
   }
   assert(!files.some((file) => file.toLowerCase().endsWith(`${sep}cname`)), 'GitHub Pages CNAME must not target production')
 
-  console.log(`Production build verified: ${files.length} files, ${ids.length} product images, ${new Set(fontUrls).size} fonts; root and Pages subpath assets resolve.`)
+  console.log(`Production build verified: ${files.length} files, ${products.length} mapped product images, ${new Set(fontUrls).size} fonts; root and Pages subpath assets resolve.`)
 }
 
 verify().catch((error) => {

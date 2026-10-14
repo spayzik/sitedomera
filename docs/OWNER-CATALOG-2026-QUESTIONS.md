@@ -63,18 +63,30 @@ For these 21 identifiable positions, the source gives a SKU only. Displaying tha
 - Slats p23: thickness, weight, construction/material; do not inherit 5 mm / 13 kg / WPC from panel defaults.
 - Aluminium profiles p25–26: cross-section widths, compatible panel thickness, colors for corner/finishing pieces if required. Do not infer fit from the photos.
 - Confirm surprising but clearly printed soft-touch 7 mm / 13 kg; keep source values pending correction from owner.
+- Confirm surface film: p3 says ПВХ / ПП, while the construction diagram on p4 says ПВХ / ПЭТ. The site does not pick one as a universal coating.
 - Confirm composition/ABA/PUR/layer claims by actual product group and supporting technical documents. No universal transfer to stone/profiles.
 - Current physical stock is unknown. PDF listing is not evidence for «в наличии».
 - Confirm current prices, sale units and whether catalogue prices can be publicly offered. Printed units alternate шт/лист; retain per item.
-- Confirm whether old items omitted from PDF remain for sale. Current proposal retires 19 old IDs; any reinstatement needs source/price/photo evidence.
+- Confirm whether old items omitted from PDF remain for sale. The implementation retires 19 old IDs; any reinstatement needs source/price/photo evidence.
 - Confirm whether seven exact-SKU cart identities may carry over unchanged. No fuzzy name/image substitution.
 - Delivery, warranty, certification and business/legal information cannot be derived from product pictures. Existing owner legal checklists remain applicable.
 
-## Proposed application behavior awaiting architecture review
+## Implemented application behavior — architecture approved with conditions
 
-- 46-source-position inventory; 45 identifiable product candidates; 1 owner-review-only record.
+- 46-source-position inventory; 45 identifiable items in the feature-branch catalogue; 1 owner-review-only record.
 - Typed groups panel / flexible_stone / slat / profile, explicit prices and dimensions; nullable official SKU; optional only-confirmed technical facts.
 - Sheet calculator: user selects an actual sheet material; no profile/slat area calculations; no selected item means no draft/result.
 - Quiz: suggest a material category from aesthetic preference, then let user select a concrete catalogue item; no unsupported precise SKU recommendation.
 - Cart: canonical latest price, only exact verified identity migration; removed entries never become another product.
 - Telegram: direct user-initiated drafts with product data only; no automatic sending or backend.
+
+## Chief / release acceptance
+
+- Independently review the 46-row source matrix and actual image mapping.
+- Approve temporary PDF previews or replace them with confirmed original photos.
+- Resolve p11 r2c2 identity and p6 r1c3 SKU; optionally supply missing names/SKUs.
+- Confirm current commercial prices/units and product technical documentation.
+- Review final production-dist browser evidence at 1440, 1024, 768, 390 and 360 px.
+- Existing Installation service/guarantee statements were retained from the accepted site; this PDF does not independently substantiate those business claims. Owner confirmation remains necessary.
+- Existing same-day dispatch wording in Conditions and the contact configuration also needs owner confirmation; product catalogue pages do not establish delivery commitments.
+- No automatic merge, GitHub Pages upload or REG.RU deployment is authorized by this branch.

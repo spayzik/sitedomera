@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { collections, products, CONTACTS, type Product } from '../data/products'
+import { collections, products, CONTACTS, type Product, productDetails } from '../data/products'
 import { useCart } from '../context/CartContext'
 import { X } from 'lucide-react'
 import { buildTelegramDraftUrl, formatProductTelegramMessage } from '../lib/telegramLink'
@@ -23,10 +23,10 @@ export function ProductModal({
   const similarProducts = useMemo(() => {
     if (!selected) return []
     const pool = closelyRelated.length ? closelyRelated : products
-    return pool.filter(p => p.collection === selected.collection)
+    return pool.filter(p => p.categoryId === selected.categoryId)
   }, [selected, closelyRelated])
 
-  const collection = selected ? collections.find(c => c.id === selected.collection)?.name ?? '' : ''
+  const collection = selected ? collections.find(c => c.id === selected.categoryId)?.name ?? '' : ''
   const telegramDraftUrl = selected
     ? buildTelegramDraftUrl(CONTACTS.telegram, formatProductTelegramMessage(selected, collection))
     : null
@@ -70,10 +70,10 @@ export function ProductModal({
               >
                 <h2>{selected.name}</h2>
                 <p>
-                  {selected.description || 'Экологичная панель премиум-класса с точной имитацией натуральной фактуры.'}
+                  {selected.description || `${collection}. Характеристики по карточке каталога 2026.`}
                 </p>
                 <div className="gocek-price-pill">
-                  {selected.price.toLocaleString('ru-RU')} ₽
+                  {selected.priceRub.toLocaleString('ru-RU')} ₽/{selected.unit}
                 </div>
               </motion.div>
 
@@ -92,13 +92,7 @@ export function ProductModal({
                 </div>
 
                 <div className="gocek-glass-list">
-                  {[
-                    ['Коллекция', collection],
-                    ['Артикул', selected.sku],
-                    ['Размеры', selected.size],
-                    ['Толщина', selected.thickness],
-                    ['Основа', 'WPC (Бамбук-полимер)'],
-                  ].map(([label, value]) => (
+                  {productDetails(selected).map(([label, value]) => (
                     <div className="gocek-row" key={label}>
                       <span>{label}</span>
                       <span>{value}</span>
@@ -106,6 +100,7 @@ export function ProductModal({
                   ))}
                 </div>
 
+                {selected.imageStatus === 'pdf_preview' && <p className="product-preview-note">Превью из PDF-каталога; фактуру и цвет уточните по образцу.</p>}
                 <button
                   className="gocek-tech-btn"
                   onClick={() => {

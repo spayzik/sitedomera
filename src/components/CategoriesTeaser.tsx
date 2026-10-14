@@ -1,45 +1,18 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import { collections } from '../data/products'
 
-const categories = [
-  {
-    id: 'wood',
-    title: 'Бамбуковые панели',
-    bg: 'catalog/categories/carusel-bamboo.webp',
-    text: 'Основа коллекции — древесно-бамбуковый композит с точной имитацией натурального шпона. Идеально для тёплых интерьеров.',
-  },
-  {
-    id: 'stone',
-    title: 'Гибкий камень',
-    bg: 'catalog/categories/carusel-stone.webp',
-    text: 'Эффект декоративной штукатурки и камня. Масштабные цельные полотна без мокрых процессов и грязи.',
-  },
-  {
-    id: 'fabric',
-    title: 'Тканевые фактуры',
-    bg: 'catalog/categories/carusel-cotton.webp',
-    text: 'Уютные текстильные фактуры, переплетение нитей и мягкий матовый блеск. Домашний уют в прочном исполнении.',
-  },
-  {
-    id: 'soft',
-    title: 'Soft-touch',
-    bg: 'catalog/categories/carusel-softtouch.webp',
-    text: 'Глубокая бархатистая поверхность. Идеально матовое покрытие, невероятно приятное на ощупь.',
-  },
-  {
-    id: 'slats',
-    title: 'Реечные панели',
-    bg: 'catalog/categories/carusel-reech.webp',
-    text: 'Объёмные 3D рейки для акцентных стен. Монтируются встык, создавая непрерывный рельеф.',
-  },
-]
+const categories = collections.map(c => ({
+  id: c.id, title: c.name, bg: c.banner,
+  text: 'Позиций: ' + c.count + '. ' + c.description,
+}))
 
 export function CategoriesTeaser() {
   const [hovered, setHovered] = useState<string | null>(null)
 
   return (
     <section
-      className="cat-teaser"
+      className="cat-teaser catalog-categories"
       onMouseLeave={() => setHovered(null)}
       aria-label="Категории материалов"
     >

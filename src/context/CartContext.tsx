@@ -8,11 +8,9 @@ import {
 } from 'react'
 import { products } from '../data/products'
 import type { Product } from '../data/products'
-
-export interface CartItem {
-  product: Product
-  qty: number
-}
+import { restoreCart, cartSnapshot, cartTotal, MAX_QTY } from '../lib/cart'
+import type { CartItem } from '../lib/cart'
+export type { CartItem } from '../lib/cart'
 
 interface CartCtx {
   items: CartItem[]
@@ -29,48 +27,21 @@ interface CartCtx {
 const Ctx = createContext<CartCtx | null>(null)
 
 const STORAGE_KEY = 'domera-cart-v1'
-const MAX_QTY = 9999
 
 const byId = new Map(products.map((p) => [p.id, p]))
 
 function loadStored(): CartItem[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return []
-    const parsed: unknown = JSON.parse(raw)
-    if (!Array.isArray(parsed) || parsed.length > byId.size) return []
-    const restored: CartItem[] = []
-    const seen = new Set<string>()
-    for (const entry of parsed) {
-      if (
-        entry &&
-        typeof entry === 'object' &&
-        !Array.isArray(entry) &&
-        Object.keys(entry).length === 2 &&
-        typeof (entry as { id?: unknown }).id === 'string' &&
-        Number.isSafeInteger((entry as { qty?: unknown }).qty) &&
-        (entry as { qty: number }).qty > 0 &&
-        (entry as { qty: number }).qty <= MAX_QTY
-      ) {
-        const id = (entry as { id: string }).id
-        const p = byId.get(id)
-        if (p && !seen.has(id)) {
-          restored.push({ product: p, qty: (entry as { qty: number }).qty })
-          seen.add(id)
-        }
-      }
-    }
-    return restored
-  } catch {
-    return []
-  }
+    return raw ? restoreCart(JSON.parse(raw)) : []
+  } catch { return [] }
 }
 
 function persist(items: CartItem[]) {
   try {
     localStorage.setItem(
       STORAGE_KEY,
-      JSON.stringify(items.map((x) => ({ id: x.product.id, qty: x.qty }))),
+      JSON.stringify(cartSnapshot(items)),
     )
   } catch {
     /* приватный режим / переполнение — молча игнорируем */
@@ -113,7 +84,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
     const clear = () => setItems([])
     const count = items.reduce((s, x) => s + x.qty, 0)
-    const total = items.reduce((s, x) => s + x.qty * x.product.price, 0)
+    const total = cartTotal(items)
     return { items, count, total, add, remove, setQty, clear, open, setOpen }
   }, [items, open])
 

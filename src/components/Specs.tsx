@@ -1,19 +1,19 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowUpRight } from 'lucide-react'
+import { catalogSummary, formatRange } from '../data/products'
 
 const features = [
-  { num: '01', title: 'Всего 13 кг', text: 'Легкая панель полного формата — удобный и безопасный монтаж вдвоем без спецтехники. Панель держит геометрию и не теряет форму со временем.' },
-  { num: '02', title: 'Монтаж на клей', text: 'Без видимого крепежа и грязных работ. Идеальная стыковка скрытыми профилями, бесшовная поверхность по всей стене.' },
-  { num: '03', title: 'Влагостойкость', text: 'Композит устойчив к влаге и перепадам температур. Подходит для любых жилых зон — от кухни до ванной.' },
-  { num: '04', title: '4 слоя защиты', text: 'Декоративная пленка, клей PUR, со-экструзия и бамбук-полимерный сердечник (ABA). Полная структура — в секции ниже.' },
+  { num: '01', title: formatRange(catalogSummary.panelWeight) + ' кг для панелей', text: 'Масса зависит от конкретного изделия. У гибкого камня, реек и профилей вес в каталоге не указан.' },
+  { num: '02', title: 'Подбор монтажа', text: 'Способ крепления, основание и совместимость профилей уточняются для выбранного материала.' },
+  { num: '03', title: 'Разная толщина', text: 'Толщина панелей: ' + formatRange(catalogSummary.panelThickness) + ' мм. Гибкий камень — 2,5 мм. Проверяйте индивидуальные характеристики в карточке.' },
+  { num: '04', title: 'Конструкция бамбуковых панелей', text: 'Вводный раздел PDF описывает четыре слоя композитной панели. Это описание не относится к гибкому камню и алюминиевым профилям.' },
 ]
-
 const layers = [
-  { label: 'Финишный слой', detail: 'Премиальная декоративная пленка', kg: '0,2 кг' },
-  { label: 'Клей PUR', detail: 'Монолитная фиксация слоев', kg: '0,3 кг' },
-  { label: 'Сердечник ABA', detail: 'Бамбук-полимерный композит', kg: '11,9 кг' },
-  { label: 'Со-экструзия', detail: 'Защита кромки и тыльной стороны', kg: '0,6 кг' },
+  { label: 'Декоративная плёнка', detail: 'Тип покрытия уточните по модели' },
+  { label: 'Клей PUR', detail: 'Горячего нанесения' },
+  { label: 'Со-экструзия', detail: 'Слой конструкции композитной панели' },
+  { label: 'Сердечник ABA', detail: 'Бамбук-полимерный композит' },
 ]
 
 export function Specs() {
@@ -29,8 +29,8 @@ export function Specs() {
             <h2>Инновации<br/>в каждом слое</h2>
           </div>
           <p className="lead">
-            Современное решение для отделки стен: легкие, прочные, устойчивые к влаге.
-            Композитная основа из бамбукового волокна.
+            Панели, гибкий камень, рейки и профили отличаются по конструкции.
+            Ниже — вводное описание бамбуковых панелей; точные параметры смотрите в карточке.
           </p>
         </div>
 
@@ -79,9 +79,9 @@ export function Specs() {
             viewport={{ once: true, margin: '-40px' }}
             transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           >
-            <p className="eyebrow" style={{ marginBottom: '1rem' }}>Структура панели</p>
+            <p className="eyebrow" style={{ marginBottom: '1rem' }}>Бамбуковые панели</p>
             <div className="stack-total">
-              <span className="stack-big">13</span>
+              <span className="stack-big">{formatRange(catalogSummary.panelWeight)}</span>
               <span className="stack-unit">кг<br/>на панель</span>
             </div>
             <div className="stack-layers">
@@ -92,12 +92,12 @@ export function Specs() {
                     <span className="stack-label">{l.label}</span>
                   </div>
                   <span className="stack-detail">{l.detail}</span>
-                  <span className="stack-kg">{l.kg}</span>
+
                 </div>
               ))}
             </div>
             <p className="stack-note">
-              Полный вес панели 1220 × 3000 мм — всего 13 кг.
+              Масса слоёв отдельно в PDF не указана. Конструкцию и область применения выбранной модели уточните у менеджера.
             </p>
           </motion.div>
         </div>

@@ -1,4 +1,5 @@
-import type { CartItem } from '../context/CartContext'
+import type { CartItem } from './cart.ts'
+import { formatDimensions } from '../data/products.ts'
 import type { Product } from '../data/products'
 
 const formatPrice = (value: number) =>
@@ -8,9 +9,9 @@ export function formatCartTelegramMessage(items: readonly CartItem[]): string {
   if (items.length === 0) return ''
 
   const lines = items.map(({ product, qty }, index) =>
-    `${index + 1}. ${product.name} — ${qty} шт. × ${formatPrice(product.price)} = ${formatPrice(qty * product.price)}`,
+    `${index + 1}. ${product.name}${product.sku && product.name !== product.sku ? ` (${product.sku})` : ''} — ${qty} ${product.unit === 'шт' ? 'шт.' : product.unit} × ${formatPrice(product.priceRub)} = ${formatPrice(qty * product.priceRub)}`,
   )
-  const total = items.reduce((sum, { product, qty }) => sum + product.price * qty, 0)
+  const total = items.reduce((sum, { product, qty }) => sum + product.priceRub * qty, 0)
 
   return [
     'Здравствуйте! Заинтересовался товарами на сайте Домэра:',
@@ -24,13 +25,13 @@ export function formatCartTelegramMessage(items: readonly CartItem[]): string {
 }
 
 function formatProductDetails(product: Product, collection: string): string[] {
-  const unit = product.unit === 'шт' ? 'шт.' : product.unit ?? 'шт.'
+  const unit = product.unit === 'шт' ? 'шт.' : product.unit
   return [
     product.name,
-    `Артикул: ${product.sku}`,
+    ...(product.sku ? [`Артикул: ${product.sku}`] : []),
     `Коллекция: ${collection}`,
-    `Размер: ${product.size}`,
-    `Цена: ${formatPrice(product.price)}/${unit}`,
+    `Размер: ${formatDimensions(product)}`,
+    `Цена: ${formatPrice(product.priceRub)}/${unit}`,
   ]
 }
 
@@ -43,11 +44,11 @@ export function formatCalculatorTelegramMessage({ area, sheets, panel, total }: 
   return [
     'Здравствуйте! Сделал расчёт на сайте Домэра.',
     '',
-    `Площадь стен: ${Math.round(area)} м²`,
+    `Площадь стен: ${new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 }).format(area)} м²`,
     `Материал: ${panel.name}`,
-    `Артикул: ${panel.sku}`,
-    `Количество: ${sheets} шт.`,
-    `Цена панели: ${formatPrice(panel.price)}`,
+    ...(panel.sku ? [`Артикул: ${panel.sku}`] : []),
+    `Количество: ${sheets} лист.`,
+    `Цена материала: ${formatPrice(panel.priceRub)}/${panel.unit === 'шт' ? 'шт.' : panel.unit}`,
     `Ориентировочная стоимость: ${formatPrice(total)}`,
     '',
     'Хочу уточнить точный расчёт с профилями и наличие.',
@@ -58,7 +59,7 @@ export function formatQuizTelegramMessage(product: Product, collection: string):
   return [
     'Здравствуйте! Прошёл подбор на сайте Домэра.',
     '',
-    'Мне подошёл материал:',
+    'Выбрал материал после подбора категории:',
     ...formatProductDetails(product, collection),
     '',
     'Хочу уточнить наличие и детали.',

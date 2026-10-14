@@ -1,19 +1,21 @@
 import { motion } from 'framer-motion'
+import { products, formatRange, formatDimensions, type Product, type ProductKind } from '../data/products'
 
-const rows = [
-  { param: 'Цена за м²', domera: 'от 1 640 ₽', wall: 'от 300 ₽', mdf: 'от 1 200 ₽', pvc: 'от 800 ₽' },
-  { param: 'Влагостойкость', domera: 'Да', wall: 'Нет', mdf: 'Ограниченно', pvc: 'Да' },
-  { param: 'Геометрия и стыки', domera: 'Идеальная, ±0,1 мм', wall: 'Зависит от стен', mdf: 'Хорошая', pvc: 'Средняя' },
-  { param: 'Монтаж', domera: 'На клей, без пыли', wall: 'Требует ровных стен', mdf: 'Каркас или клей', pvc: 'Замки / клей' },
-  { param: 'Уход', domera: 'Влажная протирка', wall: 'Сложный', mdf: 'Осторожный', pvc: 'Простой' },
-  { param: 'Срок службы', domera: '15+ лет', wall: '5–7 лет', mdf: '8–10 лет', pvc: '8–12 лет' },
+const cols: { kind: ProductKind; title: string }[] = [
+  { kind: 'panel', title: 'Панели' }, { kind: 'flexible_stone', title: 'Гибкий камень' },
+  { kind: 'slat', title: 'Рейки' }, { kind: 'profile', title: 'Профили' },
 ]
-
-const cols = [
-  { key: 'domera' as const, title: 'Домэра' },
-  { key: 'wall' as const, title: 'Обои' },
-  { key: 'mdf' as const, title: 'МДФ' },
-  { key: 'pvc' as const, title: 'ПВХ' },
+const groups = cols.map(c => products.filter(p => p.kind === c.kind))
+function specs(items: Product[], key: 'thicknessMm' | 'weightKg', unit: string) {
+  const values = [...new Set(items.flatMap(p => p[key] === undefined ? [] : [p[key]!]))]
+  return values.length ? values.sort((a, b) => a - b).map(n => n.toLocaleString('ru-RU')).join(' / ') + ' ' + unit : 'В PDF не указан' + (key === 'thicknessMm' ? 'а' : '')
+}
+const rows = [
+  { param: 'Позиций в каталоге', values: groups.map(items => String(items.length)) },
+  { param: 'Цена за единицу', values: groups.map(items => formatRange({ min: Math.min(...items.map(p => p.priceRub)), max: Math.max(...items.map(p => p.priceRub)) }) + ' ₽ / ' + [...new Set(items.map(p => p.unit))].join(' или ')) },
+  { param: 'Размер', values: groups.map(items => [...new Set(items.map(formatDimensions))].join('; ')) },
+  { param: 'Толщина', values: groups.map(items => specs(items, 'thicknessMm', 'мм')) },
+  { param: 'Вес', values: groups.map(items => specs(items, 'weightKg', 'кг')) },
 ]
 
 export function Compare() {
@@ -21,51 +23,16 @@ export function Compare() {
     <section className="section compare" id="compare">
       <div className="container">
         <div className="catalog-header" style={{ marginBottom: '3rem' }}>
-          <div>
-            <p className="eyebrow">Сравнение</p>
-            <h2>Домэра против<br/>привычных отделок</h2>
-          </div>
-          <p className="lead">
-            Почему бамбуковый композит выигрывает по совокупности
-            параметров — честно и по фактам.
-          </p>
+          <div><p className="eyebrow">Характеристики</p><h2>Разные материалы<br/>для вашего проекта</h2></div>
+          <p className="lead">Сводка по карточкам каталога 2026. Точные параметры выбранного изделия указаны в его карточке.</p>
         </div>
-
-        <motion.div
-          className="compare-scroll"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-40px' }}
-          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-        >
+        <motion.div className="compare-scroll" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-40px' }} transition={{ duration: 0.8 }}>
           <table className="compare-table">
-            <thead>
-              <tr>
-                <th className="compare-param">Параметр</th>
-                {cols.map((c) => (
-                  <th key={c.key} className={c.key === 'domera' ? 'col-domera' : ''}>
-                    {c.title}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.param}>
-                  <td className="compare-param">{r.param}</td>
-                  <td className="col-domera">{r.domera}</td>
-                  <td>{r.wall}</td>
-                  <td>{r.mdf}</td>
-                  <td>{r.pvc}</td>
-                </tr>
-              ))}
-            </tbody>
+            <thead><tr><th className="compare-param">Параметр</th>{cols.map((c, i) => <th key={c.kind} className={i === 0 ? 'col-domera' : ''}>{c.title}</th>)}</tr></thead>
+            <tbody>{rows.map(r => <tr key={r.param}><td className="compare-param">{r.param}</td>{r.values.map((v, i) => <td key={cols[i].kind} className={i === 0 ? 'col-domera' : ''}>{v}</td>)}</tr>)}</tbody>
           </table>
         </motion.div>
-
-        <p className="compare-note">
-          Ориентировочные данные. Точная цена зависит от коллекции и площади — рассчитайте в калькуляторе или спросите менеджера.
-        </p>
+        <p className="compare-note">Отсутствующие в PDF значения не подставляются. Наличие, состав, совместимость и условия применения уточняйте по конкретной модели.</p>
       </div>
     </section>
   )

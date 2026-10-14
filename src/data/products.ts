@@ -1,48 +1,88 @@
-export type CollectionId =
-  | 'wood'
-  | 'fabric'
-  | 'solid'
-  | 'metal'
-  | 'soft'
-  | 'plaster'
-  | 'decor3d'
-  | 'slats'
-  | 'profiles'
+import type { Product, Collection, CollectionId } from './catalogModel.ts'
+import { sourceInventory } from './catalog2026.ts'
+export type { Product, Collection, CollectionId, ProductKind, SourceProduct } from './catalogModel.ts'
+export { sourceInventory, catalogSource } from './catalog2026.ts'
 
-export interface Product {
-  id: string
-  sku: string
-  name: string
-  collection: CollectionId
-  price: number
-  size: string
-  thickness: string
-  weight: string
-  image: string
-  swatch: string
-  description?: string
-  unit?: string
+// Public names use only source labels, variant subtitles, or the official SKU.
+export const products: Product[] = sourceInventory
+  .filter(p => p.status === 'verified' && p.image !== null && (p.name !== null || p.sku !== null))
+  .map(({ status: _status, ...p }) => ({
+    ...p,
+    name: p.variant ? `${p.name} — ${p.variant}` : p.name ?? p.sku!,
+    image: p.image!,
+    swatch: p.image!,
+  }))
+
+const categoryNames: Record<CollectionId, [string, string]> = {
+  wood: ['Дерево', 'Wood Series'],
+  fabric: ['Ткань', 'Fabric Series'],
+  metal: ['Металл', 'Metal Series'],
+  bamboo_stone: ['Бамбук под камень', 'Bamboo Stone'],
+  soft: ['Софт-тач', 'Soft Touch'],
+  flexible_stone: ['Гибкий камень', 'Flexible Stone'],
+  plaster: ['Штукатурка', 'Plaster Series'],
+  slats: ['Декоративные рейки', 'Decorative Slats'],
+  profiles: ['Профиль и комплектующие', 'Profiles & Trims'],
 }
 
-export interface Collection {
-  id: CollectionId
-  name: string
-  nameEn: string
-  description: string
-  banner: string
-  count: number
+export const collections: Collection[] = (Object.keys(categoryNames) as CollectionId[]).map(id => {
+  const items = products.filter(p => p.categoryId === id)
+  const [name, nameEn] = categoryNames[id]
+  return { id, name, nameEn, description: `${name}: позиции каталога Домэра 2026. Характеристики и цена указаны в карточке каждого изделия.`, banner: items[0].image, count: items.length }
+})
+
+export function filterProducts(category: CollectionId | 'all', search: string): Product[] {
+  const q = search.trim().toLocaleLowerCase('ru-RU')
+  return products.filter(p => (category === 'all' || p.categoryId === category) &&
+    (!q || p.name.toLocaleLowerCase('ru-RU').includes(q) || p.sku?.toLocaleLowerCase('ru-RU').includes(q)))
 }
 
-export const SPECS = {
-  size: '1220 × 3000 мм',
-  thickness: '5 мм',
-  weight: '13 кг',
-  density: '0,7 г/см³',
-  material: 'Древесно-бамбуковый композит',
-  mount: 'На клей, без видимого крепежа',
-  glue: 'PUR, горячего нанесения',
-  surface: 'ПВХ / ПП плёнка',
-  applications: ['Гостиная', 'Спальня', 'Прихожая', 'Офис', 'Отель', 'Ресторан'],
+export function formatDimensions(p: Product): string {
+  return p.dimensions.widthMm !== undefined
+    ? `${p.dimensions.widthMm} × ${p.dimensions.lengthMm} мм`
+    : `Длина ${p.dimensions.lengthMm} мм`
+}
+
+export function productDetails(p: Product): [string, string][] {
+  const details: [string, string][] = [
+    ['Категория', collections.find(c => c.id === p.categoryId)!.name],
+    ['Размеры', formatDimensions(p)],
+  ]
+  if (p.sku) details.splice(1, 0, ['Артикул', p.sku])
+  if (p.thicknessMm !== undefined) details.push(['Толщина', `${p.thicknessMm.toLocaleString('ru-RU')} мм`])
+  if (p.weightKg !== undefined) details.push(['Вес', `${p.weightKg.toLocaleString('ru-RU')} кг`])
+  if (p.material) details.push(['Материал', p.material])
+  return details
+}
+
+export const sheetProducts = products.filter(p => (p.kind === 'panel' || p.kind === 'flexible_stone') && p.dimensions.widthMm !== undefined)
+const panels = products.filter(p => p.kind === 'panel')
+const range = (values: number[]) => ({ min: Math.min(...values), max: Math.max(...values) })
+export const catalogSummary = {
+  productCount: products.length,
+  categoryCount: collections.length,
+  sheetWidth: range(sheetProducts.map(p => p.dimensions.widthMm!)),
+  panelThickness: range(panels.flatMap(p => p.thicknessMm === undefined ? [] : [p.thicknessMm])),
+  panelWeight: range(panels.flatMap(p => p.weightKg === undefined ? [] : [p.weightKg])),
+  sheetLength: range(sheetProducts.map(p => p.dimensions.lengthMm)),
+}
+export const formatRange = ({ min, max }: { min: number; max: number }) =>
+  min === max ? min.toLocaleString('ru-RU') : `${min.toLocaleString('ru-RU')}–${max.toLocaleString('ru-RU')}`
+
+export const priceSummary = collections.map(c => {
+  const items = products.filter(p => p.categoryId === c.id)
+  return `${c.name}: ${formatRange(range(items.map(p => p.priceRub)))} ₽/${items[0].unit}`
+}).join('; ')
+
+// Only exact official SKU + visually checked source-image correspondences.
+export const legacyCartIds: Readonly<Record<string, string>> = {
+  "C807601-36": "pdf2026-p06-r1c2",
+  "671-A227": "pdf2026-p09-r1c1",
+  "8225-6-B1": "pdf2026-p09-r1c2",
+  "8305-W": "pdf2026-p09-r2c1",
+  "6011-2": "pdf2026-p17-r1c2",
+  "6652-71": "pdf2026-p23-r1c1",
+  "009-A229": "pdf2026-p23-r1c2"
 }
 
 const hostname = 'xn--80ahyhl1f.xn--p1ai'
@@ -67,207 +107,13 @@ export const CONTACTS = {
   delivery: 'Самовывоз или отправка в день заказа',
 }
 
-export const collections: Collection[] = [
-  {
-    id: 'wood',
-    name: 'Дерево',
-    nameEn: 'Wood Series',
-    description:
-      'Натуральная фактура дерева: тёплые тона и выразительный классический «шёлк».',
-    banner: 'catalog/hero/banner-wood.webp',
-    count: 10,
-  },
-  {
-    id: 'fabric',
-    name: 'Ткань',
-    nameEn: 'Fabric Series',
-    description:
-      'Тканевая фактура: переплетение нитей и мягкий матовый блеск. Уют текстиля в прочной панели.',
-    banner: 'catalog/hero/banner-fabric.webp',
-    count: 4,
-  },
-  {
-    id: 'solid',
-    name: 'Однотон',
-    nameEn: 'Solid Series',
-    description: 'Глубокие однотонные поверхности для минималистичных интерьеров.',
-    banner: 'catalog/hero/banner-solid.webp',
-    count: 2,
-  },
-  {
-    id: 'metal',
-    name: 'Металл',
-    nameEn: 'Metal Series',
-    description:
-      'Металлический эффект: шлифованная сталь и серебристый рельеф. Холодный блеск, глубокий характер.',
-    banner: 'catalog/hero/banner-metal.webp',
-    count: 2,
-  },
-  {
-    id: 'soft',
-    name: 'Софт-тач',
-    nameEn: 'Soft Touch Series',
-    description:
-      'Бархатная матовая поверхность Soft-touch: глубокий цвет и приятная на ощупь фактура.',
-    banner: 'catalog/hero/banner-soft.webp',
-    count: 2,
-  },
-  {
-    id: 'plaster',
-    name: 'Штукатурка',
-    nameEn: 'Plaster Series',
-    description:
-      'Эффект венецианской декоративной штукатурки: мягкие переливы и благородная глубина.',
-    banner: 'catalog/hero/banner-plaster.webp',
-    count: 2,
-  },
-  {
-    id: 'decor3d',
-    name: 'Декор 3D «Рябь»',
-    nameEn: 'Decor 3D',
-    description: 'Объёмный 3D-декор «Рябь» с перламутровым свечением.',
-    banner: 'catalog/hero/banner-decor3d.webp',
-    count: 1,
-  },
-  {
-    id: 'slats',
-    name: 'Декоративные рейки',
-    nameEn: 'Decorative Slats',
-    description:
-      'Реечные панели шириной 15,5 см и высотой 3 м для объёмных акцентных стен.',
-    banner: 'catalog/hero/banner-slats.webp',
-    count: 3,
-  },
-]
 
-const panel = ({ swatch, ...p }: Omit<Product, 'price' | 'size' | 'thickness' | 'weight' | 'image' | 'swatch'> & { price?: number; size?: string; swatch?: string }) => {
-  const image = `catalog/products/${p.id}.webp`
-  return {
-    price: p.price ?? 6000,
-    size: p.size ?? SPECS.size,
-    thickness: SPECS.thickness,
-    weight: SPECS.weight,
-    image,
-    swatch: swatch ?? image,
-    unit: 'шт',
-    ...p,
-  } as Product
-}
-
-export const products: Product[] = [
-  // Wood
-  panel({ id: '919-4', sku: '919-4', name: 'Дуб натуральный', collection: 'wood', description: 'Тёплый натуральный дуб с живой текстурой.' }),
-  panel({ id: '8548', sku: '8548', name: 'Дуб выбеленный', collection: 'wood', description: 'Светлый выбеленный дуб для воздушных интерьеров.' }),
-  panel({ id: '2312-309', sku: '2312-309', name: 'Дуб дымчатый', collection: 'wood', description: 'Мягкий дымчатый оттенок дуба.' }),
-  panel({ id: '8891-5', sku: '8891-5', name: 'Орех диагональ', collection: 'wood', description: 'Выразительный орех с диагональным рисунком.' }),
-  panel({ id: '8163-11Y73', sku: '8163-11Y73', name: 'Орех американский', collection: 'wood', description: 'Насыщенный американский орех.' }),
-  panel({ id: '8892-2', sku: '8892-2', name: 'Дуб тёмный', collection: 'wood', description: 'Глубокий тёмный дуб.' }),
-  panel({ id: '921-1', sku: '921-1', name: 'Дуб мокко', collection: 'wood', description: 'Благородный оттенок мокко.' }),
-  panel({ id: 'elka-seraya', sku: 'ELKA-S', name: 'Ёлка серая', collection: 'wood', description: 'Ёлочный рисунок в серых тонах.' }),
-  panel({ id: 'elka-temnaya', sku: 'ELKA-T', name: 'Ёлка тёмная', collection: 'wood', description: 'Тёмная ёлка для акцентных стен.' }),
-  panel({ id: 'C807601-36', sku: 'C807601-36', name: 'Ясень песочный', collection: 'wood', description: 'Светлый ясень с песочным теплом.' }),
-
-  // Fabric
-  panel({ id: '671-A227', sku: '671-A227', name: 'Рогожка белая', collection: 'fabric', description: 'Мягкая белая рогожка.' }),
-  panel({ id: '8225-6-B1', sku: '8225-6-B1', name: 'Лён кремовый', collection: 'fabric', description: 'Кремовый лён с живым переплетением.' }),
-  panel({ id: '8305-W', sku: '8305-W', name: 'Лён светло-серый', collection: 'fabric', description: 'Светло-серый текстильный лён.' }),
-  panel({ id: '962-1', sku: '962-1', name: 'Букле серое', collection: 'fabric', description: 'Тактильное серое букле.' }),
-
-  // Solid
-  panel({ id: '002-A229', sku: '002-A229', name: 'Бронзовый', collection: 'solid', description: 'Глубокий бронзовый однотон.' }),
-  panel({ id: '013-A229', sku: '013-A229', name: 'Графит', collection: 'solid', description: 'Строгий графитовый однотон.' }),
-
-  // Metal
-  panel({ id: '006-2', sku: '006-2', name: 'Сталь шлифованная', collection: 'metal', description: 'Холодный блеск шлифованной стали.' }),
-  panel({ id: '001-A261', sku: '001-A261', name: 'Серебристый рубчик', collection: 'metal', description: 'Серебристый рельефный рубчик.' }),
-
-  // Soft touch
-  panel({ id: 'JGFG-022', sku: 'JGFG-022', name: 'Песочный soft-touch', collection: 'soft', description: 'Бархатный песочный soft-touch.' }),
-  panel({ id: '6011-2', sku: '6011-2', name: 'Карамель soft-touch', collection: 'soft', description: 'Тёплая карамель с матовой бархатистостью.' }),
-
-  // Plaster
-  panel({ id: '002-A235', sku: '002-A235', name: 'Венецианская, золото', collection: 'plaster', description: 'Венецианская штукатурка с золотым отливом.' }),
-  panel({ id: 'M3201-254', sku: 'M3201-254', name: 'Венецианская, жемчуг', collection: 'plaster', description: 'Жемчужная венецианская штукатурка.' }),
-
-  // Decor 3D
-  panel({ id: 'ryab-3d', sku: 'RYAB-3D', name: 'Рябь 3D, перламутр', collection: 'decor3d', description: 'Объёмная рябь с перламутровым свечением.' }),
-
-  // Slats
-  panel({
-    id: '6652-71',
-    sku: '6652-71',
-    name: 'Рейка, фактура ткань',
-    collection: 'slats',
-    price: 1500,
-    size: '155 × 3000 мм',
-    description: 'Декоративная рейка с тканевой фактурой.',
-  }),
-  panel({
-    id: '009-A229',
-    sku: '009-A229',
-    name: 'Рейка, металлик',
-    collection: 'slats',
-    price: 1500,
-    size: '155 × 3000 мм',
-    description: 'Декоративная рейка с металлическим эффектом.',
-  }),
-  panel({
-    id: 'slat-plaster',
-    sku: 'SLAT-PL',
-    name: 'Рейка, штукатурка золото',
-    collection: 'slats',
-    price: 1500,
-    size: '155 × 3000 мм',
-    description: 'Рейка с эффектом венецианской штукатурки.',
-  }),
-]
-
-export const structureLayers = [
-  {
-    n: '01',
-    title: 'Декоративная плёнка',
-    text: 'ПВХ / ПП, износостойкая поверхность с точной имитацией фактур.',
-  },
-  {
-    n: '02',
-    title: 'Клей PUR',
-    text: 'Горячего нанесения — надёжно, без расслоения и без запаха.',
-  },
-  {
-    n: '03',
-    title: 'Со-экструзионный слой',
-    text: 'Ровная основа и прочное сцепление слоёв в процессе экструзии.',
-  },
-  {
-    n: '04',
-    title: 'Бамбук-полимерный сердечник',
-    text: 'ABA-структура, плотность 0,7 г/см³ — лёгкость и прочность.',
-  },
-]
 
 export const faq = [
-  {
-    q: 'Какой размер панелей и что есть в наличии?',
-    a: 'Стандартный формат стеновых панелей — 1220 × 3000 мм, толщина 5 мм. Декоративные рейки — 155 × 3000 мм. На нашем складе в Москве всегда в наличии панели, завершающие и LED-профили, а также жидкие гвозди для монтажа.',
-  },
-  {
-    q: 'Как осуществляется доставка?',
-    a: 'Самовывоз со склада (Алтуфьевское ш., 37с1) или отправка в день заказа. Доставка осуществляется силами покупателей, но мы можем предоставить контакты проверенной транспортной компании.',
-  },
-  {
-    q: 'Сколько стоит панель?',
-    a: 'Стеновые панели коллекции 2026 — 6 000 ₽/шт. Декоративные рейки — от 1 500 ₽/шт. Профили комплектуются отдельно.',
-  },
-  {
-    q: 'Как монтируются панели?',
-    a: 'Быстрый монтаж на клей (жидкие гвозди) без видимого крепежа и грязных работ. Подходят для квартир, коммерческих помещений, кафе и салонов.',
-  },
-  {
-    q: 'Где можно применять?',
-    a: 'Гостиные, спальни, прихожие, ТВ-зоны, офисы, магазины, рестораны и ресепшн-зоны. Влагостойки и устойчивы к ежедневной эксплуатации.',
-  },
-  {
-    q: 'Нужно ли записываться в шоурум?',
-    a: 'Нет, приезжайте без записи. У нас не просто шоурум, а большой склад — панели можно посмотреть вживую и сразу забрать. Ежедневно 11:00–20:00.',
-  },
+  { q: 'Какие материалы и размеры есть в каталоге?', a: `В каталоге ${products.length} позиций в ${collections.length} категориях: панели, гибкий камень, рейки и алюминиевые профили. Размер, толщина и масса зависят от изделия; смотрите конкретную карточку. Наличие уточняет менеджер.` },
+  { q: 'Как осуществляется доставка?', a: 'Способ доставки, стоимость и сроки уточните у менеджера для выбранных материалов. Адрес шоурума указан в контактах.' },
+  { q: 'Сколько стоят материалы?', a: `${priceSummary}. Это цены каталога 2026; наличие и условия покупки уточните у менеджера.` },
+  { q: 'Как монтируются материалы?', a: 'Способ монтажа и комплектующие зависят от выбранного материала. Уточните совместимость профиля с толщиной панели и рекомендации для вашего основания.' },
+  { q: 'Где можно применять материалы?', a: 'Каталог предлагает фактуры для жилых и коммерческих интерьеров. Пригодность для влажных зон и других специальных условий нужно подтвердить для конкретного изделия.' },
+  { q: 'Нужно ли записываться в шоурум?', a: `Приезжайте без записи. ${CONTACTS.hours}. Наличие нужного образца и товара можно уточнить заранее в Telegram или по телефону.` },
 ]

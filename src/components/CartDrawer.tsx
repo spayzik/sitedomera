@@ -1,6 +1,6 @@
 import { useCart } from '../context/CartContext'
 import { X, Minus, Plus, Trash2, ArrowRight } from 'lucide-react'
-import { CONTACTS } from '../data/products'
+import { CONTACTS, formatDimensions } from '../data/products'
 import { AnimatePresence, motion } from 'framer-motion'
 import { buildTelegramDraftUrl, formatCartTelegramMessage } from '../lib/telegramLink'
 import { useDialog } from '../lib/useDialog'
@@ -47,7 +47,7 @@ export function CartDrawer() {
               {!items.length && (
                 <div className="empty-cart">
                   <p>Корзина пуста</p>
-                  <span>Добавьте панели из каталога или примерки</span>
+                  <span>Добавьте материалы из каталога</span>
                 </div>
               )}
               {items.map((i) => (
@@ -61,7 +61,8 @@ export function CartDrawer() {
                   <img src={i.product.swatch} alt="" />
                   <div className="cart-info">
                     <strong>{i.product.name}</strong>
-                    <span className="price">{i.product.price.toLocaleString('ru-RU')} ₽</span>
+                    <span>{i.product.sku ? `Артикул: ${i.product.sku}` : formatDimensions(i.product)}</span>
+                    <span className="price">{i.product.priceRub.toLocaleString('ru-RU')} ₽/{i.product.unit} · {(i.product.priceRub * i.qty).toLocaleString('ru-RU')} ₽</span>
                     <div className="qty-controls">
                       <button onClick={() => setQty(i.product.id, i.qty - 1)} aria-label="Уменьшить">
                         <Minus size={14} />

@@ -1,19 +1,19 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { collections, products, type CollectionId, type Product } from '../data/products'
+import { collections, products, type CollectionId, type Product, formatDimensions } from '../data/products'
 import { useCart } from '../context/CartContext'
 import { ProductModal } from './ProductModal'
 import { TiltCard } from './TiltCard'
 import { ArrowUpRight, ShoppingBag } from 'lucide-react'
 
-const FEATURED = ['919-4', '962-1', '002-A229', '006-2', 'ryab-3d', '002-A235']
+const FEATURED = collections.slice(0, 6).map(c => products.find(p => p.categoryId === c.id)!.id)
 
 export function Catalog() {
   const [filter, setFilter] = useState<CollectionId | 'all'>('all')
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const { add } = useCart()
 
-  const list = filter === 'all' ? products : products.filter((p) => p.collection === filter)
+  const list = filter === 'all' ? products : products.filter((p) => p.categoryId === filter)
   const preview = filter === 'all' ? FEATURED.map(id => products.find(p => p.id === id)!).filter(Boolean) : list
 
   return (
@@ -27,7 +27,7 @@ export function Catalog() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', alignItems: 'flex-start' }}>
               <p className="lead">
-                {products.length} артикулов из бамбукового композита.
+                {products.length} позиций: панели, гибкий камень, рейки и профили.
                 Выберите фактуру для детального изучения.
               </p>
               <a href="#/catalog" className="btn btn-white interactive">
@@ -70,7 +70,7 @@ export function Catalog() {
                       <img src={p.swatch} alt="" loading="lazy" className="img-hover" />
                     </TiltCard>
                     <div className="card-arch-tag">
-                      {collections.find(c => c.id === p.collection)?.name}
+                      {collections.find(c => c.id === p.categoryId)?.name}
                     </div>
                     <div className="card-arch-overlay">
                       <button className="btn-view" aria-label={`Подробнее: ${p.name}`} onClick={(e) => { e.stopPropagation(); setSelectedProduct(p) }}>Смотреть детали</button>
@@ -86,9 +86,9 @@ export function Catalog() {
                   <div className="card-arch-info">
                     <div>
                       <h3>{p.name}</h3>
-                      <p>{p.sku} · {p.size}</p>
+                      <p>{p.sku ? `${p.sku} · ` : ''}{formatDimensions(p)}</p>
                     </div>
-                    <p className="card-arch-price">{p.price.toLocaleString('ru-RU')} ₽</p>
+                    <p className="card-arch-price">{p.priceRub.toLocaleString('ru-RU')} ₽/{p.unit}</p>
                   </div>
                 </motion.div>
               ))}
@@ -97,7 +97,7 @@ export function Catalog() {
 
           <div className="catalog-more">
             <a href="#/catalog" className="btn btn-primary interactive">
-              Смотреть все {products.length} артикулов
+              Смотреть все {products.length} позиций
             </a>
           </div>
         </div>

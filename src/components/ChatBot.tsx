@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { MessageCircle, X, Send } from 'lucide-react'
-import { faq, CONTACTS, products, collections } from '../data/products'
+import { faq, CONTACTS, products, collections, priceSummary } from '../data/products'
 
 interface Msg {
   from: 'bot' | 'user'
@@ -13,32 +13,32 @@ function answer(input: string): string {
   if (/привет|здравств|добрый|hello|hi/.test(q)) {
     return `Здравствуйте! Я помощник "${CONTACTS.brand}". Спросите про размеры, цены, монтаж, коллекции или доставку.`
   }
-  if (/цен|стоим|сколько|руб|6000/.test(q)) {
-    return 'Стеновые панели — 6 000 ₽/шт. Декоративные рейки — 1 500 ₽/шт. Профили комплектуются отдельно.'
+  if (/цен|стоим|сколько|руб/.test(q)) {
+    return priceSummary + '. Наличие уточните у менеджера.'
   }
   if (/размер|габарит|1220|толщин|вес|мм/.test(q)) {
-    return 'Панель: 1220 x 3000 x 5 мм, вес ~ 13 кг. Рейки: 155 x 3000 мм.'
+    return faq[0].a
   }
   if (/монтаж|кле|креп|установ/.test(q)) {
-    return 'Монтаж на клей без видимого крепежа. Панели легко режутся, стыкуются алюминиевыми профилями.'
+    return faq[3].a
   }
   if (/достав|отправ|город|росси/.test(q)) {
-    return `Доставляем по всей России. Для расчёта логистики напишите город менеджеру в Telegram: ${CONTACTS.telegram} или позвоните ${CONTACTS.phone}.`
+    return `Способ доставки, сроки и стоимость уточните у менеджера. Для расчёта логистики напишите город менеджеру в Telegram: ${CONTACTS.telegram} или позвоните ${CONTACTS.phone}.`
   }
   if (/шоурум|офис|адрес|приехать|образц/.test(q)) {
     return `Шоурум по адресу ${CONTACTS.address} открыт ${CONTACTS.hours.toLowerCase()}. Уточнить детали можно по телефону ${CONTACTS.phone} или в Telegram: ${CONTACTS.telegram}.`
   }
   if (/коллекц|серия|фактур|дерево|ткан|металл|штукатур/.test(q)) {
-    return `Коллекции: ${collections.map((c) => c.name).join(', ')}. Всего ${products.length} артикулов в каталоге 2026.`
+    return `Коллекции: ${collections.map((c) => c.name).join(', ')}. Всего ${products.length} позиций в каталоге 2026.`
   }
   if (/бамбук|материал|wpc|состав/.test(q)) {
-    return 'Основа — древесно-бамбуковый композит (ABA), плотность 0,7 г/см\u00B3. Сверху декоративная ПВХ/ПП пленка на PUR-клее.'
+    return 'В каталоге есть бамбуковые панели, гибкий камень, рейки и алюминиевые профили. Состав и условия применения уточняются по конкретному изделию.'
   }
   if (/телефон|связ|контакт|менедж/.test(q)) {
     return `Телефон: ${CONTACTS.phone}. Telegram: ${CONTACTS.telegram}. Магазин на Авито: ${CONTACTS.avito}.`
   }
   if (/влаг|ванн|кухн|влажн/.test(q)) {
-    return 'Панели устойчивы к влаге и перепадам температур — подходят для жилых и коммерческих зон.'
+    return faq[4].a
   }
 
   const hit = faq.find(

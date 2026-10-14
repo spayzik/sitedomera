@@ -45,6 +45,8 @@ jobs:
         run: npm run test:seo
       - name: Test calculator
         run: npm run test:calculator
+      - name: Test catalog integrity
+        run: npm run test:catalog
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact

@@ -1,12 +1,12 @@
 import { motion } from 'framer-motion'
-import { CONTACTS } from '../data/products'
+import { CONTACTS, catalogSummary, formatRange } from '../data/products'
 import { Counter } from './Counter'
 
 const stats = [
-  { to: 3000, suffix: '', text: null as null, label: 'высота панели, мм' },
-  { to: 5, suffix: '', text: null, label: 'толщина, мм' },
-  { to: 13, suffix: '', text: null, label: 'вес панели, кг' },
-  { to: null as null, suffix: '', text: '0,7', label: 'плотность, г/см³' },
+  { to: catalogSummary.productCount, suffix: '', text: null as string | null, label: 'позиций в каталоге' },
+  { to: catalogSummary.categoryCount, suffix: '', text: null, label: 'категорий материалов' },
+  { to: null as number | null, suffix: '', text: formatRange(catalogSummary.panelThickness), label: 'толщина панелей, мм' },
+  { to: null as number | null, suffix: '', text: formatRange(catalogSummary.panelWeight), label: 'вес панелей, кг' },
 ]
 
 export function Manifest() {

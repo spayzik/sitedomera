@@ -6,6 +6,8 @@
 
 ```text
 source repository → npm ci → npm run build → npm run verify:production → dist/* → document root
+
+Release gate также включает lint, audit и Node tests: Avito, Telegram, SEO, Calculator, Catalog (`npm run test:catalog`). До публикации CATALOG-16 обязательны независимая проверка Chief и закрытие вопросов OWNER-CATALOG-2026-QUESTIONS.md.
 ```
 
 - Production: `https://домэра.рф/` (`https://xn--80ahyhl1f.xn--p1ai/`). Это единственный canonical origin.
