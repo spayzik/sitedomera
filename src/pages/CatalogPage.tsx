@@ -6,25 +6,29 @@ import { ProductModal } from '../components/ProductModal'
 import { TiltCard } from '../components/TiltCard'
 import { Counter } from '../components/Counter'
 import { ArrowUpRight, ArrowDown, Ruler, Scale, ShoppingBag } from 'lucide-react'
+import { parseCatalogHash, updateCatalogHash } from '../lib/catalogNavigation'
 
 export function CatalogPage() {
-  const [filter, setFilter] = useState<CollectionId | 'all'>('all')
+  const [hash, setHash] = useState(() => window.location.hash)
+  const { categoryId: filter, product: selectedProduct } = parseCatalogHash(hash)
   const { add } = useCart()
   const [search, setSearch] = useState('')
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(() => {
-    // Deep link uses stable internal product ID; official SKU is optional.
-    const raw = window.location.hash.split('?')[1] ?? ''
-    const id = new URLSearchParams(raw).get('sku')
-    return id ? products.find((p) => p.id === id || p.sku === id) ?? null : null
-  })
-
-  // Синхронизируем URL с открытой панелью (replaceState — без скачков скролла)
-  const openProduct = (p: Product | null) => {
-    setSelectedProduct(p)
-    const base = window.location.hash.split('?')[0] || '#/catalog'
-    const next = p ? `${base}?sku=${encodeURIComponent(p.id)}` : base
-    history.replaceState(null, '', next)
+  useEffect(() => {
+    const sync = () => setHash(window.location.hash)
+    window.addEventListener('hashchange', sync)
+    window.addEventListener('popstate', sync)
+    return () => {
+      window.removeEventListener('hashchange', sync)
+      window.removeEventListener('popstate', sync)
+    }
+  }, [])
+  const navigate = (patch: Parameters<typeof updateCatalogHash>[1]) => {
+    const next = updateCatalogHash(window.location.hash, patch)
+    if (next !== window.location.hash) history.pushState(null, '', next)
+    setHash(next)
   }
+  const openProduct = (p: Product | null) => navigate({ sku: p?.id ?? null })
+  const setFilter = (category: CollectionId | 'all') => navigate({ category })
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })

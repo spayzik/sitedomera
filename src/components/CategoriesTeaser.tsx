@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { collections } from '../data/products'
+import { updateCatalogHash } from '../lib/catalogNavigation'
 
 const categories = collections.map(c => ({
   id: c.id, title: c.name, bg: c.banner,
@@ -21,8 +22,10 @@ export function CategoriesTeaser() {
         const isMuted = hovered !== null && !isActive
 
         return (
-          <motion.article
+          <motion.a
             key={category.id}
+            href={updateCatalogHash('#/catalog', { category: category.id })}
+            aria-label={`Открыть категорию: ${category.title}`}
             className={`cat-panel interactive${isActive ? ' is-active' : ''}${isMuted ? ' is-muted' : ''}`}
             onMouseEnter={() => setHovered(category.id)}
             onFocus={() => setHovered(category.id)}
@@ -42,7 +45,7 @@ export function CategoriesTeaser() {
                 </div>
               </div>
             </div>
-          </motion.article>
+          </motion.a>
         )
       })}
     </section>

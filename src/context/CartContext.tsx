@@ -8,7 +8,7 @@ import {
 } from 'react'
 import { products } from '../data/products'
 import type { Product } from '../data/products'
-import { restoreCart, cartSnapshot, cartTotal, MAX_QTY } from '../lib/cart'
+import { loadCartState, cartSnapshot, cartTotal, MAX_QTY } from '../lib/cart'
 import type { CartItem } from '../lib/cart'
 export type { CartItem } from '../lib/cart'
 
@@ -22,19 +22,24 @@ interface CartCtx {
   clear: () => void
   open: boolean
   setOpen: (v: boolean) => void
+  migrationNotice: boolean
+  dismissMigrationNotice: () => void
 }
 
 const Ctx = createContext<CartCtx | null>(null)
 
 const STORAGE_KEY = 'domera-cart-v1'
+const NOTICE_KEY = 'domera-cart-update-notice-v1'
 
 const byId = new Map(products.map((p) => [p.id, p]))
 
-function loadStored(): CartItem[] {
+function loadStored() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? restoreCart(JSON.parse(raw)) : []
-  } catch { return [] }
+    const pending = localStorage.getItem(NOTICE_KEY) === 'pending'
+    try { return loadCartState(raw ? JSON.parse(raw) : [], pending) }
+    catch { return loadCartState([], pending) }
+  } catch { return loadCartState([], false) }
 }
 
 function persist(items: CartItem[]) {
@@ -49,12 +54,18 @@ function persist(items: CartItem[]) {
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>(loadStored)
+  const [initial] = useState(loadStored)
+  const [items, setItems] = useState<CartItem[]>(initial.items)
+  const [migrationNotice, setMigrationNotice] = useState(initial.migrationNotice)
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
     persist(items)
-  }, [items])
+    try {
+      if (migrationNotice) localStorage.setItem(NOTICE_KEY, 'pending')
+      else localStorage.removeItem(NOTICE_KEY)
+    } catch { /* Storage unavailable: notice still works during this visit. */ }
+  }, [items, migrationNotice])
 
   const api = useMemo<CartCtx>(() => {
     const add = (p: Product, qty = 1) => {
@@ -85,8 +96,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const clear = () => setItems([])
     const count = items.reduce((s, x) => s + x.qty, 0)
     const total = cartTotal(items)
-    return { items, count, total, add, remove, setQty, clear, open, setOpen }
-  }, [items, open])
+    return { items, count, total, add, remove, setQty, clear, open, setOpen, migrationNotice, dismissMigrationNotice: () => setMigrationNotice(false) }
+  }, [items, open, migrationNotice])
 
   return <Ctx.Provider value={api}>{children}</Ctx.Provider>
 }

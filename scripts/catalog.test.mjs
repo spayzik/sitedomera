@@ -6,6 +6,75 @@ import * as catalog from '../src/data/products.ts'
 import { calculatePanels } from '../src/lib/calculator.ts'
 import { formatCartTelegramMessage, formatProductTelegramMessage } from '../src/lib/telegramLink.ts'
 
+test('category navigation preserves product and other query parameters through product open/close', async () => {
+  const { parseCatalogHash, updateCatalogHash } = await import('../src/lib/catalogNavigation.ts')
+  for (const c of catalog.collections) {
+    const hash = updateCatalogHash('#/catalog', { category: c.id })
+    assert.equal(parseCatalogHash(hash).categoryId, c.id)
+    assert.ok(catalog.filterProducts(parseCatalogHash(hash).categoryId, '').length)
+  }
+  const base = '#/catalog?category=fabric&campaign=a%26b'
+  const opened = updateCatalogHash(base, { sku: '671-A227' })
+  assert.equal(parseCatalogHash(opened).product.sku, '671-A227')
+  assert.equal(parseCatalogHash(opened).categoryId, 'fabric')
+  assert.equal(new URLSearchParams(opened.split('?')[1]).get('campaign'), 'a&b')
+  const closed = updateCatalogHash(opened, { sku: null })
+  assert.equal(closed, base)
+  assert.equal(parseCatalogHash(closed).product, null)
+  assert.equal(parseCatalogHash('#/catalog?category=invalid&sku=unknown').categoryId, 'all')
+  assert.equal(parseCatalogHash(updateCatalogHash(opened, { category: 'wood' })).product.sku, '671-A227')
+})
+
+test('quiz uses all three answers, restarts cleanly and never filters panels by project budget', async () => {
+  const { quizQuestions, createQuizState, quizReducer, quizResultContext } = await import('../src/lib/quiz.ts')
+  assert.equal(quizQuestions.length, 3)
+  let state = createQuizState()
+  for (const [step, id] of ['bedroom', 'cozy', 'basic'].entries()) {
+    assert.equal(state.step, step)
+    state = quizReducer(state, { type: 'answer', id })
+  }
+  assert.equal(state.step, 3)
+  assert.deepEqual(state.answers, { room: 'bedroom', style: 'cozy', budget: 'basic' })
+  assert.match(quizResultContext(state), /Спальня/)
+  assert.match(quizResultContext(state), /60 000/)
+  assert.deepEqual(state.categoryIds, ['wood', 'fabric', 'soft'])
+  state = quizReducer(state, { type: 'product', id: 'pdf2026-p06-r1c2' })
+  assert.equal(state.productId, 'pdf2026-p06-r1c2')
+  state = quizReducer(state, { type: 'category', id: 'fabric' })
+  assert.equal(state.productId, '')
+  state = quizReducer(state, { type: 'restart' })
+  assert.deepEqual(state, createQuizState())
+  for (const id of ['office', 'metal', 'premium']) state = quizReducer(state, { type: 'answer', id })
+  assert.deepEqual(state.categoryIds, ['metal'])
+  assert.match(quizResultContext(state), /Офис/)
+  assert.match(quizResultContext(state), /120 000/)
+  const invalid = quizReducer(state, { type: 'product', id: 'pdf2026-p06-r1c2' })
+  assert.equal(invalid.productId, '')
+  let lowBudget = createQuizState()
+  for (const id of ['office', 'metal', 'basic']) lowBudget = quizReducer(lowBudget, { type: 'answer', id })
+  assert.deepEqual(lowBudget.categoryIds, state.categoryIds)
+})
+
+test('cart reports only actually excluded known retired IDs and acknowledgement survives migration', async () => {
+  const { migrateCart, restoreCart, cartSnapshot, loadCartState, retiredCartIds } = await import('../src/lib/cart.ts')
+  assert.equal(retiredCartIds.length, 19)
+  const raw = [{ id: '919-4', qty: 2 }, { id: 'C807601-36', qty: 1 }, { id: 'unknown', qty: 1 }]
+  const result = migrateCart(raw)
+  assert.deepEqual(result.retiredIds, ['919-4'])
+  assert.equal(result.items.length, 1)
+  assert.equal(result.items[0].product.priceRub, 7000)
+  assert.deepEqual(restoreCart(raw), result.items)
+  assert.equal(loadCartState(raw, false).migrationNotice, true)
+  const migrated = cartSnapshot(result.items)
+  assert.equal(loadCartState(migrated, true).migrationNotice, true)
+  assert.equal(loadCartState(migrated, false).migrationNotice, false)
+  assert.equal(loadCartState([], false).migrationNotice, false)
+  assert.equal(loadCartState([{ id: 'unknown', qty: 1 }], false).migrationNotice, false)
+  assert.deepEqual(migrateCart([{ id: '919-4', qty: 1 }]).items, [])
+  assert.equal(loadCartState([{ id: '919-4', qty: 1 }], false).migrationNotice, true)
+  assert.deepEqual(migrateCart([{ id: '919-4', qty: -1 }]).retiredIds, [])
+})
+
 const counts = { wood: 11, fabric: 11, metal: 3, bamboo_stone: 2, soft: 2, flexible_stone: 4, plaster: 2, slats: 3, profiles: 8 }
 
 test('independently reviewed source inventory retains all 46 cards and nine categories', () => {

@@ -6,7 +6,7 @@ import { buildTelegramDraftUrl, formatCartTelegramMessage } from '../lib/telegra
 import { useDialog } from '../lib/useDialog'
 
 export function CartDrawer() {
-  const { open, setOpen, items, total, setQty, remove } = useCart()
+  const { open, setOpen, items, total, setQty, remove, migrationNotice, dismissMigrationNotice } = useCart()
   const dialogRef = useDialog(open, () => setOpen(false))
   const telegramDraftUrl = items.length > 0
     ? buildTelegramDraftUrl(CONTACTS.telegram, formatCartTelegramMessage(items))
@@ -44,6 +44,10 @@ export function CartDrawer() {
             </div>
 
             <div className="drawer-body">
+              {migrationNotice && <div className="cart-migration-notice" role="status">
+                <p>Мы обновили каталог. Некоторые ранее выбранные товары больше не представлены. Проверьте актуальную подборку.</p>
+                <button className="btn btn-outline" onClick={dismissMigrationNotice}>Понятно</button>
+              </div>}
               {!items.length && (
                 <div className="empty-cart">
                   <p>Корзина пуста</p>

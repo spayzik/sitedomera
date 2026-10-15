@@ -1,59 +1,30 @@
-import { useState } from 'react'
+import { useReducer } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { products, collections, CONTACTS, formatDimensions, type CollectionId } from '../data/products'
+import { products, collections, CONTACTS, formatDimensions } from '../data/products'
 import { useCart } from '../context/CartContext'
 import { ArrowRight, RotateCcw, Check } from 'lucide-react'
 import { buildTelegramDraftUrl, formatQuizTelegramMessage } from '../lib/telegramLink'
-import { quizCategories } from '../lib/quiz'
-
-const Q = [
-  { q: 'Какое помещение будем оформлять?', options: [
-    { id: 'living', label: 'Гостиная', sub: 'ТВ-зона и акцентная стена' },
-    { id: 'bedroom', label: 'Спальня', sub: 'Изголовье, уют' },
-    { id: 'hallway', label: 'Прихожая', sub: 'Проходимая зона' },
-    { id: 'office', label: 'Офис и коммерция', sub: 'Ресепшн, кафе, салоны' },
-  ] },
-  { q: 'Какое настроение ближе?', options: [
-    { id: 'cozy', label: 'Тёплый уют', sub: 'Дерево, ткань, софт-тач' },
-    { id: 'minimal', label: 'Минимализм', sub: 'Спокойные поверхности' },
-    { id: 'metal', label: 'Металл и лофт', sub: 'Металлические фактуры' },
-    { id: 'stone', label: 'Фактура камня', sub: 'Гибкий камень и бамбук под камень' },
-  ] },
-] as const
+import { quizQuestions as Q, createQuizState, quizReducer, quizResultContext } from '../lib/quiz'
 
 export function Quiz() {
   const { add } = useCart()
-  const [step, setStep] = useState(0)
-  const [categoryIds, setCategoryIds] = useState<readonly CollectionId[]>([])
-  const [categoryId, setCategoryId] = useState<CollectionId | null>(null)
-  const [productId, setProductId] = useState('')
+  const [state, dispatch] = useReducer(quizReducer, undefined, createQuizState)
+  const { step, categoryIds, categoryId, productId } = state
   const done = step >= Q.length
   const category = collections.find(c => c.id === categoryId)
   const candidates = products.filter(p => p.categoryId === categoryId)
   const product = candidates.find(p => p.id === productId) ?? null
   const draft = product && category ? buildTelegramDraftUrl(CONTACTS.telegram, formatQuizTelegramMessage(product, category.name)) : null
 
-  function pick(id: string) {
-    if (step === 1) {
-      const ids = quizCategories[id]
-      setCategoryIds(ids)
-      setCategoryId(ids[0])
-    }
-    setStep(step + 1)
-  }
-  function restart() {
-    setStep(0)
-    setCategoryIds([])
-    setCategoryId(null)
-    setProductId('')
-  }
+  const pick = (id: string) => dispatch({ type: 'answer', id })
+  const restart = () => dispatch({ type: 'restart' })
 
   return (
     <section className="section quiz" id="quiz">
       <div className="container">
         <div className="catalog-header" style={{ marginBottom: '3rem' }}>
           <div><p className="eyebrow">Подбор</p><h2>Найдём вашу<br/>фактуру</h2></div>
-          <p className="lead">Два коротких вопроса помогут выбрать категорию по стилю. Конкретный материал вы выберете сами; условия применения уточнит менеджер.</p>
+          <p className="lead">Три вопроса помогут выбрать категорию по стилю и подготовиться к обсуждению проекта. Конкретный материал вы выберете сами; условия применения уточнит менеджер.</p>
         </div>
         <div className="quiz-box">
           <div className="quiz-progress"><div className="quiz-progress-bar" style={{ width: (step / Q.length * 100) + '%' }} /></div>
@@ -77,12 +48,13 @@ export function Quiz() {
                 <div className="quiz-result-info">
                   <p className="eyebrow">Категории по вашему стилю</p>
                   <div className="quiz-category-choices">
-                    {categoryIds.map(id => <button key={id} className="btn btn-outline" aria-pressed={id === categoryId} onClick={() => { setCategoryId(id); setProductId('') }}>{collections.find(c => c.id === id)!.name}</button>)}
+                    {categoryIds.map(id => <button key={id} className="btn btn-outline" aria-pressed={id === categoryId} onClick={() => dispatch({ type: 'category', id })}>{collections.find(c => c.id === id)!.name}</button>)}
                   </div>
                   <h3>{product?.name ?? category.name}</h3>
                   <p className="quiz-result-desc">Это подбор по внешнему виду, а не подтверждение пригодности для конкретного помещения. Выберите изделие, чтобы уточнить его у менеджера.</p>
+                  <p className="quiz-result-context">{quizResultContext(state)}</p>
                   <label className="form-group" htmlFor="quiz-material">Материал из категории</label>
-                  <select className="catalog-select" id="quiz-material" value={productId} onChange={e => setProductId(e.target.value)}>
+                  <select className="catalog-select" id="quiz-material" value={productId} onChange={e => dispatch({ type: 'product', id: e.target.value })}>
                     <option value="">Выберите материал</option>
                     {candidates.map(p => <option key={p.id} value={p.id}>{p.name} — {p.priceRub.toLocaleString('ru-RU')} ₽/{p.unit}</option>)}
                   </select>

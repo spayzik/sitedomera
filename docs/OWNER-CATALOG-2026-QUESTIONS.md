@@ -76,7 +76,7 @@ For these 21 identifiable positions, the source gives a SKU only. Displaying tha
 - 46-source-position inventory; 45 identifiable items in the feature-branch catalogue; 1 owner-review-only record.
 - Typed groups panel / flexible_stone / slat / profile, explicit prices and dimensions; nullable official SKU; optional only-confirmed technical facts.
 - Sheet calculator: user selects an actual sheet material; no profile/slat area calculations; no selected item means no draft/result.
-- Quiz: suggest a material category from aesthetic preference, then let user select a concrete catalogue item; no unsupported precise SKU recommendation.
+- Quiz: three steps (room, style, whole-project budget). Style suggests categories; room/budget provide discussion context, without inferring suitability or filtering per-sheet prices. User selects the concrete item; answers are not included in Telegram.
 - Cart: canonical latest price, only exact verified identity migration; removed entries never become another product.
 - Telegram: direct user-initiated drafts with product data only; no automatic sending or backend.
 

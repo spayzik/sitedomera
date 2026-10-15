@@ -2,7 +2,46 @@
 
 Status: independently reviewed source inventory integrated in feature branch. Owner approved the implementation architecture with conditions on 2026-10-14. Production merge/deploy remain blocked pending Chief review and owner image/data confirmation.
 
-## Local verification evidence — 2026-10-14
+## CATALOG-16C — Chief corrections, 2026-10-14–15
+
+Correction base: `346fec0a1d9a160c0c45f5092be5a996b10849d3`. Product model, all 46 PDF source records, confirmed commercial/technical facts and image sources are unchanged.
+
+- Category tiles are real links to `#/catalog?category=...`, usable by keyboard and in a new tab. Catalog filter and ProductModal derive from current query; product open/close preserve category and unrelated parameters. History changes are observed on both hashchange and popstate; Back/Forward restore the corresponding modal/filter state.
+- Quiz restores three questions: room, style and whole-project budget. Room and budget are used in result context and manager discussion guidance. Only style selects categories; budget is not a per-panel price filter, and no answer establishes technical suitability. User chooses a product; restart clears answers/category/product. Telegram contains the selected product only.
+- Cart reports excluded IDs only from the documented 19 retired identities. Mixed migration keeps verified items at canonical prices; fully retired selections become an empty cart with the same notice. A `pending` flag under `domera-cart-update-notice-v1` retains the notice until acknowledgement, then is removed. Basket storage remains ID/qty only. Nothing can retrospectively identify entries already deleted by an earlier candidate.
+- New regressions are part of existing `test:catalog`, already in CI before Pages upload; no workflow architecture or deployment changes.
+
+### Category image risk matrix
+
+Actual image boxes in CSS pixels (borders excluded): desktop 1440×900: about 477×340; tablet 768×1024: 548×696; mobile 390×844: 275×574; mobile 360×800: 254×544. The final tile may be one pixel wider due to rounding. `object-fit: cover` crops and enlarges the source; hover adds up to 5.5%. The table shows the largest cover scale across these viewports, before hover and device pixel ratio. DPR 2 doubles the required raster resolution.
+
+| Category | Current source | Native pixels | Largest CSS cover scale | Risk / safe future treatment |
+|---|---|---:|---:|---|
+| Дерево | PDF p6/r1c1 | 254×294 | 2.37× | High: visibly soft; original category photo or smaller bounded source sample |
+| Ткань | verified old 671-A227 asset | 1000×1000 | 0.70× | Lower at DPR 1; original quality and DPR 2 still require visual acceptance |
+| Металл | PDF p13/r1c1 | 385×332 | 2.10× | High: insufficient detail for a large texture tile |
+| Бамбук под камень | PDF p15/r1c1 | 392×407 | 1.71× | High: enlargement and texture-detail loss |
+| Софт-тач | PDF p17/r1c1 | 376×339 | 2.05× | High: low-resolution flat-color preview is not an original sample photograph |
+| Гибкий камень | PDF p19/r1c1 | 389×303 | 2.30× | High: source detail cannot support the tall cover crop |
+| Штукатурка | PDF p21/r1c1 | 386×368 | 1.89× | High: enlarged small texture sample |
+| Декоративные рейки | verified old 6652-71 asset | 1000×1000 | 0.70× | Lower at DPR 1; identity confirmed, original photo quality not established |
+| Профиль и комплектующие | PDF p25/r1c1 | 375×327 | 2.13× | High: cover both enlarges and crops the profile geometry |
+
+DESIGN-17A: use owner-confirmed original category assets with sufficient resolution and intentional composition. DESIGN-17B if originals are unavailable: neutral branded panels with bounded, correctly proportioned real sample images or an explicitly labelled composition of confirmed samples; show profiles with contain rather than a cropped texture background. Do not generate/substitute textures, upscale previews as if detail were recovered, or assign an unrelated image. This correction does not replace banners or redesign tiles.
+
+### Correction verification
+
+The original candidate results below are historical. CATALOG-16C regressions expand `test:catalog` to 13 tests (28 total across existing commands). Browser checks use production dist on an isolated local origin. Legacy baskets are seeded by an external local QA page through explicit clicks, never by publishing fixtures or injecting runtime state into the application.
+
+- All nine category links were followed and their active filter/count checked at 1440 and 360 px: 11 / 10 / 3 / 2 / 2 / 4 / 2 / 3 / 8. Keyboard Enter and Ctrl-click opening a new category tab were checked.
+- Combined `category=fabric&sku=671-A227&campaign=a%26b` opens the correct product; closing removes only sku, Back restores it and Forward returns to the filtered catalogue. Product Telegram draft contains the current 7,000 RUB/лист price.
+- Category image geometry and quiz result geometry were measured at all four requested viewports, with no document horizontal overflow. Quiz was completed with bedroom/cozy/basic, then restarted and completed with office/metal/premium. Restart clears the product and draft; the new selected item gives its own correct draft without room/style/budget answers.
+- At 390 px, mixed legacy cart migration preserves two ash panels at 14,000 RUB and shows the notice. Reload before acknowledgement retains it; acknowledgement followed by reload removes it. A retired-only cart shows notice + empty state + zero total and no Telegram draft; acknowledgement also survives reload.
+- Saved local screenshots: correction-categories-360.jpg, correction-cart-notice-390.jpg and correction-empty-cart-390.jpg. Desktop screenshot capture has the previously documented physical-width limitation. These are browser viewport tests, not physical iPhone/touch-device acceptance.
+- A further combined 768/390 category batch was interrupted by a browser-tool timeout; its partial execution is not counted as a completed nine-link test. Browser tooling then changed with the session refresh, so that additional batch was not repeated. The completed results above and all four viewport measurements remain the evidence used here.
+- Build, production verifier, lint, npm audit, all 28 tests and diff check passed locally. Lint retains the existing Fast Refresh warning. One verifier run was mistakenly started while the build was replacing dist; the final sequential run after build completion passed. No assertion or release gate was weakened.
+
+## Original candidate verification evidence — 2026-10-14
 
 Environment: Windows, Node 24.18.0, npm 11.16.0. CI retains Node 22. Checks below are local; hosted CI and independent Chief acceptance have not been run for this feature branch.
 
