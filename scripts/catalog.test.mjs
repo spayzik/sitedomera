@@ -272,6 +272,8 @@ test('carousel presentation retains nine real category links and owner supplied 
     assert.equal(category.count, catalog.collections.find(c => c.id === category.id).count)
     assert.ok(existsSync(new URL('../public/' + category.image, import.meta.url)))
     assert.ok(category.evidence)
+    assert.ok(category.shortDescription.length > 30 && category.shortDescription.length < 160)
+    assert.doesNotMatch(category.shortDescription, /PDF|SKU|2026|влагостой|огнестой|акустик/i)
     assert.equal(category.image, `catalog/categories/carousel-2026-${category.id}.webp`)
     const metadata = await sharp(fileURLToPath(new URL('../public/' + category.image, import.meta.url))).metadata()
     assert.equal(metadata.width, 1086)

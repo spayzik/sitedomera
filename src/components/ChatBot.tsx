@@ -81,7 +81,7 @@ export function ChatBot() {
   return (
     <div className={`chatbot ${open ? 'open' : ''}`}>
       {open && (
-        <div className="chat-panel">
+        <div className="chat-panel" id="domera-chat-panel">
           <div className="chat-head">
             <div>
               <strong>Помощник Домэра</strong>
@@ -131,6 +131,8 @@ export function ChatBot() {
         className="chat-fab"
         onClick={() => setOpen((v) => !v)}
         aria-label="Чат"
+        aria-expanded={open}
+        aria-controls="domera-chat-panel"
       >
         {open ? <X size={20} /> : <MessageCircle size={20} />}
       </button>

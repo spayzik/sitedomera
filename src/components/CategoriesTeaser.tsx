@@ -23,6 +23,21 @@ export function CategoriesTeaser() {
     observer.observe(node)
     return () => observer.disconnect()
   }, [updateEdges])
+  const keepPanelVisible = (panel: HTMLElement) => {
+    const node = track.current
+    if (!node) return
+    const bounds = node.getBoundingClientRect()
+    const item = panel.getBoundingClientRect()
+    const delta = item.right > bounds.right ? item.right - bounds.right
+      : item.left < bounds.left ? item.left - bounds.left : 0
+    if (delta) node.scrollBy({ left: delta, behavior: 'instant' })
+  }
+  useEffect(() => {
+    if (reducedMotion && active) {
+      const panel = track.current?.querySelector<HTMLElement>('.is-active')
+      if (panel) keepPanelVisible(panel)
+    }
+  }, [active, reducedMotion])
   const move = (direction: number) => track.current?.scrollBy({
     left: direction * track.current.clientWidth * 0.7,
     behavior: reducedMotion ? 'instant' : 'smooth',
@@ -41,12 +56,12 @@ export function CategoriesTeaser() {
         {categoryPresentation.map(category => (
           <a key={category.id} href={category.href}
             aria-label={`Открыть категорию: ${category.name}`}
-            className={`cat-panel${active === category.id ? ' is-active' : ''}`}
+            className={`cat-panel${category.id === 'profiles' ? ' is-profile' : ''}${active === category.id ? ' is-active' : ''}`}
             onPointerEnter={event => { if (event.pointerType === 'mouse') setActive(category.id) }}
             onFocus={() => setActive(category.id)}
             onTransitionEnd={event => {
-              if (event.propertyName === 'flex-basis' && event.currentTarget === document.activeElement)
-                event.currentTarget.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'instant' })
+              if (event.propertyName === 'flex-basis' && (active === category.id || event.currentTarget === document.activeElement))
+                keepPanelVisible(event.currentTarget)
               updateEdges()
             }}
             onPointerDown={event => { gesture.current = { x: event.clientX, y: event.clientY, moved: false } }}
@@ -60,6 +75,9 @@ export function CategoriesTeaser() {
             <div className="cat-panel-shade" />
             <div className="cat-panel-content">
               <h3 className="cat-panel-title">{category.name}</h3>
+              <div className="cat-card-text"><div className="cat-card-text-inner">
+                <p className="cat-card-copy">{category.shortDescription}</p>
+              </div></div>
             </div>
           </a>
         ))}

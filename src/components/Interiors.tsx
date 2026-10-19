@@ -1,21 +1,22 @@
 import { useState } from 'react'
-import { motion, useScroll, useTransform, useReducedMotion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import { ZoomIn } from 'lucide-react'
-import { useRef } from 'react'
 import { Lightbox, type LightboxImage } from './Lightbox'
 
 interface Room {
   image: string
   caption: string
   tag: string
+  width: number
+  height: number
 }
 
 const rooms: Room[] = [
-  { image: 'room-wood', caption: 'Гостиная · Деревянная фактура', tag: 'Wood' },
-  { image: 'room-fabric', caption: 'Спальня · Тканевая фактура', tag: 'Fabric' },
-  { image: 'room-metal', caption: 'Кабинет · Металл', tag: 'Metal' },
-  { image: 'room-plaster', caption: 'Прихожая · Штукатурка', tag: 'Plaster' },
-  { image: 'hero-soft-new', caption: 'Спальня · Soft-touch', tag: 'Soft-touch' },
+  { image: 'room-wood', width: 1429, height: 808, caption: 'Гостиная · Деревянная фактура', tag: 'Wood' },
+  { image: 'room-fabric', width: 1310, height: 1019, caption: 'Спальня · Тканевая фактура', tag: 'Fabric' },
+  { image: 'room-metal', width: 1310, height: 1019, caption: 'Кабинет · Металл', tag: 'Metal' },
+  { image: 'room-plaster', width: 1310, height: 1019, caption: 'Прихожая · Штукатурка', tag: 'Plaster' },
+  { image: 'hero-soft-new', width: 1024, height: 1024, caption: 'Спальня · Soft-touch', tag: 'Soft-touch' },
 ]
 
 function roomSrc(r: Room) {
@@ -24,7 +25,7 @@ function roomSrc(r: Room) {
 
 const lightboxImages: LightboxImage[] = rooms.map((r) => ({ src: roomSrc(r), caption: r.caption, tag: r.tag }))
 
-function ParallaxCard({
+function InteriorCard({
   r,
   i,
   onOpen,
@@ -33,31 +34,24 @@ function ParallaxCard({
   i: number
   onOpen: (i: number) => void
 }) {
-  const ref = useRef(null)
   const reducedMotion = useReducedMotion()
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] })
-  // Изображение смещается по Y на 20% внутри контейнера во время скролла
-  const y = useTransform(scrollYProgress, [0, 1], ['-10%', '10%'])
 
   return (
     <motion.div
-      ref={ref}
-      className={`interior-card ${i === 0 ? 'wide' : i === 1 ? 'tall' : ''}`}
-      initial={{ opacity: 0, y: 40 }}
+      className={`interior-card ${i === 0 ? 'wide' : ''}`}
+      initial={reducedMotion ? false : { opacity: 0, y: 40 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-40px' }}
-      transition={{ duration: 0.8, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] }}
-      style={{ overflow: 'hidden', position: 'relative' }}
+      transition={{ duration: reducedMotion ? 0 : 0.8, delay: reducedMotion ? 0 : i * 0.1, ease: [0.22, 1, 0.36, 1] }}
       onClick={() => onOpen(i)}
     >
-      <motion.img
+      <img
         src={roomSrc(r)}
         alt={r.caption}
         loading="lazy"
-        // Scale 1.2 нужен, чтобы при параллаксе не вылезали белые края картинки
-        style={{ y: reducedMotion ? 0 : y, scale: 1.2, position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+        width={r.width}
+        height={r.height}
       />
-      <div className="interior-veil" />
       <div className="interior-tag">{r.tag}</div>
       <p className="interior-caption">{r.caption}</p>
       <button className="interior-zoom" aria-label={`Открыть интерьер: ${r.caption}`} onClick={(event) => { event.stopPropagation(); onOpen(i) }}>
@@ -86,7 +80,7 @@ export function Interiors() {
 
         <div className="interiors-grid">
           {rooms.map((r, i) => (
-            <ParallaxCard key={r.image} r={r} i={i} onOpen={setLightbox} />
+            <InteriorCard key={r.image} r={r} i={i} onOpen={setLightbox} />
           ))}
         </div>
       </div>
