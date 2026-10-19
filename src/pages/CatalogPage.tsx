@@ -3,6 +3,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { collections, products, type CollectionId, type Product, formatDimensions, filterProducts, catalogSummary } from '../data/products'
 import { useCart } from '../context/CartContext'
 import { ProductModal } from '../components/ProductModal'
+import { TiltCard } from '../components/TiltCard'
 import { Counter } from '../components/Counter'
 import { ArrowUpRight, ArrowDown, Ruler, Scale, ShoppingBag } from 'lucide-react'
 import { parseCatalogHash, updateCatalogHash } from '../lib/catalogNavigation'
@@ -123,34 +124,47 @@ export function CatalogPage() {
             Показано <strong>{list.length}</strong> из {products.length} позиций
           </p>
 
-          <motion.div className="grid-arch catalog-page-grid compact-catalog-grid" layout={!reducedMotion}>
+          <motion.div className="grid-arch catalog-page-grid" layout={!reducedMotion}>
             <AnimatePresence mode="popLayout">
               {list.map((p, i) => (
-                <motion.article
+                <motion.div
                   key={p.id}
-                  className={`compact-product-card${p.kind === 'profile' ? ' is-profile' : ''}`}
-                  layout={!reducedMotion}
-                  initial={reducedMotion ? false : { opacity: 0, y: 12 }}
+                  className={`card-arch${p.kind === 'profile' ? ' is-profile' : ''}`}
+                  initial={reducedMotion ? false : { opacity: 0, scale: 0.95, y: 60 }}
                   whileInView={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 20 }}
                   viewport={{ once: true, amount: 0.1 }}
-                  transition={{ duration: reducedMotion ? 0 : 0.25, delay: reducedMotion ? 0 : (i % 5) * 0.025 }}
+                  transition={{ duration: reducedMotion ? 0 : 0.8, delay: reducedMotion ? 0 : (i % 3) * 0.08, ease: [0.22, 1, 0.36, 1] }}
+                  onClick={() => openProduct(p)}
                 >
-                  <button className="compact-card-media interactive" aria-label={`Подробнее: ${p.name}`} onClick={() => openProduct(p)}>
-                    <img src={p.image} alt={p.name} loading="lazy" decoding="async" />
-                    <span className="compact-card-view" aria-hidden="true"><ArrowUpRight size={18} /></span>
-                  </button>
-                  <div className="compact-card-info">
-                    <p className="compact-card-category">{collections.find(c => c.id === p.categoryId)?.name}</p>
-                    <h3><button className="interactive" onClick={() => openProduct(p)}>{p.name}</button></h3>
-                    <p className="compact-card-specs">{formatDimensions(p)}{p.thicknessMm !== undefined ? ` · ${p.thicknessMm.toLocaleString('ru-RU')} мм` : ''}</p>
-                    {p.sku && p.sku !== p.name && <p className="compact-card-sku">Артикул {p.sku}</p>}
-                    <div className="compact-card-bottom">
-                      <p className="compact-card-price"><strong>{p.priceRub.toLocaleString('ru-RU')} ₽</strong><span> / {p.unit}</span></p>
-                      <button className="compact-card-add interactive" onClick={() => add(p)} aria-label={`Добавить в подборку: ${p.name}`}><ShoppingBag size={18} /></button>
+                  <div className="card-arch-img">
+                    <TiltCard>
+                      <img src={p.image} alt={p.name} loading="lazy" className="img-main" />
+                      <img src={p.swatch} alt="" loading="lazy" className="img-hover" />
+                    </TiltCard>
+                    <div className="card-arch-tag">
+                      {collections.find(c => c.id === p.categoryId)?.name}
+                    </div>
+                    <div className="card-arch-num">{(String(i + 1)).padStart(2, '0')}</div>
+                    <div className="card-arch-overlay">
+                      <button className="btn-view" aria-label={`Подробнее: ${p.name}`} onClick={(e) => { e.stopPropagation(); openProduct(p) }}>Смотреть детали <ArrowUpRight size={14} /></button>
+                      <button
+                        className="btn-mini-add interactive"
+                        onClick={(e) => { e.stopPropagation(); add(p) }}
+                        aria-label="Добавить в подборку"
+                      >
+                        <ShoppingBag size={18} />
+                      </button>
                     </div>
                   </div>
-                </motion.article>
+                  <div className="card-arch-info">
+                    <div>
+                      <h3>{p.name}</h3>
+                      <p>{p.sku ? `${p.sku} · ` : ''}{formatDimensions(p)}</p>
+                    </div>
+                    <p className="card-arch-price">{p.priceRub.toLocaleString('ru-RU')} ₽/{p.unit}</p>
+                  </div>
+                </motion.div>
               ))}
             </AnimatePresence>
           </motion.div>

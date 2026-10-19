@@ -1484,39 +1484,16 @@ body:has(.analytics-banner, .hero-in-view) :is(.floating-cart, .tg-fab, .back-to
   .editorial-line { transform: none !important; opacity: 1 !important; }
 }
 
-/* Compact catalog presentation; editorial motion remains unchanged. */
-.compact-catalog-grid.catalog-page-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem 1.25rem; }
-.compact-product-card { min-width: 0; display: flex; flex-direction: column; }
-.compact-card-media { position: relative; display: block; width: 100%; aspect-ratio: 1; overflow: hidden; background: #11100e; text-align: left; }
-.compact-card-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 250ms var(--ease-out); }
-.compact-product-card.is-profile .compact-card-media img { object-fit: contain; padding: 1rem; }
-.compact-card-view { position: absolute; top: 0.65rem; right: 0.65rem; width: 32px; height: 32px; display: grid; place-items: center; background: rgba(5,5,5,0.78); color: #fff; }
-.compact-card-info { display: flex; flex: 1; flex-direction: column; padding: 0.9rem 0 0; }
-.compact-card-category { color: var(--accent); font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; line-height: 1.5; margin-bottom: 0.4rem; }
-.compact-card-info h3 { font-family: var(--font-display); font-size: clamp(1.2rem, 1.5vw, 1.5rem); line-height: 1.15; margin: 0 0 0.5rem; overflow-wrap: anywhere; }
-.compact-card-info h3 button { text-align: left; }
-.compact-card-specs, .compact-card-sku { color: var(--muted); font-size: 0.75rem; line-height: 1.6; overflow-wrap: anywhere; }
-.compact-card-bottom { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem; margin-top: auto; padding-top: 0.8rem; border-bottom: 1px solid var(--line); padding-bottom: 0.65rem; }
-.compact-card-price { white-space: nowrap; line-height: 1.5; }
-.compact-card-price strong { font-size: 1rem; font-weight: 600; }
-.compact-card-price span { color: var(--muted); font-size: 0.75rem; }
-.compact-card-add { display: grid; place-items: center; flex: 0 0 44px; width: 44px; height: 44px; border: 1px solid var(--line); color: var(--ink); transition: border-color 180ms, color 180ms; }
-.compact-card-add:hover { border-color: var(--accent); color: var(--accent); }
-.compact-product-card button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-.compact-card-media:focus-visible { outline-offset: -3px !important; }
-@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  .compact-card-media:hover img { transform: scale(1.025); }
+/* Preserve the original editorial cards, including touch and keyboard actions. */
+.catalog-page-grid .card-arch.is-profile .card-arch-img img { object-fit: contain; padding: 1rem; }
+.catalog-page-grid .card-arch button:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+@media (hover: none), (pointer: coarse) {
+  .catalog-page-grid .card-arch-overlay { opacity: 1; background: linear-gradient(to top, rgba(0,0,0,0.65), transparent 45%); align-items: flex-end; justify-content: flex-start; padding: 1rem; }
+  .catalog-page-grid .btn-view { min-height: 44px; padding-right: 3rem; font-size: 0.75rem; }
 }
-@media (min-width: 1000px) { .compact-catalog-grid.catalog-page-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-@media (min-width: 1360px) { .compact-catalog-grid.catalog-page-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-@media (min-width: 1920px) { .compact-catalog-grid.catalog-page-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
-@media (max-width: 599px) {
-  .compact-catalog-grid.catalog-page-grid { grid-template-columns: minmax(0, 1fr); gap: 1.75rem; }
-  .compact-card-info h3 { font-size: 1.45rem; }
-  .compact-card-add { width: 48px; height: 48px; flex-basis: 48px; }
+@media (prefers-reduced-motion: reduce) {
+  .catalog-page-grid .card-arch-img img { transition: none; transform: none !important; }
 }
-@media (prefers-reduced-motion: reduce) { .compact-card-media img { transform: none !important; transition: none; } }
-
 
 /* One native horizontal track. Only the active panel changes basis, not all nine. */
 .cat-teaser { position: relative; padding: 0; overflow: clip; }

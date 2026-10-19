@@ -279,7 +279,12 @@ test('carousel presentation retains nine real category links and owner supplied 
   }
   const page = readFileSync(new URL('../src/pages/CatalogPage.tsx', import.meta.url), 'utf8')
   assert.doesNotMatch(page, /compact-card-preview|PDF-превью/)
-  assert.match(page, /compact-catalog-grid/)
+  assert.doesNotMatch(page, /compact-catalog-grid|compact-product-card/)
+  assert.match(page, /className="grid-arch catalog-page-grid"/)
+  assert.match(page, /card-arch-img/)
+  const css = readFileSync(new URL('../src/index.css', import.meta.url), 'utf8')
+  assert.match(css, /\.card-arch-img\s*\{[^}]*aspect-ratio:\s*3\s*\/\s*4/)
+  assert.doesNotMatch(css, /compact-catalog-grid/)
   for (const file of ['../src/components/ProductModal.tsx', '../src/components/Quiz.tsx', '../src/components/CategoriesTeaser.tsx']) {
     assert.doesNotMatch(readFileSync(new URL(file, import.meta.url), 'utf8'), /PDF-превью|Превью из PDF|Характеристики по карточке каталога 2026/)
   }
