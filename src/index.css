@@ -1556,3 +1556,11 @@ body:has(.analytics-banner, .hero-in-view) :is(.floating-cart, .tg-fab, .back-to
   }
   html { scroll-behavior: auto; }
 }
+
+/* Editorial line masks: transform only; wrapping and final text geometry stay native. */
+.editorial-reveal, .editorial-mask, .editorial-line { display: block; }
+.editorial-mask { overflow: hidden; padding-bottom: 0.16em; margin-bottom: -0.16em; }
+.hero-title-reveal .editorial-mask + .editorial-mask { margin-top: -0.1em; }
+@media (prefers-reduced-motion: reduce) {
+  .editorial-line { transform: none !important; opacity: 1 !important; }
+}

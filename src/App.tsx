@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
+import { lazy, Suspense, useEffect, useState, useCallback, type ReactNode } from 'react'
 import { CartProvider } from './context/CartContext'
 import { Header } from './components/Header'
 import { Hero } from './components/Hero'
@@ -100,7 +100,7 @@ function SectionAnchor({ route, ids }: { route: string; ids: string[] }) {
   return null
 }
 
-function Home({ route }: { route: string }) {
+function Home({ route, introReady }: { route: string; introReady: boolean }) {
   useEffect(() => {
     const id = route.replace('/', '')
     if (!['top', 'specs', 'why', 'catalog'].includes(id)) return
@@ -110,7 +110,7 @@ function Home({ route }: { route: string }) {
 
   return (
     <>
-      <Hero />
+      <Hero ready={introReady} />
       <GradientLine />
       <Manifest />
       <Specs />
@@ -137,7 +137,7 @@ function Home({ route }: { route: string }) {
   )
 }
 
-function Wrapper({ children }: { children: ReactNode }) {
+function Wrapper({ children, onIntroComplete }: { children: ReactNode; onIntroComplete: () => void }) {
   const route = useRoute()
   const [booted, setBooted] = useState(false)
   const [widgetsReady, setWidgetsReady] = useState(false)
@@ -166,7 +166,7 @@ function Wrapper({ children }: { children: ReactNode }) {
 
   return (
     <CartProvider>
-      <Preloader done={booted} />
+      <Preloader done={booted} onComplete={onIntroComplete} />
       <Cursor />
       <ScrollProgress />
       <ScrollGlow />
@@ -190,6 +190,8 @@ function Wrapper({ children }: { children: ReactNode }) {
 
 export default function App() {
   const route = useRoute()
+  const [introReady, setIntroReady] = useState(false)
+  const finishIntro = useCallback(() => setIntroReady(true), [])
 
   const page = isPageRoute(route)
     ? route === '/catalog'
@@ -197,12 +199,12 @@ export default function App() {
       : route === '/privacy'
         ? <PrivacyPage />
         : <OfferPage />
-    : <Home route={route} />
+    : <Home route={route} introReady={introReady} />
 
   return (
     <MotionConfig reducedMotion="user">
       <PrivacyProvider>
-        <Wrapper>{page}</Wrapper>
+        <Wrapper onIntroComplete={finishIntro}>{page}</Wrapper>
       </PrivacyProvider>
     </MotionConfig>
   )

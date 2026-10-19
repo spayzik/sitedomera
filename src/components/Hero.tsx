@@ -1,18 +1,14 @@
 import { motion, useScroll, useTransform, useReducedMotion, useInView } from 'framer-motion'
 import { ArrowRight, ArrowDown } from 'lucide-react'
 import { useRef } from 'react'
+import { EditorialReveal } from './EditorialReveal'
 import { catalogSummary, formatRange } from '../data/products'
 
 const easeOutQuint = [0.22, 1, 0.36, 1] as const
 
 const stagger = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.15, delayChildren: 0.3 } },
-}
-
-const textMask = {
-  hidden: { y: '120%', rotate: 2, transformOrigin: 'top left' },
-  show: { y: '0%', rotate: 0, transition: { duration: 1.2, ease: easeOutQuint } },
+  show: { transition: { staggerChildren: 0.1, delayChildren: 0 } },
 }
 
 const textMaskFlat = {
@@ -25,7 +21,7 @@ const fadeUp = {
   show: { opacity: 1, y: 0, transition: { duration: 1, ease: easeOutQuint } },
 }
 
-export function Hero() {
+export function Hero({ ready = true }: { ready?: boolean }) {
   const ref = useRef(null)
   const visible = useInView(ref)
   const reducedMotion = useReducedMotion()
@@ -69,8 +65,8 @@ export function Hero() {
         <motion.div
           className="hero-arch-text"
           variants={stagger}
-          initial="hidden"
-          animate="show"
+          initial={reducedMotion ? false : "hidden"}
+          animate={ready || reducedMotion ? "show" : "hidden"}
         >
           <div style={{ overflow: 'hidden', paddingBottom: '0.2em' }}>
             <motion.p className="hero-eyebrow" variants={textMaskFlat}>
@@ -78,17 +74,8 @@ export function Hero() {
             </motion.p>
           </div>
 
-          <h1 style={{ display: 'flex', flexDirection: 'column' }}>
-            <div style={{ overflow: 'hidden', paddingBottom: '0.15em' }}>
-              <motion.span style={{ display: 'block' }} variants={textMask}>
-                Бамбуковые
-              </motion.span>
-            </div>
-            <div style={{ overflow: 'hidden', paddingBottom: '0.15em', marginTop: '-0.1em' }}>
-              <motion.span style={{ display: 'block' }} variants={textMask}>
-                панели
-              </motion.span>
-            </div>
+          <h1 aria-label="Бамбуковые панели">
+            <EditorialReveal className="hero-title-reveal" ready={ready} lines={['Бамбуковые', 'панели']} />
           </h1>
 
           <motion.div variants={fadeUp}>

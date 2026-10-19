@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { CONTACTS, catalogSummary, formatRange } from '../data/products'
 import { Counter } from './Counter'
+import { EditorialReveal } from './EditorialReveal'
 
 const stats = [
   { to: catalogSummary.productCount, suffix: '', text: null as string | null, label: 'позиций в каталоге' },
@@ -24,16 +25,9 @@ export function Manifest() {
           >
             {CONTACTS.brand} · Философия материала
           </motion.p>
-          <motion.h2
-            className="manifest-title"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-60px' }}
-            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          >
-            У нас стены,<br />
-            которые <em>хочется трогать</em>
-          </motion.h2>
+          <h2 className="manifest-title" aria-label="У нас стены, которые хочется трогать">
+            <EditorialReveal lines={['У нас стены,', <>которые <em>хочется трогать</em></>]} />
+          </h2>
           <motion.p
             className="manifest-lead"
             initial={{ opacity: 0, y: 30 }}

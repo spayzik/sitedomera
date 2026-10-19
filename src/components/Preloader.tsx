@@ -1,8 +1,8 @@
 import { AnimatePresence, motion } from 'framer-motion'
 
-export function Preloader({ done }: { done: boolean }) {
+export function Preloader({ done, onComplete }: { done: boolean; onComplete: () => void }) {
   return (
-    <AnimatePresence>
+    <AnimatePresence onExitComplete={onComplete}>
       {!done && (
         <motion.div
           className="preloader"
