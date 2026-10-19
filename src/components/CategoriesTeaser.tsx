@@ -62,7 +62,7 @@ export function CategoriesTeaser() {
               style={category.mode === 'sample' ? { maxWidth: category.sampleMaxPx } : undefined} />
             <div className="cat-panel-shade" />
             <div className="cat-panel-content">
-              <p className="cat-panel-count">{category.count} позиций</p>
+              <p className="cat-panel-count">Позиций: {category.count}</p>
               <h3 className="cat-panel-title">{category.name}</h3>
               <div className="cat-card-text"><div className="cat-card-text-inner"><p className="cat-card-copy">{category.copy}</p></div></div>
               <span className="cat-panel-link">Смотреть коллекцию <ArrowUpRight size={16} /></span>
