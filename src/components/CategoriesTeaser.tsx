@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useReducedMotion } from 'framer-motion'
-import { ArrowLeft, ArrowRight, ArrowUpRight } from 'lucide-react'
+import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { categoryPresentation } from '../lib/categoryPresentation'
 
 export function CategoriesTeaser() {
@@ -30,13 +30,10 @@ export function CategoriesTeaser() {
 
   return (
     <section className="cat-teaser catalog-categories" aria-labelledby="category-heading">
-      <div className="container cat-heading">
-        <div><p className="eyebrow">Материалы для вашего пространства</p><h2 id="category-heading">Фактуры и формы</h2></div>
-        <div className="cat-navigation" aria-label="Прокрутка категорий">
-          <span>{categoryPresentation.length} коллекций · листайте</span>
+      <h2 id="category-heading" className="visually-hidden">Категории материалов</h2>
+      <div className="cat-navigation" aria-label="Прокрутка категорий">
           <button type="button" aria-label="Предыдущие категории" disabled={edges.start} onClick={() => move(-1)}><ArrowLeft size={18} /></button>
           <button type="button" aria-label="Следующие категории" disabled={edges.end} onClick={() => move(1)}><ArrowRight size={18} /></button>
-        </div>
       </div>
       <div className="cat-track" ref={track} onScroll={updateEdges} onMouseLeave={() => setActive(null)} onBlur={event => {
         if (!event.currentTarget.contains(event.relatedTarget)) setActive(null)
@@ -62,10 +59,7 @@ export function CategoriesTeaser() {
               style={{ objectPosition: category.imagePosition }} />
             <div className="cat-panel-shade" />
             <div className="cat-panel-content">
-              <p className="cat-panel-count">Позиций: {category.count}</p>
               <h3 className="cat-panel-title">{category.name}</h3>
-              <div className="cat-card-text"><div className="cat-card-text-inner"><p className="cat-card-copy">{category.copy}</p></div></div>
-              <span className="cat-panel-link">Смотреть коллекцию <ArrowUpRight size={16} /></span>
             </div>
           </a>
         ))}

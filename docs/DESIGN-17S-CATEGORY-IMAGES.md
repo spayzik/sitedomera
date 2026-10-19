@@ -31,6 +31,10 @@ Previous assets remain intact; no unrelated asset cleanup is performed.
 
 Total source PNG bytes: 24,773,203. Total WebP bytes: 2,712,068.
 The carousel retains lazy loading, native scroll, links, expansion and touch snap.
+At the Owner's request, the visible presentation is limited to photos and material
+names. The section heading, item counts, descriptions and repeated CTA text are
+removed. Wider/taller desktop panels and a lighter gradient give the scenes room;
+small overlaid arrows preserve access to all nine categories.
 
 ## Evidence boundary
 
