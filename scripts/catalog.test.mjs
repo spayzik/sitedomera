@@ -251,11 +251,44 @@ test('customer descriptions cover all categories without inventing material fact
   const { productDescription } = await import('../src/lib/productPresentation.ts')
   for (const product of catalog.products) {
     const text = productDescription(product)
-    assert.ok(text.length > 30, product.categoryId)
+    if (product.description?.trim()) assert.equal(text, product.description.trim())
+    else assert.ok(text.length > 30, product.categoryId)
     assert.doesNotMatch(text, /PDF|каталога 2026|pdf2026|влагостой|акуст|огнестой|сертифиц/i)
   }
   assert.match(productDescription(catalog.products.find(p => p.categoryId === 'fabric')), /тканевой фактурой/)
-  assert.match(productDescription(catalog.products.find(p => p.categoryId === 'profiles')), /алюминия/)
+  assert.match(productDescription({ categoryId: 'profiles', material: 'алюминий' }), /алюминия/)
   assert.doesNotMatch(productDescription({ categoryId: 'profiles' }), /алюминия/)
   assert.doesNotMatch(productDescription(catalog.products.find(p => p.kind === 'flexible_stone')), /бамбук|WPC|13 кг/i)
+})
+
+
+test('carousel presentation retains nine real category links and bounded source samples', async () => {
+  const { categoryPresentation } = await import('../src/lib/categoryPresentation.ts')
+  const { parseCatalogHash } = await import('../src/lib/catalogNavigation.ts')
+  assert.deepEqual(categoryPresentation.map(c => c.id), catalog.collections.map(c => c.id))
+  for (const category of categoryPresentation) {
+    assert.equal(parseCatalogHash(category.href).categoryId, category.id)
+    assert.equal(category.count, catalog.collections.find(c => c.id === category.id).count)
+    assert.ok(existsSync(new URL('../public/' + category.image, import.meta.url)))
+    assert.ok(category.evidence)
+    if (category.mode === 'sample') {
+      assert.ok(category.sampleMaxPx <= 220)
+      assert.equal(category.image, catalog.products.find(p => p.categoryId === category.id).image)
+    }
+  }
+  const page = readFileSync(new URL('../src/pages/CatalogPage.tsx', import.meta.url), 'utf8')
+  assert.doesNotMatch(page, /compact-card-preview|PDF-превью/)
+  assert.match(page, /compact-catalog-grid/)
+  for (const file of ['../src/components/ProductModal.tsx', '../src/components/Quiz.tsx', '../src/components/CategoriesTeaser.tsx']) {
+    assert.doesNotMatch(readFileSync(new URL(file, import.meta.url), 'utf8'), /PDF-превью|Превью из PDF|Характеристики по карточке каталога 2026/)
+  }
+  const workflow = readFileSync(new URL('../.github/workflows/deploy.yml', import.meta.url), 'utf8')
+  assert.ok(workflow.includes('npm run test:catalog'))
+  assert.ok(workflow.indexOf('npm run test:catalog') < workflow.indexOf('name: Upload artifact'))
+})
+
+test('confirmed individual description takes priority over safe category fallback', async () => {
+  const { productDescription } = await import('../src/lib/productPresentation.ts')
+  assert.equal(productDescription({ categoryId: 'profiles', description: 'Соединительный — бронза' }), 'Соединительный — бронза')
+  assert.match(productDescription({ categoryId: 'fabric', description: '  ' }), /тканевой фактурой/)
 })

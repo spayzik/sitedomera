@@ -12,7 +12,9 @@ const descriptions: Record<Exclude<CollectionId, 'profiles'>, string> = {
 }
 
 // Presentation copy is separate from the immutable PDF inventory and its review status.
-export function productDescription(product: Pick<Product, 'categoryId' | 'material'>): string {
+export function productDescription(product: Pick<Product, 'categoryId' | 'material' | 'description'>): string {
+  const individual = product.description?.trim()
+  if (individual) return individual
   if (product.categoryId === 'profiles') {
     return product.material === 'алюминий'
       ? 'Профиль из алюминия для декоративного оформления панелей.'
