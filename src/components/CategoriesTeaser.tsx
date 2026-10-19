@@ -23,7 +23,7 @@ export function CategoriesTeaser() {
     observer.observe(node)
     return () => observer.disconnect()
   }, [updateEdges])
-  const keepPanelVisible = (panel: HTMLElement) => {
+  const keepPanelVisible = useCallback((panel: HTMLElement) => {
     const node = track.current
     if (!node) return
     const bounds = node.getBoundingClientRect()
@@ -31,13 +31,15 @@ export function CategoriesTeaser() {
     const delta = item.right > bounds.right ? item.right - bounds.right
       : item.left < bounds.left ? item.left - bounds.left : 0
     if (delta) node.scrollBy({ left: delta, behavior: 'instant' })
-  }
+  }, [])
   useEffect(() => {
-    if (reducedMotion && active) {
-      const panel = track.current?.querySelector<HTMLElement>('.is-active')
-      if (panel) keepPanelVisible(panel)
-    }
-  }, [active, reducedMotion])
+    const panel = track.current?.querySelector<HTMLElement>('.is-active')
+    if (!panel) return
+    // Follow only the expanding panel so its subject stays in view throughout the reveal.
+    const observer = new ResizeObserver(() => keepPanelVisible(panel))
+    observer.observe(panel)
+    return () => observer.disconnect()
+  }, [active, keepPanelVisible])
   const move = (direction: number) => track.current?.scrollBy({
     left: direction * track.current.clientWidth * 0.7,
     behavior: reducedMotion ? 'instant' : 'smooth',
