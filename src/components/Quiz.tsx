@@ -61,7 +61,6 @@ export function Quiz() {
                   {product && <>
                     <p className="quiz-result-sku">{product.sku ? product.sku + ' · ' : ''}{formatDimensions(product)}</p>
                     <div className="quiz-result-price">{product.priceRub.toLocaleString('ru-RU')} ₽ <span>/ {product.unit}</span></div>
-                    {product.imageStatus === 'pdf_preview' && <p className="product-preview-note">Превью из PDF-каталога.</p>}
                   </>}
                   <div className="quiz-result-actions">
                     <button className="btn btn-primary interactive" disabled={!product} onClick={() => { if (product) add(product) }}>Добавить в подборку <Check size={16} /></button>

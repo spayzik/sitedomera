@@ -5,6 +5,7 @@ import { useCart } from '../context/CartContext'
 import { X } from 'lucide-react'
 import { buildTelegramDraftUrl, formatProductTelegramMessage } from '../lib/telegramLink'
 import { useDialog } from '../lib/useDialog'
+import { productDescription } from '../lib/productPresentation'
 
 export function ProductModal({
   selected,
@@ -70,7 +71,7 @@ export function ProductModal({
               >
                 <h2>{selected.name}</h2>
                 <p>
-                  {selected.description || `${collection}. Характеристики по карточке каталога 2026.`}
+                  {productDescription(selected)}
                 </p>
                 <div className="gocek-price-pill">
                   {selected.priceRub.toLocaleString('ru-RU')} ₽/{selected.unit}
@@ -100,7 +101,6 @@ export function ProductModal({
                   ))}
                 </div>
 
-                {selected.imageStatus === 'pdf_preview' && <p className="product-preview-note">Превью из PDF-каталога; фактуру и цвет уточните по образцу.</p>}
                 <button
                   className="gocek-tech-btn"
                   onClick={() => {

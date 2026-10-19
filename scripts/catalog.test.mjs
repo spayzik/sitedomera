@@ -245,3 +245,17 @@ test('PDF previews retain their documented crop dimensions without artificial en
     assert.equal(metadata.height, p.previewCrop[3] - p.previewCrop[1], p.id)
   }
 })
+
+
+test('customer descriptions cover all categories without inventing material facts or exposing QA provenance', async () => {
+  const { productDescription } = await import('../src/lib/productPresentation.ts')
+  for (const product of catalog.products) {
+    const text = productDescription(product)
+    assert.ok(text.length > 30, product.categoryId)
+    assert.doesNotMatch(text, /PDF|каталога 2026|pdf2026|влагостой|акуст|огнестой|сертифиц/i)
+  }
+  assert.match(productDescription(catalog.products.find(p => p.categoryId === 'fabric')), /тканевой фактурой/)
+  assert.match(productDescription(catalog.products.find(p => p.categoryId === 'profiles')), /алюминия/)
+  assert.doesNotMatch(productDescription({ categoryId: 'profiles' }), /алюминия/)
+  assert.doesNotMatch(productDescription(catalog.products.find(p => p.kind === 'flexible_stone')), /бамбук|WPC|13 кг/i)
+})
