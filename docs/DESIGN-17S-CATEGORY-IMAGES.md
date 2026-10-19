@@ -1,49 +1,44 @@
-# DESIGN-17S — category presentation and image evidence
+# DESIGN-17S — owner-supplied category images
 
-Source: editorial `65b1e54e7e35441795ed7307ae95b381f32e1823`.
-Original five-panel reference: `c1a71796ecc3a426a5458f29b7d8df5a5848eb40`.
-Category identities, names and counts come exclusively from `collections`.
-The presentation mapping lives in `src/lib/categoryPresentation.ts`, outside the immutable product inventory.
+Replacement BASE: c023ca993b5ba2a254c9ee955bf983934e749add.
+
+The Owner supplied nine editorial images and requested their use in the carousel.
+All originals are 1086 × 1448 PNG. The site uses WebP quality 90 at the same
+dimensions, without upscaling, generated content or changes to the product photos.
+Category identities, names and counts still come exclusively from collections.
+The presentation mapping is in src/lib/categoryPresentation.ts.
 
 ## Mapping
 
-Paths below are relative to `public/`. Editorial photographs illustrate a material family;
-they do **not** prove a specific SKU, actual installation, construction or performance property.
+Image paths below are relative to public/catalog/categories/.
 
-| Category | Image | Native pixels | Evidence / mode | Quality / outstanding input |
-|---|---|---:|---|---|
-| Дерево | catalog/categories/carusel-bamboo.webp | 1086 × 1448 | Original carousel; visible vertical wood grain in an interior | Suitable editorial presentation; not a product photograph |
-| Ткань | catalog/categories/carusel-cotton.webp | 1086 × 1448 | Original carousel; visible woven surface | Suitable editorial presentation; not a product photograph |
-| Металл | catalog/2026/previews/p13-r1c1.webp | 385 × 332 | First published metal product; existing PDF mapping | Bounded real sample, at most 220 × 220 CSS px; original category asset required |
-| Бамбук под камень | catalog/2026/previews/p15-r1c1.webp | 392 × 407 | First published bamboo-stone product; existing PDF mapping | Bounded sample; original category asset required |
-| Софт-тач | catalog/categories/carusel-softtouch.webp | 1086 × 1448 | Original carousel; smooth matte panel scene | Editorial inspiration only; photo does not prove tactile properties |
-| Гибкий камень | catalog/categories/carusel-stone.webp | 1086 × 1448 | Original carousel's stone illustration; visibly rough stone scene | Editorial inspiration only; does not establish the new SKU or that the installed material is flexible stone; owner confirmation desirable |
-| Штукатурка | catalog/2026/previews/p21-r1c1.webp | 386 × 368 | First published plaster product; existing PDF mapping | Bounded sample; original category asset required |
-| Декоративные рейки | catalog/categories/carusel-reech.webp | 1086 × 1448 | Original carousel; visible vertical slats | Suitable editorial presentation; not evidence of a particular slat SKU |
-| Профиль и комплектующие | catalog/2026/previews/p25-r1c1.webp | 375 × 327 | First published profile; existing PDF mapping | Entire form shown with contain; bounded sample; original category asset required |
+| Category | Attachment # | WebP | Original PNG SHA256 |
+|---|---:|---|---|
+| Дерево | 1 | carousel-2026-wood.webp | 009cb580c1c5c16b383d93e3db794a3ffdce3c9d966b4391911b8b8f1b17a593 |
+| Ткань | 9 | carousel-2026-fabric.webp | f07b0d437bf8d55d99f013393db8111a0fbece3980e478887f25b02a9d9c1dba |
+| Металл | 2 | carousel-2026-metal.webp | de576d80d737d3778a85e3c4d38b9ede000f5a1e6723fc3f95772c2e36741690 |
+| Бамбук под камень | 3 | carousel-2026-bamboo_stone.webp | a436e414e45108a2da53f48023de1beda497018eba9eebf6966ca67aaba64201 |
+| Софт-тач | 4 | carousel-2026-soft.webp | 053817a62542e8a5ec4b5089777a383f0fccccf8b0c3ba1b70556863cc42974e |
+| Гибкий камень | 5 | carousel-2026-flexible_stone.webp | 5743d3c2ddce16e8d2f8c6a0bfce132e1f2e6218c1e3325a17f999e5caee4df7 |
+| Штукатурка | 6 | carousel-2026-plaster.webp | e8d4ae7494c4620c7c8401073338664f023f984b6737eb4c4bea6e6e5c723b56 |
+| Декоративные рейки | 7 | carousel-2026-slats.webp | d612120b84c54c44548dac711b88f09195df82c03e7eaecda84d4baee25b2d3f |
+| Профиль и комплектующие | 8 | carousel-2026-profiles.webp | 3a6532e31bc8365d1898f08f9892350f7647e4026442eaae7b95af633ee5bfe3 |
 
-The four sample paths are derived from the corresponding canonical product, not
-duplicated in the component. Verify the exact filenames against that mapping.
-Samples are never stretched to fill the tall panel. A neutral dark frame provides
-the remaining composition; CSS does not synthesize material textures.
-At high device pixel ratios these small previews still have limited detail.
-No upscaling, re-encoding, generated image or change to product-image identity is performed.
+All nine are full-panel editorial backgrounds. The profile image is positioned
+right/bottom to prioritize the foreground accessories. The prior four bounded
+PDF samples and their unused carousel-only CSS were replaced by these scenes.
+Previous assets remain intact; no unrelated asset cleanup is performed.
 
-## Interaction / performance contract
+Total source PNG bytes: 24,773,203. Total WebP bytes: 2,712,068.
+The carousel retains lazy loading, native scroll, links, expansion and touch snap.
 
-- One native horizontal scroll track; all nine links remain in source order.
-- Desktop: only the active panel changes flex basis, rather than flex-grow on all nine.
-- Narrow screens up to 820 px and coarse/no-hover touch devices at any width:
-  fixed panel basis, native scroll snap, persistent descriptions.
-- Explicit previous/next controls; no autoplay, wheel interception or carousel dependency.
-- Reduced motion removes panel/image transitions. Hero/Manifest reveal remains unchanged.
-- Category links retain the existing hash-router contract and query-safe product navigation.
+## Evidence boundary
 
-## Release boundary
+These Owner-selected scenes illustrate categories; they do not establish a specific
+SKU, installed material, construction detail or technical compatibility.
+The canonical inventory, 38 provisional product images, seven reused product images
+and unresolved fabric record are unchanged. Replacing category imagery does not
+resolve those separate product-image review items.
 
-The 38 PDF previews, seven reused images and unresolved source record retain their
-existing provenance and owner-review status. Removing internal QA labels from the
-customer UI does not approve image quality or remove production blockers.
-This branch is for Chief review. Preview publication requires separate permission;
-the preview repository, pinned source, noindex/robots protections, notice and absence
-of live analytics/Avito credentials are unchanged by this task.
+No preview/production deployment is included. Existing staging noindex/robots,
+notice, analytics and credential boundaries remain unchanged.

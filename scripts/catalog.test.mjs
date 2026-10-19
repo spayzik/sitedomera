@@ -262,19 +262,20 @@ test('customer descriptions cover all categories without inventing material fact
 })
 
 
-test('carousel presentation retains nine real category links and bounded source samples', async () => {
+test('carousel presentation retains nine real category links and owner supplied editorial images', async () => {
   const { categoryPresentation } = await import('../src/lib/categoryPresentation.ts')
   const { parseCatalogHash } = await import('../src/lib/catalogNavigation.ts')
+  const { default: sharp } = await import('sharp')
   assert.deepEqual(categoryPresentation.map(c => c.id), catalog.collections.map(c => c.id))
   for (const category of categoryPresentation) {
     assert.equal(parseCatalogHash(category.href).categoryId, category.id)
     assert.equal(category.count, catalog.collections.find(c => c.id === category.id).count)
     assert.ok(existsSync(new URL('../public/' + category.image, import.meta.url)))
     assert.ok(category.evidence)
-    if (category.mode === 'sample') {
-      assert.ok(category.sampleMaxPx <= 220)
-      assert.equal(category.image, catalog.products.find(p => p.categoryId === category.id).image)
-    }
+    assert.equal(category.image, `catalog/categories/carousel-2026-${category.id}.webp`)
+    const metadata = await sharp(fileURLToPath(new URL('../public/' + category.image, import.meta.url))).metadata()
+    assert.equal(metadata.width, 1086)
+    assert.equal(metadata.height, 1448)
   }
   const page = readFileSync(new URL('../src/pages/CatalogPage.tsx', import.meta.url), 'utf8')
   assert.doesNotMatch(page, /compact-card-preview|PDF-превью/)

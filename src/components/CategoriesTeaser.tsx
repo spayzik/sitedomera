@@ -44,7 +44,7 @@ export function CategoriesTeaser() {
         {categoryPresentation.map(category => (
           <a key={category.id} href={category.href}
             aria-label={`Открыть категорию: ${category.name}`}
-            className={`cat-panel cat-panel--${category.mode}${active === category.id ? ' is-active' : ''}`}
+            className={`cat-panel${active === category.id ? ' is-active' : ''}`}
             onPointerEnter={event => { if (event.pointerType === 'mouse') setActive(category.id) }}
             onFocus={() => setActive(category.id)}
             onTransitionEnd={event => {
@@ -59,7 +59,7 @@ export function CategoriesTeaser() {
             onPointerCancel={() => { gesture.current.moved = true }}
             onClick={event => { if (gesture.current.moved && event.detail !== 0) { event.preventDefault(); gesture.current.moved = false } }}>
             <img className="cat-panel-img" src={category.image} alt="" loading="lazy" decoding="async"
-              style={category.mode === 'sample' ? { maxWidth: category.sampleMaxPx } : undefined} />
+              style={{ objectPosition: category.imagePosition }} />
             <div className="cat-panel-shade" />
             <div className="cat-panel-content">
               <p className="cat-panel-count">Позиций: {category.count}</p>

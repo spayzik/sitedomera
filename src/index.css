@@ -1541,11 +1541,6 @@ body:has(.analytics-banner, .hero-in-view) :is(.floating-cart, .tg-fab, .back-to
 .cat-card-copy { padding-top: 1rem; font-size: 0.9rem; line-height: 1.6; max-width: 30rem; color: #e2ded8; }
 .cat-panel.is-active .cat-card-text { grid-template-rows: 1fr; opacity: 1; }
 .cat-panel-link { display: flex; align-items: center; gap: 0.6rem; margin-top: 1.25rem; font-size: 0.7rem; letter-spacing: 0.06em; }
-.cat-panel--sample { background: radial-gradient(ellipse at 50% 20%, #3b352b, #151411 70%); }
-.cat-panel--sample::before { content: ''; position: absolute; inset: 1.25rem; border: 1px solid rgba(194,163,120,0.18); }
-.cat-panel--sample .cat-panel-img { inset: 10% 0 auto; margin: auto; width: min(70%, 220px); height: 220px; object-fit: contain; transform: none; }
-.cat-panel--sample.is-active .cat-panel-img { transform: none; }
-.cat-panel--sample .cat-panel-shade { background: linear-gradient(0deg, rgba(0,0,0,0.45), transparent 65%); }
 @media (max-width: 820px) {
   .cat-heading { align-items: flex-start; flex-direction: column; gap: 1rem; padding-bottom: 1.5rem; }
   .cat-heading h2 { font-size: 2.6rem; }
