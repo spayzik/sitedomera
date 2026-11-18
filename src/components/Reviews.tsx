@@ -18,7 +18,6 @@ export function Reviews() {
     return () => { active = false }
   }, [])
 
-  if (!snapshot) return null
 
   const move = (direction: 1 | -1) => {
     const track = trackRef.current
@@ -38,15 +37,18 @@ export function Reviews() {
           </div>
           <div className="reviews-head-side">
             <p className="lead">
-              {`Отзывы из профиля на Авито. Данные на ${dateFormatter.format(new Date(snapshot.updatedAt))}.`}
+              {snapshot
+                ? `Отзывы из профиля на Авито. Данные на ${dateFormatter.format(new Date(snapshot.updatedAt))}.`
+                : 'Смотрите отзывы покупателей в профиле ДЕКОРАЙ на Авито.'}
             </p>
             {avitoProfile && (<a className="reviews-avito-link interactive" href={avitoProfile} target="_blank" rel="noreferrer">
-              Все отзывы на Авито <ExternalLink size={15} />
+              Открыть профиль на Авито <ExternalLink size={15} />
             </a>)}
           </div>
         </div>
 
 
+        {snapshot && (
           <motion.div
             className="reviews-carousel"
             initial={{ opacity: 0, y: 28 }}
@@ -88,12 +90,13 @@ export function Reviews() {
                   </div>
                   <p className="review-text">«{review.text}»</p>
                   {avitoProfile && (<a className="review-source" href={avitoProfile} target="_blank" rel="noreferrer">
-                    Все отзывы на Авито <ExternalLink size={12} />
+                    Открыть профиль на Авито <ExternalLink size={12} />
                   </a>)}
                 </article>
               ))}
             </div>
           </motion.div>
+        )}
       </div>
     </section>
   )
