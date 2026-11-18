@@ -1,7 +1,7 @@
+import { avitoProfile } from '../lib/avitoProfile'
 import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { ChevronLeft, ChevronRight, ExternalLink, Star } from 'lucide-react'
-import { CONTACTS } from '../data/products'
 import { loadAvitoSnapshot, type AvitoSnapshot } from '../lib/avitoReviews'
 
 const dateFormatter = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Moscow' })
@@ -17,6 +17,8 @@ export function Reviews() {
     loadAvitoSnapshot().then((value) => { if (active) setSnapshot(value) })
     return () => { active = false }
   }, [])
+
+  if (!snapshot) return null
 
   const move = (direction: 1 | -1) => {
     const track = trackRef.current
@@ -36,17 +38,15 @@ export function Reviews() {
           </div>
           <div className="reviews-head-side">
             <p className="lead">
-              {snapshot
-                ? `Отзывы из профиля на Авито. Данные на ${dateFormatter.format(new Date(snapshot.updatedAt))}.`
-                : 'Отзывы и актуальный рейтинг смотрите в нашем профиле на Авито.'}
+              {`Отзывы из профиля на Авито. Данные на ${dateFormatter.format(new Date(snapshot.updatedAt))}.`}
             </p>
-            <a className="reviews-avito-link interactive" href={CONTACTS.avito} target="_blank" rel="noreferrer">
+            {avitoProfile && (<a className="reviews-avito-link interactive" href={avitoProfile} target="_blank" rel="noreferrer">
               Все отзывы на Авито <ExternalLink size={15} />
-            </a>
+            </a>)}
           </div>
         </div>
 
-        {snapshot ? (
+
           <motion.div
             className="reviews-carousel"
             initial={{ opacity: 0, y: 28 }}
@@ -87,26 +87,13 @@ export function Reviews() {
                     </div>
                   </div>
                   <p className="review-text">«{review.text}»</p>
-                  <a className="review-source" href={CONTACTS.avito} target="_blank" rel="noreferrer">
+                  {avitoProfile && (<a className="review-source" href={avitoProfile} target="_blank" rel="noreferrer">
                     Все отзывы на Авито <ExternalLink size={12} />
-                  </a>
+                  </a>)}
                 </article>
               ))}
             </div>
           </motion.div>
-        ) : (
-          <div className="reviews-empty">
-            <div className="reviews-empty-mark" aria-hidden="true"><Star size={28} strokeWidth={1.2} /></div>
-            <div>
-              <p className="eyebrow">Авито · отзывы покупателей</p>
-              <h3>Мнения покупателей — в нашем профиле</h3>
-              <p>Читайте отзывы и проверяйте актуальный рейтинг непосредственно на Авито.</p>
-            </div>
-            <a className="btn btn-outline interactive" href={CONTACTS.avito} target="_blank" rel="noreferrer">
-              Смотреть отзывы на Авито <ExternalLink size={16} />
-            </a>
-          </div>
-        )}
       </div>
     </section>
   )

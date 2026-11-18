@@ -1,4 +1,6 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
+import { Cookie } from 'lucide-react'
+import { isPageRoute, useRoute } from '../router'
 import { isAnalyticsConfigured, observeAnalyticsConsent, readAnalyticsConsent, saveAnalyticsConsent, startAnalytics, stopAnalytics, trackAnalyticsLink, trackAnalyticsPage, type AnalyticsConsent } from '../lib/analytics'
 
 type ConsentContextValue = {
@@ -43,41 +45,108 @@ export function PrivacyProvider({ children }: { children: ReactNode }) {
 
 export function AnalyticsBanner() {
   const { consent, choose } = useConsent()
-  if (!isAnalyticsConfigured() || consent !== 'unknown') return null
+  const standalone = isPageRoute(useRoute())
+  const eligible = isAnalyticsConfigured() && consent === 'unknown'
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    setVisible(false)
+    if (!eligible) return
+    let timer: number | undefined
+    const schedule = (outsideHero: boolean) => {
+      window.clearTimeout(timer)
+      if (outsideHero) timer = window.setTimeout(() => setVisible(true), 800)
+      else setVisible(false)
+    }
+    const hero = standalone ? null : document.getElementById('top')
+    if (!hero) {
+      schedule(true)
+      return () => window.clearTimeout(timer)
+    }
+    const observer = new IntersectionObserver(([entry]) => {
+      schedule(!entry.isIntersecting && entry.boundingClientRect.bottom <= 0)
+    })
+    observer.observe(hero)
+    return () => { observer.disconnect(); window.clearTimeout(timer) }
+  }, [eligible, standalone])
+
+  if (!eligible || !visible) return null
 
   return (
-    <aside className="analytics-banner" aria-label="Выбор аналитики">
-      <p className="analytics-banner-title">Аналитика сайта</p>
-      <p>Мы используем Яндекс.Метрику для анализа посещаемости. Вы можете разрешить аналитику или продолжить без неё.</p>
-      <div className="analytics-choices">
-        <button type="button" onClick={() => choose('accepted')}>Разрешить аналитику</button>
-        <button type="button" onClick={() => choose('rejected')}>Без аналитики</button>
+    <aside className="analytics-banner" aria-labelledby="cookie-banner-title">
+      <div className="analytics-banner-copy">
+        <h2 className="analytics-banner-title" id="cookie-banner-title"><span><Cookie size={17} aria-hidden="true" /></span> Настройки cookie</h2>
+        <p>Сайт сохраняет корзину и настройки. С вашего разрешения мы собираем статистику посещений, чтобы улучшать сайт.</p>
+        <a href="#/privacy">Подробнее о данных</a>
       </div>
-      <a href="#/privacy">Подробнее о данных</a>
+      <ConsentChoices choose={choose} />
     </aside>
   )
 }
 
-export function AnalyticsSettings() {
+function ConsentChoices({ choose, consent }: { choose: ConsentContextValue['choose']; consent?: AnalyticsConsent }) {
+  return (
+    <div className="analytics-choices">
+      <button type="button" aria-pressed={consent === undefined ? undefined : consent === 'accepted'} onClick={() => choose('accepted')}>Принять</button>
+      <button type="button" aria-pressed={consent === undefined ? undefined : consent === 'rejected'} onClick={() => choose('rejected')}>Отклонить</button>
+    </div>
+  )
+}
+
+export function CookieSettingsLink() {
+  const dialog = useRef<HTMLDialogElement>(null)
+  const trigger = useRef<HTMLButtonElement>(null)
+
+  return (
+    <>
+      <button ref={trigger} type="button" className="cookie-settings-link" aria-haspopup="dialog" onClick={() => dialog.current?.showModal()}>
+        Настройки cookie
+      </button>
+      <dialog
+        ref={dialog}
+        className="cookie-dialog"
+        aria-labelledby="cookie-dialog-title"
+        onClose={() => trigger.current?.focus()}
+        onKeyDown={event => {
+          if (event.key !== 'Tab') return
+          const buttons = event.currentTarget.querySelectorAll<HTMLButtonElement>('button:not([disabled])')
+          const first = buttons[0]
+          const last = buttons[buttons.length - 1]
+          if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault()
+            last?.focus()
+          } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault()
+            first?.focus()
+          }
+        }}
+      >
+        <div className="cookie-dialog-header">
+          <h2 id="cookie-dialog-title">Настройки cookie</h2>
+          <form method="dialog"><button type="submit" className="cookie-dialog-close" aria-label="Закрыть настройки cookie">×</button></form>
+        </div>
+        <AnalyticsSettings inDialog />
+      </dialog>
+    </>
+  )
+}
+
+export function AnalyticsSettings({ inDialog = false }: { inDialog?: boolean }) {
   const { consent, choose } = useConsent()
-  if (!isAnalyticsConfigured()) {
-    return (
-      <div className="analytics-settings">
-        <h2>Настройки аналитики</h2>
-        <p>В этой версии сайта аналитика не настроена.</p>
-      </div>
-    )
-  }
+  const configured = isAnalyticsConfigured()
   const status = consent === 'accepted' ? 'разрешена' : consent === 'rejected' ? 'отключена' : 'решение не принято'
 
   return (
     <div className="analytics-settings">
-      <h2>Настройки аналитики</h2>
-      <p>Сейчас аналитика: {status}. Вы можете изменить выбор в любое время. При отключении уже загруженной Метрики страница обновится; ранее переданные Яндексу данные это не удаляет.</p>
-      <div className="analytics-choices">
-        <button type="button" aria-pressed={consent === 'accepted'} onClick={() => choose('accepted')}>Разрешить аналитику</button>
-        <button type="button" aria-pressed={consent === 'rejected'} onClick={() => choose('rejected')}>Без аналитики</button>
-      </div>
+      {!inDialog && <h2>Настройки cookie</h2>}
+      <dl className="cookie-categories">
+        <div><dt>Необходимые данные</dt><dd>Сохраняют корзину и настройки сайта.</dd></div>
+        <div><dt>Аналитика</dt><dd>Яндекс Метрика для статистики сайта. Включается по вашему выбору.</dd></div>
+      </dl>
+      <p role="status">{configured ? `Аналитика: ${status}.` : 'Аналитика в этой версии сайта отключена.'}</p>
+      {configured && <>
+        <p>При отзыве согласия передача новых событий прекратится. Ранее переданные Яндексу данные сохраняются у сервиса по его правилам.</p>
+        <ConsentChoices choose={choose} consent={consent} />
+      </>}
     </div>
   )
 }

@@ -45,6 +45,7 @@ async function browserHarness(t) {
     },
     Element: TestLink,
   }
+  browser.localStorage = mocks.localStorage
   for (const [key, value] of Object.entries(mocks)) {
     const old = Object.getOwnPropertyDescriptor(globalThis, key)
     Object.defineProperty(globalThis, key, { value, configurable: true })

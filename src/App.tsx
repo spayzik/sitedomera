@@ -20,7 +20,7 @@ import { LogoIcon } from './components/Logo'
 import { useRoute, isPageRoute } from './router'
 import { CONTACTS } from './data/products'
 import { metadataForRoute } from './data/seo'
-import { AnalyticsBanner, PrivacyProvider } from './components/AnalyticsConsent'
+import { AnalyticsBanner, CookieSettingsLink, PrivacyProvider } from './components/AnalyticsConsent'
 import { MotionConfig } from 'framer-motion'
 
 const Quiz = lazy(() => import('./components/Quiz').then(m => ({ default: m.Quiz })))
@@ -28,7 +28,6 @@ const Installation = lazy(() => import('./components/Installation').then(m => ({
 const Interiors = lazy(() => import('./components/Interiors').then(m => ({ default: m.Interiors })))
 const Reviews = lazy(() => import('./components/Reviews').then(m => ({ default: m.Reviews })))
 const Showroom = lazy(() => import('./components/Showroom').then(m => ({ default: m.Showroom })))
-const Compare = lazy(() => import('./components/Compare').then(m => ({ default: m.Compare })))
 const Calculator = lazy(() => import('./components/Calculator').then(m => ({ default: m.Calculator })))
 const FAQ = lazy(() => import('./components/FAQ').then(m => ({ default: m.FAQ })))
 
@@ -78,6 +77,7 @@ function Footer() {
           <p>&copy; {new Date().getFullYear()} {CONTACTS.brand}. Все права защищены.</p>
           <div className="footer-legal">
             <a href="#/privacy">Политика конфиденциальности</a>
+            <CookieSettingsLink />
             <a href="#/offer">Условия приобретения</a>
           </div>
         </div>
@@ -123,7 +123,6 @@ function Home({ route, introReady }: { route: string; introReady: boolean }) {
         <Installation />
         <Interiors />
         <Reviews />
-        <Compare />
         <Calculator />
         <SectionAnchor route={route} ids={firstLazySectionIds} />
       </Suspense>

@@ -227,7 +227,9 @@ test('all published commercial/specification fields agree with their individual 
     }
     assert.deepEqual(product.dimensions, source.dimensions)
     const details = catalog.productDetails(product)
-    if (source.thicknessMm === undefined) assert.ok(!details.some(([label]) => label === 'Толщина'))
+    const publishedThickness = details.find(([label]) => label === 'Толщина')
+    if (source.thicknessMm === undefined || product.kind === 'flexible_stone') assert.equal(publishedThickness, undefined)
+    else assert.equal(publishedThickness?.[1], `${source.thicknessMm.toLocaleString('ru-RU')} мм`)
     if (source.weightKg === undefined) assert.ok(!details.some(([label]) => label === 'Вес'))
     if (source.sku === null) assert.ok(!details.some(([label]) => label === 'Артикул'))
     if (source.material === undefined) assert.ok(!details.some(([label]) => label === 'Материал'))

@@ -1,3 +1,4 @@
+import { avitoProfile } from '../lib/avitoProfile'
 import { CONTACTS } from '../data/products'
 import { useCart } from '../context/CartContext'
 import { motion } from 'framer-motion'
@@ -34,10 +35,10 @@ export function Showroom() {
                 <strong style={{ fontSize: '1.5rem', fontFamily: 'var(--font-display)', marginBottom: '0.5rem' }}>{CONTACTS.phone}</strong>
                 <span>Официальный отдел продаж</span>
               </a>
-              <a className="info-item" href={CONTACTS.avito} target="_blank" rel="noreferrer" style={{ display: 'block', textDecoration: 'none' }}>
+              {avitoProfile && (<a className="info-item" href={avitoProfile} target="_blank" rel="noreferrer" style={{ display: 'block', textDecoration: 'none' }}>
                 <strong style={{ fontSize: '1.5rem', fontFamily: 'var(--font-display)', marginBottom: '0.5rem' }}>Магазин на Авито</strong>
                 <span>Отзывы и дополнительный ассортимент</span>
-              </a>
+              </a>)}
               <a className="info-item" href={CONTACTS.telegram} target="_blank" rel="noreferrer" style={{ display: 'block', textDecoration: 'none' }}>
                 <strong style={{ fontSize: '1.5rem', fontFamily: 'var(--font-display)', marginBottom: '0.5rem' }}>Написать в Telegram</strong>
                 <span>Пишите — отвечаем в течение дня</span>
@@ -84,9 +85,9 @@ export function Showroom() {
               <a className="btn btn-primary btn-full interactive" href={CONTACTS.telegram} target="_blank" rel="noreferrer">
                 Написать в Telegram <ArrowUpRight size={16} />
               </a>
-              <a className="btn btn-white btn-full interactive" href={CONTACTS.avito} target="_blank" rel="noreferrer">
+              {avitoProfile && (<a className="btn btn-white btn-full interactive" href={avitoProfile} target="_blank" rel="noreferrer">
                 Открыть магазин на Авито <ArrowUpRight size={16} />
-              </a>
+              </a>)}
             </div>
             <a className="contact-panel-phone interactive" href={`tel:${CONTACTS.phoneRaw}`}>
               <Phone size={18} /> {CONTACTS.phone}

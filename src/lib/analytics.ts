@@ -44,7 +44,12 @@ export function saveAnalyticsConsent(value: 'accepted' | 'rejected'): void {
 
 export function observeAnalyticsConsent(onChange: (consent: AnalyticsConsent) => void): () => void {
   const onStorage = (event: StorageEvent) => {
-    if (event.storageArea !== localStorage || (event.key !== consentKey && event.key !== null)) return
+    if (event.key !== consentKey && event.key !== null) return
+    try {
+      if (!event.storageArea || event.storageArea !== window.localStorage) return
+    } catch {
+      return
+    }
     const consent = readAnalyticsConsent()
     if (consent !== 'accepted') stopAnalytics()
     onChange(consent)

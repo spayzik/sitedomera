@@ -1,38 +1,44 @@
-import { motion } from 'framer-motion'
-import { products, formatRange, formatDimensions, type Product, type ProductKind } from '../data/products'
+import { ArrowUpRight } from 'lucide-react'
+import { products, formatRange, formatDimensions, type ProductKind, type CollectionId } from '../data/products'
+import { updateCatalogHash } from '../lib/catalogNavigation'
 
-const cols: { kind: ProductKind; title: string }[] = [
-  { kind: 'panel', title: 'Панели' }, { kind: 'flexible_stone', title: 'Гибкий камень' },
-  { kind: 'slat', title: 'Рейки' }, { kind: 'profile', title: 'Профили' },
-]
-const groups = cols.map(c => products.filter(p => p.kind === c.kind))
-function specs(items: Product[], key: 'thicknessMm' | 'weightKg', unit: string) {
-  const values = [...new Set(items.flatMap(p => p[key] === undefined ? [] : [p[key]!]))]
-  return values.length ? values.sort((a, b) => a - b).map(n => n.toLocaleString('ru-RU')).join(' / ') + ' ' + unit : 'В PDF не указан' + (key === 'thicknessMm' ? 'а' : '')
-}
-const rows = [
-  { param: 'Позиций в каталоге', values: groups.map(items => String(items.length)) },
-  { param: 'Цена за единицу', values: groups.map(items => formatRange({ min: Math.min(...items.map(p => p.priceRub)), max: Math.max(...items.map(p => p.priceRub)) }) + ' ₽ / ' + [...new Set(items.map(p => p.unit))].join(' или ')) },
-  { param: 'Размер', values: groups.map(items => [...new Set(items.map(formatDimensions))].join('; ')) },
-  { param: 'Толщина', values: groups.map(items => specs(items, 'thicknessMm', 'мм')) },
-  { param: 'Вес', values: groups.map(items => specs(items, 'weightKg', 'кг')) },
+const materials: { kind: ProductKind; category: CollectionId | 'all'; title: string; description: string }[] = [
+  { kind: 'panel', category: 'all', title: 'Панели', description: 'Для отделки стен. В коллекции есть фактуры дерева, ткани и штукатурки.' },
+  { kind: 'flexible_stone', category: 'flexible_stone', title: 'Гибкий камень', description: 'Листовой материал с каменной фактурой для отделки стен.' },
+  { kind: 'slat', category: 'slats', title: 'Декоративные рейки', description: 'Для ритмичного рисунка стены, ниш и акцентных зон.' },
+  { kind: 'profile', category: 'profiles', title: 'Профили', description: 'Для оформления стыков, углов и краёв облицовки.' },
 ]
 
 export function Compare() {
   return (
     <section className="section compare" id="compare">
       <div className="container">
-        <div className="catalog-header" style={{ marginBottom: '3rem' }}>
-          <div><p className="eyebrow">Характеристики</p><h2>Разные материалы<br/>для вашего проекта</h2></div>
-          <p className="lead">Сводка по карточкам каталога 2026. Точные параметры выбранного изделия указаны в его карточке.</p>
+        <div className="section-head-flex">
+          <div><p className="eyebrow">Материалы</p><h2>Подберите отделку<br />для своего проекта</h2></div>
+          <p className="lead">Сравните форматы, цены и назначение материалов.</p>
         </div>
-        <motion.div className="compare-scroll" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-40px' }} transition={{ duration: 0.8 }}>
-          <table className="compare-table">
-            <thead><tr><th className="compare-param">Параметр</th>{cols.map((c, i) => <th key={c.kind} className={i === 0 ? 'col-domera' : ''}>{c.title}</th>)}</tr></thead>
-            <tbody>{rows.map(r => <tr key={r.param}><td className="compare-param">{r.param}</td>{r.values.map((v, i) => <td key={cols[i].kind} className={i === 0 ? 'col-domera' : ''}>{v}</td>)}</tr>)}</tbody>
-          </table>
-        </motion.div>
-        <p className="compare-note">Отсутствующие в PDF значения не подставляются. Наличие, состав, совместимость и условия применения уточняйте по конкретной модели.</p>
+        <div className="material-grid">
+          {materials.map(({ kind, category, title, description }) => {
+            const items = products.filter(product => product.kind === kind)
+            const prices = items.map(product => product.priceRub)
+            const price = formatRange({ min: Math.min(...prices), max: Math.max(...prices) })
+            const units = [...new Set(items.map(product => product.unit))]
+            const sizes = [...new Set(items.map(formatDimensions))]
+            return (
+              <article key={kind} className="material-card">
+                <h3>{title}</h3>
+                <p>{description}</p>
+                <dl>
+                  <div><dt>Формат</dt><dd>{sizes.join(' · ')}</dd></div>
+                  <div><dt>Цена за {units.join(' или ')}</dt><dd>{price} ₽</dd></div>
+                </dl>
+                <a className="material-link interactive" href={updateCatalogHash('#/catalog', { category })}>
+                  {category === 'all' ? 'Открыть каталог' : 'Смотреть в каталоге'} <ArrowUpRight size={16} aria-hidden="true" />
+                </a>
+              </article>
+            )
+          })}
+        </div>
       </div>
     </section>
   )

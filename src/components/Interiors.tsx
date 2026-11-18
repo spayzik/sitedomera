@@ -12,15 +12,15 @@ interface Room {
 }
 
 const rooms: Room[] = [
-  { image: 'room-wood', width: 1429, height: 808, caption: 'Гостиная · Деревянная фактура', tag: 'Wood' },
-  { image: 'room-fabric', width: 1310, height: 1019, caption: 'Спальня · Тканевая фактура', tag: 'Fabric' },
-  { image: 'room-metal', width: 1310, height: 1019, caption: 'Кабинет · Металл', tag: 'Metal' },
-  { image: 'room-plaster', width: 1310, height: 1019, caption: 'Прихожая · Штукатурка', tag: 'Plaster' },
-  { image: 'hero-soft-new', width: 1024, height: 1024, caption: 'Спальня · Soft-touch', tag: 'Soft-touch' },
+  { image: 'interior-living', width: 1122, height: 1402, caption: 'Гостиная с каменной фактурой и рейками', tag: 'Гостиная' },
+  { image: 'interior-bedroom', width: 1122, height: 1402, caption: 'Спальня с акцентной стеной', tag: 'Спальня' },
+  { image: 'interior-dining', width: 1122, height: 1402, caption: 'Столовая в тёплых тонах', tag: 'Столовая' },
+  { image: 'interior-metal', width: 1448, height: 1086, caption: 'Металлическая фактура с подсветкой', tag: 'Металл' },
+  { image: 'interior-fabric', width: 1122, height: 1402, caption: 'Тканевая фактура вблизи', tag: 'Ткань' },
 ]
 
 function roomSrc(r: Room) {
-  return `catalog/${r.image === 'hero-soft-new' ? 'hero' : 'rooms'}/${r.image}.webp`
+  return `catalog/rooms/${r.image}.webp`
 }
 
 const lightboxImages: LightboxImage[] = rooms.map((r) => ({ src: roomSrc(r), caption: r.caption, tag: r.tag }))
@@ -38,25 +38,17 @@ function InteriorCard({
 
   return (
     <motion.div
-      className={`interior-card ${i === 0 ? 'wide' : ''}`}
+      className="interior-card"
       initial={reducedMotion ? false : { opacity: 0, y: 40 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-40px' }}
       transition={{ duration: reducedMotion ? 0 : 0.8, delay: reducedMotion ? 0 : i * 0.1, ease: [0.22, 1, 0.36, 1] }}
-      onClick={() => onOpen(i)}
     >
-      <img
-        src={roomSrc(r)}
-        alt={r.caption}
-        loading="lazy"
-        width={r.width}
-        height={r.height}
-      />
-      <div className="interior-tag">{r.tag}</div>
-      <p className="interior-caption">{r.caption}</p>
-      <button className="interior-zoom" aria-label={`Открыть интерьер: ${r.caption}`} onClick={(event) => { event.stopPropagation(); onOpen(i) }}>
-        <ZoomIn size={18} />
+      <button type="button" className="interior-photo" aria-label={`Открыть интерьер: ${r.caption}`} onClick={() => onOpen(i)}>
+        <img src={roomSrc(r)} alt={r.caption} loading="lazy" width={r.width} height={r.height} />
+        <span className="interior-zoom" aria-hidden="true"><ZoomIn size={18} /></span>
       </button>
+      <p className="interior-caption">{r.caption}</p>
     </motion.div>
   )
 }
@@ -73,15 +65,17 @@ export function Interiors() {
             <h2>Декорай<br/>в пространстве</h2>
           </div>
           <p className="lead">
-            Примеры оформления интерьера: объём, свет
-            и характер фактур. Изображения не подтверждают соответствие конкретному артикулу каталога.
+            Посмотрите, как фактуры выглядят рядом с мебелью и при разном освещении.
           </p>
         </div>
 
         <div className="interiors-grid">
-          {rooms.map((r, i) => (
-            <InteriorCard key={r.image} r={r} i={i} onOpen={setLightbox} />
-          ))}
+          <InteriorCard r={rooms[0]} i={0} onOpen={setLightbox} />
+          <div className="interior-previews">
+            {rooms.slice(1).map((r, i) => (
+              <InteriorCard key={r.image} r={r} i={i + 1} onOpen={setLightbox} />
+            ))}
+          </div>
         </div>
       </div>
 

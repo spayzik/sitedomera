@@ -35,7 +35,7 @@ function answer(input: string): string {
     return 'В каталоге есть бамбуковые панели, гибкий камень, рейки и алюминиевые профили. Состав и условия применения уточняются по конкретному изделию.'
   }
   if (/телефон|связ|контакт|менедж/.test(q)) {
-    return `Телефон: ${CONTACTS.phone}. Telegram: ${CONTACTS.telegram}. Магазин на Авито: ${CONTACTS.avito}.`
+    return `Телефон: ${CONTACTS.phone}. Telegram: ${CONTACTS.telegram}.`
   }
   if (/влаг|ванн|кухн|влажн/.test(q)) {
     return faq[4].a

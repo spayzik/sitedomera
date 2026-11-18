@@ -49,7 +49,8 @@ export function productDetails(p: Product): [string, string][] {
     ['Размеры', formatDimensions(p)],
   ]
   if (p.sku) details.splice(1, 0, ['Артикул', p.sku])
-  if (p.thicknessMm !== undefined) details.push(['Толщина', `${p.thicknessMm.toLocaleString('ru-RU')} мм`])
+  // Flexible stone thickness is pending verification for the storefront.
+  if (p.kind !== 'flexible_stone' && p.thicknessMm !== undefined) details.push(['Толщина', `${p.thicknessMm.toLocaleString('ru-RU')} мм`])
   if (p.weightKg !== undefined) details.push(['Вес', `${p.weightKg.toLocaleString('ru-RU')} кг`])
   if (p.material) details.push(['Материал', p.material])
   return details
@@ -93,7 +94,6 @@ export const CONTACTS = {
   brand: 'ДЕКОРАЙ',
   phone: '+7 977 476-08-88',
   phoneRaw: '+79774760888',
-  avito: 'https://www.avito.ru/brands/i344978249',
   site: 'декорай.рф',
   hostname,
   origin: `https://${hostname}`,
@@ -110,7 +110,7 @@ export const CONTACTS = {
 
 
 export const faq = [
-  { q: 'Какие материалы и размеры есть в каталоге?', a: `В каталоге ${products.length} позиций в ${collections.length} категориях: панели, гибкий камень, рейки и алюминиевые профили. Размер, толщина и масса зависят от изделия; смотрите конкретную карточку. Наличие уточняет менеджер.` },
+  { q: 'Какие материалы и размеры есть в каталоге?', a: `В каталоге ${products.length} позиций в ${collections.length} категориях: панели, гибкий камень, рейки и алюминиевые профили. Размеры и характеристики смотрите в карточке выбранного изделия. Наличие уточняет менеджер.` },
   { q: 'Как осуществляется доставка?', a: 'Способ доставки, стоимость и сроки уточните у менеджера для выбранных материалов. Адрес шоурума указан в контактах.' },
   { q: 'Сколько стоят материалы?', a: `${priceSummary}. Это цены каталога 2026; наличие и условия покупки уточните у менеджера.` },
   { q: 'Как монтируются материалы?', a: 'Способ монтажа и комплектующие зависят от выбранного материала. Уточните совместимость профиля с толщиной панели и рекомендации для вашего основания.' },

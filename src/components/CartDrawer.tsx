@@ -1,3 +1,4 @@
+import { avitoProfile } from '../lib/avitoProfile'
 import { useCart } from '../context/CartContext'
 import { X, Minus, Plus, Trash2, ArrowRight } from 'lucide-react'
 import { CONTACTS, formatDimensions } from '../data/products'
@@ -103,9 +104,9 @@ export function CartDrawer() {
                 <a className="contact-inline-phone interactive" href={`tel:${CONTACTS.phoneRaw}`}>
                   Позвонить: {CONTACTS.phone}
                 </a>
-                <a className="contact-inline-phone interactive" href={CONTACTS.avito} target="_blank" rel="noreferrer">
+                {avitoProfile && (<a className="contact-inline-phone interactive" href={avitoProfile} target="_blank" rel="noreferrer">
                   Открыть магазин на Авито
-                </a>
+                </a>)}
               </div>
             </div>
           </motion.div>
