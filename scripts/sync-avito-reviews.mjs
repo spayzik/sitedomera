@@ -6,11 +6,14 @@ import { createAvitoSnapshot, REQUEST_LIMIT } from './avito-reviews-core.mjs'
 const output = resolve('public/generated/avito-reviews.json')
 const clientId = process.env.AVITO_CLIENT_ID
 const clientSecret = process.env.AVITO_CLIENT_SECRET
+const expectedAccountId = process.env.AVITO_ACCOUNT_ID
+const args = process.argv.slice(2)
+const publish = args.length === 1 && args[0] === '--publish'
 
 async function requestJson(url, options, label) {
   let response
   try {
-    response = await fetch(url, { ...options, signal: AbortSignal.timeout(15_000) })
+    response = await fetch(url, { ...options, redirect: 'error', signal: AbortSignal.timeout(15_000) })
   } catch {
     throw new Error(`${label}: network or timeout failure`)
   }
@@ -36,11 +39,27 @@ async function sync() {
     throw new Error('Token response has no access token')
   }
   const headers = { Authorization: `Bearer ${tokenData.access_token}` }
+  console.log('[avito] OAuth client credentials accepted.')
+
+  const account = await requestJson('https://api.avito.ru/core/v1/accounts/self', { headers }, 'Account identity')
+  const accountId = account?.id
+  if (!Number.isSafeInteger(accountId) || accountId < 1) {
+    throw new Error('Account response has no valid ID')
+  }
+  if (expectedAccountId && String(accountId) !== expectedAccountId) {
+    throw new Error('Authenticated account does not match AVITO_ACCOUNT_ID')
+  }
+  if (expectedAccountId) console.log('[avito] Account identity matches the configured ID.')
   const info = await requestJson('https://api.avito.ru/ratings/v1/info', { headers }, 'Rating info')
   const reviewsUrl = new URL('https://api.avito.ru/ratings/v1/reviews')
   reviewsUrl.search = new URLSearchParams({ offset: '0', limit: String(REQUEST_LIMIT) }).toString()
   const list = await requestJson(reviewsUrl, { headers }, 'Review list')
   const snapshot = createAvitoSnapshot(info, list)
+
+  if (!publish) {
+    console.log(`[avito] Ratings API returned ${snapshot.reviews.length} usable reviews. Existing snapshot preserved.`)
+    return
+  }
 
   await mkdir(dirname(output), { recursive: true })
   const temporary = `${output}.${randomUUID()}.tmp`
@@ -53,10 +72,17 @@ async function sync() {
   console.log(`[avito] Synced ${snapshot.reviews.length} reviews; no credentials or token were written.`)
 }
 
-if (!clientId && !clientSecret) {
-  console.warn('[avito] Credentials absent; keeping the existing static snapshot.')
+if (args.length > 0 && !publish) {
+  console.error('[avito] Use sync:avito for read-only preflight or sync:avito -- --publish to update the snapshot.')
+  process.exitCode = 1
 } else if (!clientId || !clientSecret) {
-  console.error('[avito] Credentials incomplete; keeping the existing static snapshot.')
+  console.error('[avito] Credentials absent or incomplete; existing snapshot preserved.')
+  process.exitCode = 1
+} else if ((publish || expectedAccountId) && !/^[1-9]\d*$/.test(expectedAccountId ?? '')) {
+  console.error('[avito] Set AVITO_ACCOUNT_ID to the confirmed numeric ID before publishing.')
+  process.exitCode = 1
+} else if (publish && process.env.AVITO_REVIEW_PUBLICATION_APPROVED !== '1') {
+  console.error('[avito] Publication approval is required before updating the public snapshot.')
   process.exitCode = 1
 } else {
   try {

@@ -1,16 +1,23 @@
-import { useReducer } from 'react'
+import { useEffect, useReducer, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { products, collections, CONTACTS, formatDimensions } from '../data/products'
 import { useCart } from '../context/CartContext'
 import { ArrowRight, RotateCcw, Check } from 'lucide-react'
 import { buildTelegramDraftUrl, formatQuizTelegramMessage } from '../lib/telegramLink'
 import { quizQuestions as Q, createQuizState, quizReducer, quizResultContext } from '../lib/quiz'
+import { trackAnalyticsGoal } from '../lib/analytics'
 
 export function Quiz() {
   const { add } = useCart()
   const [state, dispatch] = useReducer(quizReducer, undefined, createQuizState)
   const { step, categoryIds, categoryId, productId } = state
   const done = step >= Q.length
+  const reportedCompletion = useRef(false)
+  useEffect(() => {
+    if (done === reportedCompletion.current) return
+    reportedCompletion.current = done
+    if (done) trackAnalyticsGoal('quiz_complete')
+  }, [done])
   const category = collections.find(c => c.id === categoryId)
   const candidates = products.filter(p => p.categoryId === categoryId)
   const product = candidates.find(p => p.id === productId) ?? null

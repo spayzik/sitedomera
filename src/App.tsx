@@ -69,9 +69,9 @@ function Footer() {
         </div>
         
         {/* Massive Typography Brand Reveal */}
-        <div className="footer-ghost" aria-hidden="true">ДОМЭРА</div>
+        <div className="footer-ghost" aria-hidden="true">ДЕКОРАЙ</div>
         <div className="footer-massive">
-          ДОМЭРА
+          ДЕКОРАЙ
         </div>
 
         <div className="footer-bottom">

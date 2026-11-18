@@ -44,7 +44,7 @@ export function Hero({ ready = true }: { ready?: boolean }) {
       >
         <motion.img 
           src="catalog/hero/hero.webp" 
-          alt="Интерьер спальни с панелями Домэра"
+          alt="Визуализация гостиной с бамбуковыми панелями тёплого оттенка ореха"
           fetchPriority="high"
           decoding="async"
           initial={{ scale: 1.25 }}
@@ -70,7 +70,7 @@ export function Hero({ ready = true }: { ready?: boolean }) {
         >
           <div style={{ overflow: 'hidden', paddingBottom: '0.2em' }}>
             <motion.p className="hero-eyebrow" variants={textMaskFlat}>
-              Домэра · Коллекция 2026
+              Декорай · Коллекция 2026
             </motion.p>
           </div>
 

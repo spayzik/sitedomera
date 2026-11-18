@@ -2,10 +2,10 @@ import { motion } from 'framer-motion'
 import { CheckCircle2 } from 'lucide-react'
 
 const features = [
-  'Собственные бригады с опытом более 5 лет',
-  'Чистый монтаж на клей: без пыли и шума',
-  'Идеальная подгонка углов и стыковка профилей',
-  'Официальная гарантия на работы'
+  'Проверка основания перед установкой',
+  'Подбор способа крепления под материал',
+  'Согласование раскладки, углов и стыков',
+  'Расчёт работ и комплектующих'
 ]
 
 export function Installation() {
@@ -24,7 +24,7 @@ export function Installation() {
             <p className="eyebrow">Наши услуги</p>
             <h2>Профессиональный<br/>монтаж «под ключ»</h2>
             <p className="lead" style={{ marginBottom: '2.5rem' }}>
-              Мы предлагаем премиальные материалы и гарантируем их безупречную установку. Доверьте монтаж профессионалам Домэра, чтобы получить идеальный результат без лишних хлопот.
+              Обсудите монтаж с командой ДЕКОРАЙ. Объём работ, стоимость и сроки уточним с учётом материала, размеров стен и состояния основания.
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '3rem' }}>
@@ -59,14 +59,14 @@ export function Installation() {
           >
             <img 
               src="catalog/rooms/montage.webp" 
-              alt="Профессиональный монтаж панелей Домэра" 
+              alt="Иллюстрация монтажа: мастер устанавливает стеновую панель"
               loading="lazy"
               style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
             />
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)' }} />
             <div style={{ position: 'absolute', bottom: '2rem', left: '2rem', right: '2rem' }}>
-              <div style={{ fontSize: '3rem', fontFamily: 'var(--font-display)', color: 'var(--accent)', lineHeight: 1, marginBottom: '0.5rem' }}>1 день</div>
-              <p style={{ color: '#fff', fontSize: '1.1rem', margin: 0 }}>Среднее время монтажа комнаты</p>
+              <div style={{ fontSize: 'clamp(1.25rem, 3vw, 2.5rem)', fontFamily: 'var(--font-display)', color: 'var(--accent)', lineHeight: 1.2, marginBottom: '0.5rem' }}>Монтаж панелей</div>
+              <p style={{ color: '#fff', fontSize: '1.1rem', margin: 0 }}>Иллюстрация процесса установки</p>
             </div>
           </motion.div>
 

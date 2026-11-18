@@ -721,7 +721,7 @@ h4 { font-size: 1.25rem; font-weight: 500; }
 
 .footer-massive {
   font-family: var(--font-display);
-  font-size: clamp(4rem, 15vw, 18rem);
+  font-size: clamp(3rem, 12.5vw, 14rem);
   line-height: 0.75;
   color: var(--ink);
   letter-spacing: -0.04em;
@@ -1415,7 +1415,7 @@ h4 { font-size: 1.25rem; font-weight: 500; }
 }
 @media (max-width: 480px) {
   .footer-ghost { font-size: 10rem; }
-  .footer-massive { font-size: clamp(3rem, 18vw, 5rem); }
+  .footer-massive { font-size: clamp(2rem, 12.5vw, 5rem); }
 }
 
 /* === PRE-SALE STABILIZATION === */

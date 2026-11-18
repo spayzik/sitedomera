@@ -14,7 +14,7 @@ export function formatCartTelegramMessage(items: readonly CartItem[]): string {
   const total = items.reduce((sum, { product, qty }) => sum + product.priceRub * qty, 0)
 
   return [
-    'Здравствуйте! Заинтересовался товарами на сайте Домэра:',
+    'Здравствуйте! Заинтересовался товарами на сайте ДЕКОРАЙ:',
     '',
     ...lines,
     '',
@@ -42,7 +42,7 @@ export function formatCalculatorTelegramMessage({ area, sheets, panel, total }: 
   total: number
 }): string {
   return [
-    'Здравствуйте! Сделал расчёт на сайте Домэра.',
+    'Здравствуйте! Сделал расчёт на сайте ДЕКОРАЙ.',
     '',
     `Площадь стен: ${new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 }).format(area)} м²`,
     `Материал: ${panel.name}`,
@@ -57,7 +57,7 @@ export function formatCalculatorTelegramMessage({ area, sheets, panel, total }: 
 
 export function formatQuizTelegramMessage(product: Product, collection: string): string {
   return [
-    'Здравствуйте! Прошёл подбор на сайте Домэра.',
+    'Здравствуйте! Прошёл подбор на сайте ДЕКОРАЙ.',
     '',
     'Выбрал материал после подбора категории:',
     ...formatProductDetails(product, collection),
@@ -68,7 +68,7 @@ export function formatQuizTelegramMessage(product: Product, collection: string):
 
 export function formatProductTelegramMessage(product: Product, collection: string): string {
   return [
-    'Здравствуйте! Заинтересовался товаром на сайте Домэра:',
+    'Здравствуйте! Заинтересовался товаром на сайте ДЕКОРАЙ:',
     '',
     ...formatProductDetails(product, collection),
     '',

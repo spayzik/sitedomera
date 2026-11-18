@@ -70,7 +70,7 @@ export function Interiors() {
         <div className="section-head-flex">
           <div>
             <p className="eyebrow">В интерьере</p>
-            <h2>Домэра<br/>в пространстве</h2>
+            <h2>Декорай<br/>в пространстве</h2>
           </div>
           <p className="lead">
             Примеры оформления интерьера: объём, свет

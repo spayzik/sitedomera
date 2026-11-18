@@ -17,7 +17,7 @@ export function Preloader({ done, onComplete }: { done: boolean; onComplete: () 
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
                 >
-                  ДОМЭРА
+                  ДЕКОРАЙ
                 </motion.div>
               </div>
               <motion.div
@@ -26,7 +26,7 @@ export function Preloader({ done, onComplete }: { done: boolean; onComplete: () 
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
               >
-                ДОМЭРА
+                ДЕКОРАЙ
               </motion.div>
             </div>
             <motion.p

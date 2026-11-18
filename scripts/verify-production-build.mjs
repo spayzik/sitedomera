@@ -123,6 +123,7 @@ async function verify() {
   for (const base of [canonical, previewBase]) {
     await requireFile(localPath('catalog/hero/hero.webp', base))
     await requireFile(localPath('catalog/hero/hero-catalog.webp', base))
+    await requireFile(localPath('catalog/rooms/montage.webp', base))
     for (const p of products) await requireFile(localPath(p.image, base))
   }
 
@@ -137,13 +138,17 @@ async function verify() {
   for (const file of files) {
     const path = relative(dist, file).replaceAll('\\', '/')
     const parts = path.toLowerCase().split('/')
+    assert(!/^catalog\/(?:pages\/|_labels\/|ocr\.json$)/i.test(path), `Catalog source in dist: ${path}`)
     assert(!parts.some((part) => blockedParts.has(part)), `Source/private directory in dist: ${path}`)
     assert(!parts.some((part) => /^\.env(?:\.|$)/.test(part)), `Environment file in dist: ${path}`)
     assert(allowedExtensions.has(extname(path).toLowerCase()), `Unreviewed file type in dist: ${path}`)
     assert(!/\.map$|\.(?:pem|key|p12|pfx)$/i.test(path), `Source map or key file in dist: ${path}`)
     assert(!/(?:secret|credential|password)/i.test(path), `Private-looking file in dist: ${path}`)
     if (textExtensions.has(extname(path).toLowerCase())) {
-      assert(!blockedText.test(await readFile(file, 'utf8')), `Private/config marker in dist: ${path}`)
+      const content = await readFile(file, 'utf8')
+      assert(!blockedText.test(content), `Private/config marker in dist: ${path}`)
+      assert(!/домэра|xn--80ahyhl1f/i.test(content), `Previous public brand in dist: ${path}`)
+      assert(!/MOYSKLAD_API_TOKEN|api\.moysklad\.ru|api\.avito\.ru/i.test(content), `Server integration marker in dist: ${path}`)
     }
   }
   assert(!files.some((file) => file.toLowerCase().endsWith(`${sep}cname`)), 'GitHub Pages CNAME must not target production')

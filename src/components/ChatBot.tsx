@@ -57,7 +57,7 @@ export function ChatBot() {
   const [msgs, setMsgs] = useState<Msg[]>([
     {
       from: 'bot',
-      text: 'Здравствуйте! Я помогу с панелями Домэра: размеры, цены, коллекции, монтаж. Задайте вопрос или выберите быстрый.',
+      text: 'Здравствуйте! Я помогу с панелями ДЕКОРАЙ: размеры, цены, коллекции, монтаж. Задайте вопрос или выберите быстрый.',
     },
   ])
   const endRef = useRef<HTMLDivElement>(null)
@@ -84,7 +84,7 @@ export function ChatBot() {
         <div className="chat-panel" id="domera-chat-panel">
           <div className="chat-head">
             <div>
-              <strong>Помощник Домэра</strong>
+              <strong>Помощник ДЕКОРАЙ</strong>
               <span>автоответы на сайте</span>
             </div>
             <button type="button" className="icon-btn" onClick={() => setOpen(false)} aria-label="Закрыть чат">

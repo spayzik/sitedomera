@@ -4,10 +4,13 @@ import { CONTACTS, formatDimensions } from '../data/products'
 import { AnimatePresence, motion } from 'framer-motion'
 import { buildTelegramDraftUrl, formatCartTelegramMessage } from '../lib/telegramLink'
 import { useDialog } from '../lib/useDialog'
+import { useRef } from 'react'
+import { CartLeadForm, type LeadAttempt } from './CartLeadForm'
 
 export function CartDrawer() {
   const { open, setOpen, items, total, setQty, remove, migrationNotice, dismissMigrationNotice } = useCart()
   const dialogRef = useDialog(open, () => setOpen(false))
+  const leadAttempt = useRef<LeadAttempt | null>(null)
   const telegramDraftUrl = items.length > 0
     ? buildTelegramDraftUrl(CONTACTS.telegram, formatCartTelegramMessage(items))
     : null
@@ -82,6 +85,7 @@ export function CartDrawer() {
                   </div>
                 </motion.div>
               ))}
+              <CartLeadForm items={items} attempt={leadAttempt} />
             </div>
 
             <div className="drawer-foot">

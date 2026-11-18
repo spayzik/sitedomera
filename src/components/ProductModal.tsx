@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { collections, products, CONTACTS, type Product, productDetails } from '../data/products'
 import { useCart } from '../context/CartContext'
@@ -6,6 +6,7 @@ import { X } from 'lucide-react'
 import { buildTelegramDraftUrl, formatProductTelegramMessage } from '../lib/telegramLink'
 import { useDialog } from '../lib/useDialog'
 import { productDescription } from '../lib/productPresentation'
+import { trackAnalyticsGoal } from '../lib/analytics'
 
 export function ProductModal({
   selected,
@@ -20,6 +21,13 @@ export function ProductModal({
 }) {
   const { add } = useCart()
   const dialogRef = useDialog(Boolean(selected), onClose)
+  const productId = selected?.id
+  const lastViewed = useRef<string | undefined>(undefined)
+  useEffect(() => {
+    if (productId === lastViewed.current) return
+    lastViewed.current = productId
+    if (productId) trackAnalyticsGoal('product_view')
+  }, [productId])
 
   const similarProducts = useMemo(() => {
     if (!selected) return []

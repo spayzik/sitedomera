@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import { isAnalyticsConfigured, readAnalyticsConsent, saveAnalyticsConsent, startAnalytics, stopAnalytics, trackAnalyticsPage, type AnalyticsConsent } from '../lib/analytics'
+import { isAnalyticsConfigured, observeAnalyticsConsent, readAnalyticsConsent, saveAnalyticsConsent, startAnalytics, stopAnalytics, trackAnalyticsLink, trackAnalyticsPage, type AnalyticsConsent } from '../lib/analytics'
 
 type ConsentContextValue = {
   consent: AnalyticsConsent
@@ -22,17 +22,19 @@ export function PrivacyProvider({ children }: { children: ReactNode }) {
   }, [consent])
 
   useEffect(() => {
+    const unsubscribe = observeAnalyticsConsent(setConsent)
     window.addEventListener('hashchange', trackAnalyticsPage)
-    return () => window.removeEventListener('hashchange', trackAnalyticsPage)
+    document.addEventListener('click', trackAnalyticsLink)
+    return () => {
+      unsubscribe()
+      window.removeEventListener('hashchange', trackAnalyticsPage)
+      document.removeEventListener('click', trackAnalyticsLink)
+    }
   }, [])
 
   function choose(value: 'accepted' | 'rejected') {
     saveAnalyticsConsent(value)
-    if (value === 'rejected' && consent === 'accepted') {
-      stopAnalytics()
-      window.location.reload() // Unload the third-party script already running on this page.
-      return
-    }
+    if (value === 'rejected') stopAnalytics()
     setConsent(value)
   }
 

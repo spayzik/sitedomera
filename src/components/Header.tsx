@@ -66,9 +66,9 @@ export function Header() {
         transition={{ duration: 0.8, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
       >
         <div className="header-inner">
-          <a href="#top" className="logo" aria-label="Домэра" style={{ display: 'flex', alignItems: 'center' }}>
+          <a href="#top" className="logo" aria-label="Декорай" style={{ display: 'flex', alignItems: 'center' }}>
             <LogoIcon style={{ marginRight: '0.5rem' }} />
-            ДОМЭРА
+            ДЕКОРАЙ
           </a>
 
           <nav className="nav-desktop">

@@ -1,4 +1,4 @@
-# Домэра: подготовка статического production deployment
+# ДЕКОРАЙ: подготовка статического production deployment
 
 Этот документ — план для будущего размещения, а не подтверждение, что REG.RU уже настроен. Не меняйте DNS и не загружайте сайт, пока владелец не подтвердит параметры хостинга. Публикуется **содержимое `dist/`**, а не весь репозиторий и не папка `dist` как вложенный каталог.
 
@@ -7,10 +7,10 @@
 ```text
 source repository → npm ci → npm run build → npm run verify:production → dist/* → document root
 
-Release gate также включает lint, audit и Node tests: Avito, Telegram, SEO, Calculator, Catalog (`npm run test:catalog`). До публикации CATALOG-16 обязательны независимая проверка Chief и закрытие вопросов OWNER-CATALOG-2026-QUESTIONS.md.
+Release gate также включает lint, audit и Node tests: Avito, Telegram, SEO, Calculator, Catalog (`npm run test:catalog`). До публикации обязательны независимая проверка Chief и закрытие вопросов OWNER-CATALOG-2026-QUESTIONS.md.
 ```
 
-- Production: `https://домэра.рф/` (`https://xn--80ahyhl1f.xn--p1ai/`). Это единственный canonical origin.
+- Production: `https://декорай.рф/` (`https://xn--80ahdrdyo.xn--p1ai/`). Это единственный canonical origin.
 - Vite `base: './'`: собранные JS/CSS, favicon и шрифты в `dist/index.html` имеют относительные пути. Изображения каталога и `generated/avito-reviews.json` также разрешаются относительно документа.
 - GitHub Pages остаётся preview на подпути `/sitedomera/`; относительные assets должны работать там. Его canonical, OG и sitemap намеренно указывают на production. `CNAME` для production на Pages не нужен.
 - Маршруты `#/catalog`, `#/privacy`, `#/offer` и якоря обрабатываются браузером. Серверный SPA rewrite для текущего hash-router не нужен.
@@ -19,18 +19,18 @@ Release gate также включает lint, audit и Node tests: Avito, Teleg
 
 ## OWNER / HOSTING INPUT REQUIRED до deploy
 
-- [ ] Куплен и назван точный тариф REG.RU; подтверждены возможности именно этой услуги.
+- [ ] В кабинете REG.RU подтверждены заявленный владельцем тариф Host-Lite и параметры конкретной услуги.
 - [ ] Получены фактический document root, способ загрузки (FTP, FTPS или SFTP), отдельные credentials вне Git и права на каталог.
 - [ ] Получены реальные DNS-значения от хостинга. Не использовать предполагаемый IP.
 - [ ] Подтверждены механизм SSL, настройка HTTP/host redirects, поддержка `.htaccess`, custom headers, cache controls и error pages.
-- [ ] Решено, обслуживается ли `www.домэра.рф`. Если да, он должен вести на canonical apex; если нет — не публиковать его как альтернативный сайт.
+- [ ] Решено, обслуживается ли `www.декорай.рф`. Если да, он должен вести на canonical apex; если нет — не публиковать его как альтернативный сайт.
 - [ ] Подтверждены правовые и товарные сведения из `OWNER-LEGAL-CHECKLIST.md` перед публичным запуском.
 
 ## DNS, HTTPS и redirects
 
-1. Настраивать apex `домэра.рф` / `xn--80ahyhl1f.xn--p1ai` по выданным REG.RU A/AAAA/CNAME параметрам. Не подставлять IP из примеров.
-2. Включить валидный TLS-сертификат и проверить открытие `https://домэра.рф/` с браузера и командой `curl -I`.
-3. Настроить `http://домэра.рф/` → `https://домэра.рф/`; при использовании `www` направить его на тот же apex. Проверить цепочку для путей, query и отсутствие циклов.
+1. Настраивать apex `декорай.рф` / `xn--80ahdrdyo.xn--p1ai` по выданным REG.RU A/AAAA/CNAME параметрам. Не подставлять IP из примеров.
+2. Включить валидный TLS-сертификат и проверить открытие `https://декорай.рф/` с браузера и командой `curl -I`.
+3. Настроить `http://декорай.рф/` → `https://декорай.рф/`; при использовании `www` направить его на тот же apex. Проверить цепочку для путей, query и отсутствие циклов.
 4. Конкретный redirect config писать только после подтверждения стека и возможностей выбранного тарифа.
 5. HSTS рассматривать после проверки HTTPS и redirects на реальном сервере; не включать preload автоматически.
 
@@ -63,13 +63,19 @@ Release gate также включает lint, audit и Node tests: Avito, Teleg
 
 ## Production smoke test после будущей загрузки
 
-- [ ] `/`, JS/CSS chunks, fonts, оба Hero, первые и последующие catalog images, `/generated/avito-reviews.json`, `/robots.txt`, `/sitemap.xml`, `/catalog/og-cover.jpg` отвечают 200 с верными MIME types.
+- [ ] `/`, JS/CSS chunks, fonts, Hero и фото монтажа, первые и последующие catalog images, `/generated/avito-reviews.json`, `/robots.txt`, `/sitemap.xml`, `/catalog/og-cover.jpg` отвечают 200 с верными MIME types.
 - [ ] TLS валиден; HTTP и используемые альтернативные hostnames перенаправляют на canonical HTTPS без циклов.
-- [ ] Canonical, Open Graph, JSON-LD, robots и sitemap указывают на `https://xn--80ahyhl1f.xn--p1ai/`.
-- [ ] Главная, категории, интерьеры, полный каталог из 26 товаров, ProductModal и hover карточек работают на desktop и mobile.
+- [ ] Canonical, Open Graph, JSON-LD, robots и sitemap указывают на `https://xn--80ahdrdyo.xn--p1ai/`.
+- [ ] Главная, категории, интерьеры, полный каталог из 45 товаров, ProductModal и hover карточек работают на desktop и mobile.
 - [ ] Корзина, калькулятор, квиз и Telegram drafts показывают актуальные данные; пользователь сам отправляет сообщение.
 - [ ] Авито fallback/отзывы, телефон, Telegram, карта, построение маршрута и внешние ссылки работают.
 - [ ] Без согласия Метрика не загружается; принятие и отказ сохраняются, изменение выбора работает. Карта загружается независимо от analytics consent при приближении iframe к viewport.
 - [ ] Сняты реальные Network/headers/cache результаты и внесены в журнал запуска; проверена недоступность приватных файлов и отсутствие source maps.
 
 STOP: без реальных параметров REG.RU, DNS и TLS этот checklist не означает, что production опубликован или проверен.
+
+## Наблюдение перед размещением · 18 ноября 2026
+
+Публичные DNS: ns1.reg.ru / ns2.reg.ru, apex и www указывают на 95.163.244.138. HTTP вернул парковочную страницу Рег.ру, HTTPS завершился ошибкой TLS. Этот IP принадлежит наблюдаемой парковочной конфигурации. IP назначения следует брать из кабинета услуги.
+
+При доступе к панели сохраните полный экспорт DNS-зоны, копию текущего document root и перечень сертификатов/редиректов. Проверьте сборку на временном адресе хостинга. Для возврата сохраните прежние значения точечных DNS-записей и копию файлов. Меняйте HTTP-редирект после успешной установки и проверки SSL. Сохраните почтовые записи и NS, если для привязки достаточно изменить A/AAAA.

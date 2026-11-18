@@ -106,7 +106,7 @@ export function Showroom() {
           <div className="map-frame">
             <iframe
               src={mapSrc}
-              title="Склад и шоурум Домэра на карте"
+              title="Склад и шоурум ДЕКОРАЙ на карте"
               loading="lazy"
               referrerPolicy="strict-origin-when-cross-origin"
               allowFullScreen

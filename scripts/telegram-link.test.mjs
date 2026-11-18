@@ -24,7 +24,7 @@ test('two catalog products produce a Telegram draft with current prices and tota
   assert.equal(url.hostname, 't.me')
   assert.equal(url.pathname, '/domeraru')
   assert.equal(url.searchParams.get('text'), [
-    'Здравствуйте! Заинтересовался товарами на сайте Домэра:',
+    'Здравствуйте! Заинтересовался товарами на сайте ДЕКОРАЙ:',
     '',
     '1. Ясень песочный (C807601-36) — 10 шт. × 7 000 ₽ = 70 000 ₽',
     '2. Карамель (6011-2) — 10 шт. × 8 000 ₽ = 80 000 ₽',
@@ -58,7 +58,7 @@ test('calculator draft uses the supplied area, panel, sheet count and total', ()
 
   assert.equal(url.hostname, 't.me')
   assert.equal(url.searchParams.get('text'), [
-    'Здравствуйте! Сделал расчёт на сайте Домэра.',
+    'Здравствуйте! Сделал расчёт на сайте ДЕКОРАЙ.',
     '',
     'Площадь стен: 25 м²',
     'Материал: Ясень песочный',
@@ -81,7 +81,7 @@ test('quiz draft contains the recommendation and no quiz answers', () => {
 
   assert.equal(url.hostname, 't.me')
   assert.equal(url.searchParams.get('text'), [
-    'Здравствуйте! Прошёл подбор на сайте Домэра.',
+    'Здравствуйте! Прошёл подбор на сайте ДЕКОРАЙ.',
     '',
     'Выбрал материал после подбора категории:',
     'Ясень песочный',
@@ -105,7 +105,7 @@ test('product draft describes the selected panel without cart contents', () => {
 
   assert.equal(url.hostname, 't.me')
   assert.equal(url.searchParams.get('text'), [
-    'Здравствуйте! Заинтересовался товаром на сайте Домэра:',
+    'Здравствуйте! Заинтересовался товаром на сайте ДЕКОРАЙ:',
     '',
     'Карамель',
     'Артикул: 6011-2',

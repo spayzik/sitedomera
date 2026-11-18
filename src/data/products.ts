@@ -28,7 +28,7 @@ const categoryNames: Record<CollectionId, [string, string]> = {
 export const collections: Collection[] = (Object.keys(categoryNames) as CollectionId[]).map(id => {
   const items = products.filter(p => p.categoryId === id)
   const [name, nameEn] = categoryNames[id]
-  return { id, name, nameEn, description: `${name}: позиции каталога Домэра 2026. Характеристики и цена указаны в карточке каждого изделия.`, banner: items[0].image, count: items.length }
+  return { id, name, nameEn, description: `${name}: позиции коллекции ДЕКОРАЙ 2026. Характеристики и цена указаны в карточке каждого изделия.`, banner: items[0].image, count: items.length }
 })
 
 export function filterProducts(category: CollectionId | 'all', search: string): Product[] {
@@ -85,16 +85,16 @@ export const legacyCartIds: Readonly<Record<string, string>> = {
   "009-A229": "pdf2026-p23-r1c2"
 }
 
-const hostname = 'xn--80ahyhl1f.xn--p1ai'
+const hostname = 'xn--80ahdrdyo.xn--p1ai'
 const city = 'Москва'
 const streetAddress = 'Алтуфьевское ш., 37с1'
 
 export const CONTACTS = {
-  brand: 'Домэра',
+  brand: 'ДЕКОРАЙ',
   phone: '+7 977 476-08-88',
   phoneRaw: '+79774760888',
   avito: 'https://www.avito.ru/brands/i344978249',
-  site: 'домэра.рф',
+  site: 'декорай.рф',
   hostname,
   origin: `https://${hostname}`,
   telegram: 'https://t.me/domeraru',

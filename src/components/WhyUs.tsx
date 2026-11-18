@@ -41,7 +41,7 @@ export function WhyUs() {
         <div className="section-head-flex">
           <div>
             <p className="eyebrow">Преимущества</p>
-            <h2>Почему<br/>Домэра</h2>
+            <h2>Почему<br/>Декорай</h2>
           </div>
           <p className="lead">
             Шесть причин выбрать бамбуковый композит —

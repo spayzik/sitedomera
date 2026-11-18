@@ -2,6 +2,14 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { CONTACTS } from '../src/data/products.ts'
 import { SEO, metadataForRoute } from '../src/data/seo.ts'
+import { domainToASCII } from 'node:url'
+
+test('launch uses the owner-provided brand and IDN hostname', () => {
+  assert.equal(CONTACTS.brand, 'ДЕКОРАЙ')
+  assert.equal(CONTACTS.site, 'декорай.рф')
+  assert.equal(CONTACTS.hostname, domainToASCII('декорай.рф'))
+  assert.equal(CONTACTS.origin, 'https://xn--80ahdrdyo.xn--p1ai')
+})
 
 test('home metadata names the product and brand', () => {
   assert.equal(metadataForRoute('/'), SEO.home)

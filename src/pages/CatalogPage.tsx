@@ -47,7 +47,7 @@ export function CatalogPage() {
         <div className="catalog-page-hero-bg">
           <motion.img
             src="catalog/hero/hero-catalog.webp"
-            alt="Интерьер с панелями Домэра"
+            alt="Интерьер с панелями ДЕКОРАЙ"
             fetchPriority="high"
             initial={{ opacity: 0, scale: 1.05 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -58,7 +58,7 @@ export function CatalogPage() {
 
         <div className="container catalog-page-content">
           <motion.p className="hero-eyebrow" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }}>
-            Домэра · {collectionMeta.nameEn}
+            Декорай · {collectionMeta.nameEn}
           </motion.p>
           <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.2 }}>
             Каталог<br />материалов

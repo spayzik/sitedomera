@@ -40,7 +40,7 @@ export function Lightbox({
           ref={dialogRef}
           role="dialog"
           aria-modal="true"
-          aria-label="Интерьеры Домэра"
+          aria-label="Интерьеры ДЕКОРАЙ"
           tabIndex={-1}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

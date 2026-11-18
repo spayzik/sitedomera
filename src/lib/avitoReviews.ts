@@ -19,7 +19,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 export function parseAvitoSnapshot(value: unknown): AvitoSnapshot | null {
   if (!isRecord(value) || value.source !== 'avito' ||
       typeof value.updatedAt !== 'string' || !Number.isFinite(Date.parse(value.updatedAt)) ||
-      typeof value.rating !== 'number' || value.rating < 1 || value.rating > 5 ||
+      typeof value.rating !== 'number' || !Number.isFinite(value.rating) || value.rating < 1 || value.rating > 5 ||
       !Number.isSafeInteger(value.reviewsCount) || (value.reviewsCount as number) < 1 ||
       !Array.isArray(value.reviews) || value.reviews.length < 1 || value.reviews.length > 8) return null
 

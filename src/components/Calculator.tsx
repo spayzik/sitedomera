@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { sheetProducts, CONTACTS, formatDimensions } from '../data/products'
 import { useCart } from '../context/CartContext'
@@ -6,6 +6,7 @@ import { Counter } from './Counter'
 import { ArrowRight, ArrowUpRight } from 'lucide-react'
 import { buildTelegramDraftUrl, formatCalculatorTelegramMessage } from '../lib/telegramLink'
 import { calculatePanels, sheetArea } from '../lib/calculator'
+import { trackAnalyticsGoal } from '../lib/analytics'
 
 export function Calculator() {
   const { add } = useCart()
@@ -20,6 +21,13 @@ export function Calculator() {
   }, [length, height, openings, selectedPanel])
 
   const price = res.panel ? res.sheets * res.panel.priceRub : 0
+  const completed = Boolean(res.panel && res.valid && res.sheets > 0)
+  const reportedCompletion = useRef(false)
+  useEffect(() => {
+    if (!completed || reportedCompletion.current) return
+    reportedCompletion.current = true
+    trackAnalyticsGoal('calculator_complete')
+  }, [completed])
   const telegramDraftUrl = res.panel && res.valid && res.sheets > 0
     ? buildTelegramDraftUrl(CONTACTS.telegram, formatCalculatorTelegramMessage({
       area: res.area, sheets: res.sheets, panel: res.panel, total: price,

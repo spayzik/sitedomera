@@ -1,7 +1,7 @@
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { cpSync, readFileSync } from 'node:fs'
+import { relative, resolve, sep } from 'node:path'
 import { CONTACTS } from './src/data/products.ts'
 import { SEO } from './src/data/seo.ts'
 
@@ -45,11 +45,32 @@ function siteMetadata(): Plugin {
   }
 }
 
+function publicReleaseAssets(): Plugin {
+  let publicDir: string
+  const catalogSource = new Set(['pages', '_labels', 'ocr.json'])
+  return {
+    name: 'public-release-assets',
+    apply: 'build',
+    configResolved(config) { publicDir = config.publicDir },
+    writeBundle(output) {
+      if (!output.dir) throw new Error('A release directory is required for public assets')
+      cpSync(publicDir, output.dir, {
+        recursive: true,
+        filter(source) {
+          const [folder, entry] = relative(publicDir, source).split(sep)
+          return (folder !== 'catalog' || !catalogSource.has(entry)) && !/\.pdf$/i.test(source)
+        },
+      })
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), siteMetadata()],
+  plugins: [react(), siteMetadata(), publicReleaseAssets()],
   base: './',
   build: {
+    copyPublicDir: false,
     target: 'es2018',
     rollupOptions: {
       output: {

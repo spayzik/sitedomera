@@ -32,7 +32,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
           textAlign: 'center',
           padding: '2rem',
         }}>
-          <strong style={{ fontSize: '1.4rem', letterSpacing: '0.1em' }}>ДОМЭРА</strong>
+          <strong style={{ fontSize: '1.4rem', letterSpacing: '0.1em' }}>ДЕКОРАЙ</strong>
           <p style={{ color: 'rgba(255,255,255,0.6)', maxWidth: '40ch', lineHeight: 1.6 }}>
             Что-то пошло не так. Мы уже в курсе — попробуйте обновить страницу
             или свяжитесь с нами напрямую.

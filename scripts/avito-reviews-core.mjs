@@ -10,7 +10,9 @@ function publicText(value) {
     return code < 32 || code === 127 ? ' ' : character
   }).join('')
   return withoutControls
+    .replace(/(?:https?:\/\/|www\.|(?:t\.me|wa\.me|vk\.com)\/)[^\s<>"«»]+/gi, '[ссылка скрыта]')
     .replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, '[контакт скрыт]')
+    .replace(/(^|\s)@[a-z0-9_]{3,}\b/gi, '$1[контакт скрыт]')
     .replace(/\+?\d[\d\s().-]{8,}\d/g, (match) =>
       match.replace(/\D/g, '').length >= 10 ? '[контакт скрыт]' : match)
     .replace(/\s+/g, ' ')

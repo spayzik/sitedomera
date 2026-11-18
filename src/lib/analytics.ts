@@ -1,5 +1,11 @@
 export type AnalyticsConsent = 'unknown' | 'accepted' | 'rejected'
 
+const goals = [
+  'catalog_view', 'product_view', 'cart_add', 'calculator_complete', 'quiz_complete',
+  'telegram_click', 'phone_click', 'lead_submit',
+] as const
+type AnalyticsGoal = typeof goals[number]
+
 const consentKey = 'domera-analytics-consent-v1'
 const scriptUrl = 'https://mc.yandex.ru/metrika/tag.js'
 const configuredId = import.meta.env.VITE_YM_ID
@@ -12,6 +18,8 @@ type MetrikaWindow = Window & { ym?: (...args: unknown[]) => void }
 let scriptState: 'idle' | 'loading' | 'ready' | 'failed' = 'idle'
 let allowed = false
 let lastHitUrl = ''
+let pendingCalls: unknown[][] | undefined
+const pageRoutes = new Set(['/catalog', '/privacy', '/offer'])
 
 export function isAnalyticsConfigured(): boolean {
   return counterId !== null
@@ -34,12 +42,21 @@ export function saveAnalyticsConsent(value: 'accepted' | 'rejected'): void {
   }
 }
 
+export function observeAnalyticsConsent(onChange: (consent: AnalyticsConsent) => void): () => void {
+  const onStorage = (event: StorageEvent) => {
+    if (event.storageArea !== localStorage || (event.key !== consentKey && event.key !== null)) return
+    const consent = readAnalyticsConsent()
+    if (consent !== 'accepted') stopAnalytics()
+    onChange(consent)
+  }
+  window.addEventListener('storage', onStorage)
+  return () => window.removeEventListener('storage', onStorage)
+}
+
 function pageUrl(): string {
-  const routes = new Set(['/catalog', '/privacy', '/offer'])
-  const sections = new Set(['top', 'manifest', 'specs', 'why', 'catalog', 'quiz', 'installation', 'interiors', 'reviews', 'compare', 'calculator', 'showroom', 'faq', 'products'])
   const hash = window.location.hash.slice(1).split('?')[0]
-  const route = routes.has(hash) || sections.has(hash) ? `#${hash}` : ''
-  return `${window.location.origin}${window.location.pathname}${route}`
+  const route = pageRoutes.has(hash) ? `#${hash}` : ''
+  return `${window.location.origin}/${route}`
 }
 
 export function startAnalytics(): void {
@@ -48,13 +65,14 @@ export function startAnalytics(): void {
   const metrikaWindow = window as MetrikaWindow
   if (typeof metrikaWindow.ym !== 'function') {
     const queue: unknown[][] = []
+    pendingCalls = queue
     metrikaWindow.ym = Object.assign((...args: unknown[]) => { queue.push(args) }, { a: queue, l: Date.now() })
   }
   // Queue init using Yandex's documented loader pattern; tag.js runs it after loading.
   metrikaWindow.ym(counterId, 'init', {
     defer: true,
-    trackLinks: true,
-    accurateTrackBounce: true,
+    trackLinks: false,
+    accurateTrackBounce: false,
     clickmap: false,
     webvisor: false,
     trackHash: false,
@@ -63,6 +81,7 @@ export function startAnalytics(): void {
   script.src = scriptUrl
   script.async = true
   script.onload = () => {
+    pendingCalls = undefined
     if (!allowed || typeof metrikaWindow.ym !== 'function') {
       scriptState = 'failed'
       return
@@ -81,21 +100,39 @@ export function trackAnalyticsPage(): void {
   if (url === lastHitUrl) return
   const ym = (window as MetrikaWindow).ym
   if (typeof ym !== 'function') return
-  ym(counterId, 'hit', url)
+  try { ym(counterId, 'hit', url, { referer: lastHitUrl }) } catch { return }
   lastHitUrl = url
+  if (url.endsWith('#/catalog')) trackAnalyticsGoal('catalog_view')
+}
+
+export function trackAnalyticsGoal(goal: AnalyticsGoal): void {
+  if (!allowed || scriptState !== 'ready' || counterId === null || !goals.includes(goal)) return
+  // The method takes only a fixed identifier. Never pass links or customer input.
+  try { (window as MetrikaWindow).ym?.(counterId, 'reachGoal', goal) } catch { /* Analytics is optional. */ }
+}
+
+export function trackAnalyticsLink(event: MouseEvent): void {
+  if (!(event.target instanceof Element)) return
+  const link = event.target.closest<HTMLAnchorElement>('a[href]')
+  if (!link) return
+  if (link.protocol === 'tel:') trackAnalyticsGoal('phone_click')
+  if (link.protocol === 'https:' && link.hostname === 't.me') trackAnalyticsGoal('telegram_click')
 }
 
 export function stopAnalytics(): void {
+  if (!allowed) return
   allowed = false
+  if (pendingCalls) pendingCalls.length = 0
   if (counterId !== null) {
+    // Yandex's opt-out flag also covers revocation during tag.js loading.
+    const globalValues = window as unknown as Record<string, unknown>
+    globalValues[`disableYaCounter${counterId}`] = true
     const ym = (window as MetrikaWindow).ym
     try {
       if (scriptState === 'ready' && typeof ym === 'function') ym(counterId, 'destruct')
     } catch {
       // Continue with opt-out and reload even if the external API fails.
     }
-    // Yandex's opt-out flag stops an already initialized counter before reload.
-    const globalValues = window as unknown as Record<string, unknown>
-    globalValues[`disableYaCounter${counterId}`] = true
   }
+  window.location.reload() // Unload the third-party script already running in this tab.
 }

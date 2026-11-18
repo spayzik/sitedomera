@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight, ExternalLink, Star } from 'lucide-react'
 import { CONTACTS } from '../data/products'
 import { loadAvitoSnapshot, type AvitoSnapshot } from '../lib/avitoReviews'
 
-const dateFormatter = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
+const dateFormatter = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Moscow' })
 const reviewPlural = new Intl.PluralRules('ru-RU')
 const reviewNoun = (count: number) => ({ zero: 'отзывов', one: 'отзыв', two: 'отзыва', few: 'отзыва', many: 'отзывов', other: 'отзыва' })[reviewPlural.select(count)]
 
@@ -37,7 +37,7 @@ export function Reviews() {
           <div className="reviews-head-side">
             <p className="lead">
               {snapshot
-                ? 'Опубликованные отзывы из профиля на Авито.'
+                ? `Отзывы из профиля на Авито. Данные на ${dateFormatter.format(new Date(snapshot.updatedAt))}.`
                 : 'Отзывы и актуальный рейтинг смотрите в нашем профиле на Авито.'}
             </p>
             <a className="reviews-avito-link interactive" href={CONTACTS.avito} target="_blank" rel="noreferrer">
@@ -77,7 +77,7 @@ export function Reviews() {
                   <div className="review-topline">
                     <div>
                       <strong>Отзыв на Авито</strong>
-                      <span>{dateFormatter.format(new Date(review.createdAt))}</span>
+                      <span><time dateTime={review.createdAt}>{dateFormatter.format(new Date(review.createdAt))}</time></span>
                     </div>
                     <div className="review-rating" aria-label={`Оценка ${review.rating} из 5`}>
                       {Array.from({ length: 5 }).map((_, star) => (

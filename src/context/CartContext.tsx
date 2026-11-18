@@ -10,6 +10,7 @@ import { products } from '../data/products'
 import type { Product } from '../data/products'
 import { loadCartState, cartSnapshot, cartTotal, MAX_QTY } from '../lib/cart'
 import type { CartItem } from '../lib/cart'
+import { trackAnalyticsGoal } from '../lib/analytics'
 export type { CartItem } from '../lib/cart'
 
 interface CartCtx {
@@ -71,6 +72,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const add = (p: Product, qty = 1) => {
       const product = byId.get(p.id)
       if (!product || !Number.isSafeInteger(qty) || qty < 1) return
+      if ((items.find((item) => item.product.id === product.id)?.qty ?? 0) < MAX_QTY) {
+        trackAnalyticsGoal('cart_add')
+      }
       setItems((prev) => {
         const i = prev.findIndex((x) => x.product.id === product.id)
         if (i >= 0) {
