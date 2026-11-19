@@ -12,6 +12,10 @@ export type AvitoSnapshot = {
   reviews: AvitoReview[]
 }
 
+export function featuredAvitoReviews(reviews: readonly AvitoReview[]): AvitoReview[] {
+  return reviews.filter(review => review.rating > 1)
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
 }

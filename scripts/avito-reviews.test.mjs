@@ -6,8 +6,23 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { test } from 'node:test'
 import { createAvitoSnapshot } from './avito-reviews-core.mjs'
+import { featuredAvitoReviews, parseAvitoSnapshot } from '../src/lib/avitoReviews.ts'
 
 const fixture = JSON.parse(await readFile(new URL('./fixtures/avito-responses.json', import.meta.url), 'utf8'))
+
+test('the storefront selection omits one-star cards without changing the Avito profile aggregate', () => {
+  const createdAt = '2026-11-18T12:00:00.000Z'
+  const snapshot = parseAvitoSnapshot({
+    source: 'avito', updatedAt: createdAt, rating: 4.8, reviewsCount: 98,
+    reviews: [1, 2, 5].map(rating => ({ rating, createdAt, text: `Отзыв ${rating}` })),
+  })
+  assert.ok(snapshot)
+  assert.deepEqual(featuredAvitoReviews(snapshot.reviews).map(review => review.rating), [2, 5])
+  assert.deepEqual(snapshot.reviews.map(review => review.rating), [1, 2, 5])
+  assert.equal(snapshot.rating, 4.8)
+  assert.equal(snapshot.reviewsCount, 98)
+  assert.deepEqual(featuredAvitoReviews(snapshot.reviews.slice(0, 1)), [])
+})
 const now = new Date('2026-09-29T12:00:00.000Z')
 
 test('publishes only the minimal fields from a valid API response', () => {

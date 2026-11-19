@@ -2,7 +2,7 @@ import { avitoProfile } from '../lib/avitoProfile'
 import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { ChevronLeft, ChevronRight, ExternalLink, Star } from 'lucide-react'
-import { loadAvitoSnapshot, type AvitoSnapshot } from '../lib/avitoReviews'
+import { featuredAvitoReviews, loadAvitoSnapshot, type AvitoSnapshot } from '../lib/avitoReviews'
 
 const dateFormatter = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Moscow' })
 const reviewPlural = new Intl.PluralRules('ru-RU')
@@ -11,6 +11,7 @@ const reviewNoun = (count: number) => ({ zero: 'отзывов', one: 'отзы�
 export function Reviews() {
   const trackRef = useRef<HTMLDivElement>(null)
   const [snapshot, setSnapshot] = useState<AvitoSnapshot | null>(null)
+  const featured = snapshot ? featuredAvitoReviews(snapshot.reviews) : []
 
   useEffect(() => {
     let active = true
@@ -38,7 +39,7 @@ export function Reviews() {
           <div className="reviews-head-side">
             <p className="lead">
               {snapshot
-                ? `Отзывы из профиля на Авито. Данные на ${dateFormatter.format(new Date(snapshot.updatedAt))}.`
+                ? `Подборка отзывов из профиля на Авито. Данные на ${dateFormatter.format(new Date(snapshot.updatedAt))}.`
                 : 'Смотрите отзывы покупателей в профиле ДЕКОРАЙ на Авито.'}
             </p>
             {avitoProfile && (<a className="reviews-avito-link interactive" href={avitoProfile} target="_blank" rel="noreferrer">
@@ -62,18 +63,18 @@ export function Reviews() {
                 <strong>{snapshot.rating.toFixed(1).replace('.', ',')}</strong>
                 <span>из 5 · {snapshot.reviewsCount} {reviewNoun(snapshot.reviewsCount)} на Авито</span>
               </div>
-              <div className="reviews-arrows">
+              {featured.length > 1 && <div className="reviews-arrows">
                 <button type="button" onClick={() => move(-1)} aria-label="Предыдущий отзыв">
                   <ChevronLeft size={18} />
                 </button>
                 <button type="button" onClick={() => move(1)} aria-label="Следующий отзыв">
                   <ChevronRight size={18} />
                 </button>
-              </div>
+              </div>}
             </div>
 
-            <div className="reviews-track" ref={trackRef}>
-              {snapshot.reviews.map((review, index) => (
+            {featured.length > 0 && <div className="reviews-track" ref={trackRef}>
+              {featured.map((review, index) => (
                 <article className="review-card" key={`${review.createdAt}-${index}`}>
                   <div className={`review-avatar avatar-${index % 5}`} aria-hidden="true">★</div>
                   <div className="review-topline">
@@ -94,7 +95,7 @@ export function Reviews() {
                   </a>)}
                 </article>
               ))}
-            </div>
+            </div>}
           </motion.div>
         )}
       </div>
