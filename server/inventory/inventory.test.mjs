@@ -110,6 +110,34 @@ test('missing, recalculating and negative numbers stay unknown, including after 
   }
 })
 
+test('a reviewed single-panel mapping counts pieces as sheets and keeps conflicting SKUs out', async () => {
+  const name = 'Бамбуковая стеновая панель 1220*3000*7мм P01'
+  const panel = { id: 'panel', sku: 'P01', kind: 'panel', unit: 'лист' }
+  const slat = { id: 'slat', sku: 'S01', kind: 'slat', unit: 'шт' }
+  const products = [panel, slat]
+  const mapping = { panel: { id: uuid(21), type: 'product', singleSheetName: name }, slat: null }
+  const rows = [item(21, panel.sku, 'product', uuid(9), { name }), item(22, slat.sku, 'product', uuid(9))]
+  const loadMapping = (assortment, manual = mapping, catalog = products) => importInventory({
+    reader: {
+      stores: async () => stores,
+      assortment: async () => assortment,
+      units: async () => [{ id: uuid(9), name: 'шт.' }],
+      stock: async (_store, ids) => new Map(ids.map(id => [id, 18])),
+    },
+    products: catalog, storeId, manual, now: () => now,
+  })
+
+  const { snapshot } = await loadMapping(rows)
+  assert.deepEqual(snapshot.items, [{ id: 'panel', unit: 'лист', quantity: 18 }, { id: 'slat', reason: 'unmapped' }])
+  for (const changed of [{ name: 'Упаковка панелей P01' }, { article: 'P02' }, { variantsCount: 2 },
+    { packs: [{ quantity: 2 }] }]) {
+    const { snapshot: changedSnapshot } = await loadMapping([{ ...rows[0], ...changed }, rows[1]])
+    assert.equal(availabilityFor(parseInventory(changedSnapshot, products, now), 'panel', now).status, 'unknown')
+  }
+  const { snapshot: unreviewed } = await loadMapping(rows, { slat: null })
+  assert.equal(availabilityFor(parseInventory(unreviewed, products, now), 'panel', now).status, 'unknown')
+})
+
 test('corrupt pages, wrong store, foreign UUIDs, duplicated rows and transport failures reject the import', async () => {
   for (const options of [
     { brokenPage: true }, { stocks: { rows: okRows } }, { stocks: [row(11, 18, otherStore)] },

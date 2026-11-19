@@ -25,8 +25,14 @@ function matchCatalog(products, assortment, units, manual) {
   if (!manual || typeof manual !== 'object' || Array.isArray(manual)) throw new InventoryError('INVALID_MAPPING')
   const siteIds = new Set(products.map(p => p.id))
   for (const [id, entry] of Object.entries(manual)) {
-    if (!siteIds.has(id) || Object.keys(entry ?? {}).length !== 2 || !isUuid(entry?.id) ||
-        !['product', 'variant'].includes(entry?.type)) throw new InventoryError('INVALID_MAPPING')
+    if (!siteIds.has(id)) throw new InventoryError('INVALID_MAPPING')
+    if (entry === null) continue
+    if (!isUuid(entry?.id) || !['product', 'variant'].includes(entry?.type) ||
+        Object.keys(entry).some(key => !['id', 'type', 'singleSheetName'].includes(key)) ||
+        (Object.hasOwn(entry, 'singleSheetName') && (entry.type !== 'product' ||
+          typeof entry.singleSheetName !== 'string' || !entry.singleSheetName.trim()))) {
+      throw new InventoryError('INVALID_MAPPING')
+    }
   }
   const active = assortment.filter(row => !row.archived)
   const byId = new Map(active.map(row => [row.id, row]))
@@ -37,6 +43,7 @@ function matchCatalog(products, assortment, units, manual) {
   const byUnit = new Map(units.filter(unit => !unit.archived).map(unit => [unit.id, unit.name]))
   const potential = products.map(product => {
     const approved = Object.hasOwn(manual, product.id) ? manual[product.id] : undefined
+    if (approved === null) return { product, reason: 'conflicting_identity' }
     const sku = skuKey(product.sku)
     const candidates = sku ? bySku.get(sku) ?? [] : []
     const fallback = !approved && !product.skuReview
@@ -51,7 +58,12 @@ function matchCatalog(products, assortment, units, manual) {
     }
     const parentRows = type === 'variant' ? parents.get(linkedId(entity.product, 'product')) ?? [] : [entity]
     const unitName = parentRows.length === 1 ? byUnit.get(linkedId(parentRows[0].uom, 'uom')) : undefined
-    if (catalogUnit(unitName) !== product.unit) {
+    const unit = catalogUnit(unitName)
+    // A reviewed individual panel can be counted as one sheet while the exact CRM card still matches.
+    const reviewedSheet = approved?.singleSheetName !== undefined && approved.singleSheetName === entity.name &&
+      product.kind === 'panel' && product.unit === 'лист' && unit === 'шт' && sku && skuKey(entity.article) === sku &&
+      (entity.packs == null || (Array.isArray(entity.packs) && entity.packs.length === 0))
+    if (approved?.singleSheetName ? !reviewedSheet : unit !== product.unit) {
       return { product, reason: 'unit_unverified', unitName }
     }
     return { product, entity, via: approved ? 'uuid' : 'article', unitName }
