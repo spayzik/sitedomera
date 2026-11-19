@@ -37,12 +37,20 @@ jobs:
 
           const { MOYSKLAD_API_TOKEN, MOYSKLAD_STORE_ID } = process.env
           const env = { MOYSKLAD_API_TOKEN, MOYSKLAD_STORE_ID }
+          let failureCode = 'invalid_result'
           function run(action, webroot) {
             const result = spawnSync(process.execPath, ['server/inventory/run.mjs', action], {
               env: { ...env, ...(webroot ? { DEKORAY_INVENTORY_WEBROOT: webroot } : {}) },
               encoding: 'utf8', timeout: 90_000,
             })
-            if (result.status !== 0) throw new Error('Inventory command failed')
+            if (result.status !== 0) {
+              const error = JSON.parse(result.stderr)
+              const allowed = ['AUTH_HOLD', 'CONFIG_HOLD', 'STORE_SELECTION_HOLD', 'MAPPING_HOLD',
+                'STALE_SNAPSHOT', 'INVENTORY_RUN_FAILED', 'MOYSKLAD_NETWORK_ERROR']
+              if (allowed.includes(error.status)) failureCode = error.status
+              else if ([400, 401, 403, 429, 500, 502, 503, 504].includes(error.status)) failureCode = 'http_' + error.status
+              throw new Error('Inventory command failed')
+            }
             const summary = JSON.parse(result.stdout)
             if (summary.storeId !== MOYSKLAD_STORE_ID || summary.endpoint !== STOCK_ENDPOINT ||
                 !summary.stockReportRead || !(summary.verifiedRows > 0)) throw new Error('Unverified stock')
@@ -55,16 +63,18 @@ jobs:
             if (!MOYSKLAD_API_TOKEN || !isUuid(MOYSKLAD_STORE_ID)) throw new Error('Secrets required')
             stage = 'preflight'
             if (run('preflight') !== 'preflight_complete') throw new Error('Preflight incomplete')
-            stage = 'isolated_snapshot'
+            stage = 'prepare_isolated_directory'
             webroot = await mkdtemp(join(tmpdir(), 'dekoray-stock-'))
             const generated = join(webroot, 'generated')
             await mkdir(generated, { mode: 0o700 })
+            stage = 'write_isolated_snapshot'
             if (run('publish', webroot) !== 'published') throw new Error('Snapshot incomplete')
+            stage = 'read_isolated_snapshot'
             const snapshot = parseInventory(JSON.parse(await readFile(join(generated, 'inventory.json'), 'utf8')), products)
             if (snapshot.expiresAt <= Date.now()) throw new Error('Expired snapshot')
             console.log('Confirmed warehouse preflight and isolated snapshot verified.')
           } catch {
-            console.error('Warehouse verification failed at ' + stage + '.')
+            console.error('Warehouse verification failed at ' + stage + ' (' + failureCode + ').')
             process.exitCode = 1
           } finally {
             if (webroot) await rm(webroot, { recursive: true, force: true })
