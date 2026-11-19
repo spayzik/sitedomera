@@ -1,4 +1,4 @@
-name: MoySklad inventory read access check
+name: MoySklad confirmed warehouse preflight
 
 on:
   push:
@@ -10,10 +10,10 @@ permissions:
   contents: read
 
 jobs:
-  verify-read-access:
+  verify-confirmed-warehouse:
     if: github.repository == 'spayzik/sitedomera' && github.actor == 'spayzik'
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 4
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -21,28 +21,52 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 24
-      - name: Verify read access without logging inventory data
+      - name: Validate the confirmed warehouse and an isolated snapshot
         env:
           MOYSKLAD_API_TOKEN: ${{ secrets.MOYSKLAD_API_TOKEN }}
+          MOYSKLAD_STORE_ID: ${{ secrets.MOYSKLAD_STORE_ID }}
         run: |
           node --input-type=module <<'NODE'
-          import { createStockReader } from './server/inventory/moysklad.mjs'
+          import { spawnSync } from 'node:child_process'
+          import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises'
+          import { tmpdir } from 'node:os'
+          import { join } from 'node:path'
+          import { products } from './src/data/products.ts'
+          import { isUuid, STOCK_ENDPOINT } from './server/inventory/moysklad.mjs'
+          import { parseInventory } from './src/lib/inventory.ts'
+
+          const { MOYSKLAD_API_TOKEN, MOYSKLAD_STORE_ID } = process.env
+          const env = { MOYSKLAD_API_TOKEN, MOYSKLAD_STORE_ID }
+          function run(action, webroot) {
+            const result = spawnSync(process.execPath, ['server/inventory/run.mjs', action], {
+              env: { ...env, ...(webroot ? { DEKORAY_INVENTORY_WEBROOT: webroot } : {}) },
+              encoding: 'utf8', timeout: 90_000,
+            })
+            if (result.status !== 0) throw new Error('Inventory command failed')
+            const summary = JSON.parse(result.stdout)
+            if (summary.storeId !== MOYSKLAD_STORE_ID || summary.endpoint !== STOCK_ENDPOINT ||
+                !summary.stockReportRead || !(summary.verifiedRows > 0)) throw new Error('Unverified stock')
+            return summary.status
+          }
+
+          let stage = 'configuration'
+          let webroot
           try {
-            const reader = createStockReader(process.env.MOYSKLAD_API_TOKEN)
-            const stores = (await reader.stores()).filter(store => !store.archived)
-            const assortment = (await reader.assortment()).filter(row => !row.archived &&
-              ['product', 'variant'].includes(row.meta.type))
-            if (stores.length !== 2 || !assortment.length) throw new Error()
-            await reader.units()
-            for (const store of stores) {
-              for (let offset = 0; offset < assortment.length; offset += 32) {
-                const ids = assortment.slice(offset, offset + 32).map(row => row.id)
-                await reader.stock(store.id, ids)
-              }
-            }
-            console.log('MoySklad physical stock read access verified.')
+            if (!MOYSKLAD_API_TOKEN || !isUuid(MOYSKLAD_STORE_ID)) throw new Error('Secrets required')
+            stage = 'preflight'
+            if (run('preflight') !== 'preflight_complete') throw new Error('Preflight incomplete')
+            stage = 'isolated_snapshot'
+            webroot = await mkdtemp(join(tmpdir(), 'dekoray-stock-'))
+            const generated = join(webroot, 'generated')
+            await mkdir(generated, { mode: 0o700 })
+            if (run('publish', webroot) !== 'published') throw new Error('Snapshot incomplete')
+            const snapshot = parseInventory(JSON.parse(await readFile(join(generated, 'inventory.json'), 'utf8')), products)
+            if (snapshot.expiresAt <= Date.now()) throw new Error('Expired snapshot')
+            console.log('Confirmed warehouse preflight and isolated snapshot verified.')
           } catch {
-            console.error('MoySklad physical stock read access check failed.')
+            console.error('Warehouse verification failed at ' + stage + '.')
             process.exitCode = 1
+          } finally {
+            if (webroot) await rm(webroot, { recursive: true, force: true })
           }
           NODE
