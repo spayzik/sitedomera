@@ -41,7 +41,7 @@ const manual = { manual: { id: uuid(14), type: 'variant' } }
 const now = Date.parse('2026-11-19T12:00:00.000Z')
 const row = (id, stock, warehouse = storeId) => ({ assortmentId: uuid(id), storeId: warehouse, stock })
 const okRows = [row(11, 18), row(12, 0), row(14, 2.5)]
-function provider({ stocks = okRows, status, brokenPage, onRequest } = {}) {
+function provider({ stocks = okRows, expandedStocks = [], status, brokenPage, onRequest } = {}) {
   return async (url, init) => {
     assert.equal(init.method, 'GET')
     assert.equal(init.redirect, 'error')
@@ -59,6 +59,12 @@ function provider({ stocks = okRows, status, brokenPage, onRequest } = {}) {
       if (status === 'timeout') throw new DOMException('fixture', 'TimeoutError')
       if (status) return Response.json({}, { status })
       return Response.json(stocks)
+    }
+    if (route === 'report/stock/bystore') {
+      assert.equal(url.searchParams.get('filter'), 'store=' + base + 'entity/store/' + storeId + ';stockMode=all')
+      assert.equal(url.searchParams.get('groupBy'), 'variant')
+      const offset = Number(url.searchParams.get('offset'))
+      return Response.json({ meta: { size: expandedStocks.length, limit: 2, offset }, rows: expandedStocks.slice(offset, offset + 2) })
     }
     const rows = { 'entity/store': stores, 'entity/assortment': entities,
       'entity/uom': [{ id: uuid(8), name: 'Лист' }, { id: uuid(9), name: 'шт.' }] }[route]
@@ -108,6 +114,21 @@ test('missing, recalculating and negative numbers stay unknown, including after 
   for (const id of ['sheet-a', 'sheet-b', 'manual']) {
     assert.deepEqual(availabilityFor(data, id, now), { status: 'unknown', reason: 'invalid_data' })
   }
+})
+
+test('uses an explicit missing-row stock from the expanded report at the selected store only', async () => {
+  const expandedRow = (id, type, warehouse, stock) => ({
+    meta: meta(type, uuid(id)), stockByStore: [{ meta: meta('store', warehouse), stock }],
+  })
+  const expandedStocks = [expandedRow(12, 'product', otherStore, 5),
+    expandedRow(11, 'product', storeId, 0), expandedRow(14, 'variant', storeId, 27)]
+  const result = await load(make(provider({ stocks: [row(14, null)], expandedStocks })))
+  const data = states(result.snapshot)
+  assert.equal(availabilityFor(data, 'sheet-a', now).status, 'out_of_stock')
+  assert.equal(availabilityFor(data, 'sheet-b', now).status, 'unknown')
+  assert.equal(availabilityFor(data, 'manual', now).status, 'unknown')
+  const duplicated = [...expandedStocks, expandedRow(11, 'product', storeId, 2)]
+  await assert.rejects(load(make(provider({ stocks: [row(14, null)], expandedStocks: duplicated }))), /MOYSKLAD_INVALID_STOCK/)
 })
 
 test('a reviewed single-panel mapping counts pieces as sheets and keeps conflicting SKUs out', async () => {

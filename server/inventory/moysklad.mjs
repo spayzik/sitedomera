@@ -34,6 +34,16 @@ function hasAddress(store) {
     .some(value => typeof value === 'string' && value.trim())
 }
 
+function pageSize(value, endpoint, offset, size) {
+  const info = value?.meta
+  if (!Number.isSafeInteger(info?.size) || info.size < offset || (size !== undefined && info.size !== size) ||
+      !Number.isSafeInteger(info.limit) || info.limit < 1 || info.limit > 1000 || info.offset !== offset ||
+      !Array.isArray(value.rows) || value.rows.length !== Math.min(info.limit, info.size - offset)) {
+    throw new InventoryError('MOYSKLAD_INCOMPLETE_PAGE', { endpoint })
+  }
+  return info.size
+}
+
 export function selectStore(stores, configuredId) {
   const active = stores.filter(store => store.archived === false)
   const matches = active.filter(matchesAddress)
@@ -83,13 +93,7 @@ export function createStockReader(token, fetchImpl = fetch, { minimumIntervalMs 
     do {
       const offset = items.size
       const value = await get(path, { ...params, limit: '1000', offset: String(offset) }, headers)
-      const info = value?.meta
-      if (!Number.isSafeInteger(info?.size) || info.size < offset || (size !== undefined && info.size !== size) ||
-          !Number.isSafeInteger(info.limit) || info.limit < 1 || info.limit > 1000 || info.offset !== offset ||
-          !Array.isArray(value.rows) || value.rows.length !== Math.min(info.limit, info.size - offset)) {
-        throw new InventoryError('MOYSKLAD_INCOMPLETE_PAGE', { endpoint: path })
-      }
-      size = info.size
+      size = pageSize(value, path, offset, size)
       for (const record of value.rows) {
         if (!isUuid(record?.id) || items.has(record.id.toLowerCase()) ||
             ((assortment || path === 'entity/store') && typeof record.archived !== 'boolean') ||
@@ -100,6 +104,32 @@ export function createStockReader(token, fetchImpl = fetch, { minimumIntervalMs 
       }
     } while (items.size < size)
     return [...items.values()]
+  }
+
+  async function fillMissingStock(storeId, missing, stocks) {
+    const path = 'report/stock/bystore'
+    const seen = new Set()
+    let offset = 0
+    let size
+    do {
+      const value = await get(path, {
+        filter: 'store=' + API + 'entity/store/' + storeId + ';stockMode=all',
+        groupBy: 'variant', limit: '1000', offset: String(offset),
+      })
+      size = pageSize(value, path, offset, size)
+      for (const row of value.rows) {
+        const id = linkedId(row, 'product') ?? linkedId(row, 'variant')
+        if (!missing.has(id)) continue
+        if (seen.has(id) || !Array.isArray(row.stockByStore)) throw new InventoryError('MOYSKLAD_INVALID_STOCK')
+        seen.add(id)
+        const selected = row.stockByStore.filter(item => linkedId(item, 'store') === storeId)
+        if (selected.length > 1 || (selected[0] && !Number.isFinite(selected[0].stock))) {
+          throw new InventoryError('MOYSKLAD_INVALID_STOCK')
+        }
+        if (selected[0]) stocks.set(id, selected[0].stock)
+      }
+      offset += value.rows.length
+    } while (offset < size)
   }
 
   async function stock(storeId, assortmentIds) {
@@ -121,6 +151,9 @@ export function createStockReader(token, fetchImpl = fetch, { minimumIntervalMs 
       }
       stocks.set(id, row.stock)
     }
+    const missing = new Set(assortmentIds.filter(id => !stocks.has(id)))
+    // The short report can omit a row even with zeroLines. Only explicit warehouse values can fill the gap.
+    if (missing.size) await fillMissingStock(storeId, missing, stocks)
     return stocks
   }
 
