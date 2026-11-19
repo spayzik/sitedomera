@@ -1,0 +1,48 @@
+name: MoySklad inventory read access check
+
+on:
+  push:
+    branches: [dekoray/21-inventory-sync]
+    paths:
+      - .github/workflows/moysklad-warehouse-audit.yml
+
+permissions:
+  contents: read
+
+jobs:
+  verify-read-access:
+    if: github.repository == 'spayzik/sitedomera' && github.actor == 'spayzik'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+      - name: Verify read access without logging inventory data
+        env:
+          MOYSKLAD_API_TOKEN: ${{ secrets.MOYSKLAD_API_TOKEN }}
+        run: |
+          node --input-type=module <<'NODE'
+          import { createStockReader } from './server/inventory/moysklad.mjs'
+          try {
+            const reader = createStockReader(process.env.MOYSKLAD_API_TOKEN)
+            const stores = (await reader.stores()).filter(store => !store.archived)
+            const assortment = (await reader.assortment()).filter(row => !row.archived &&
+              ['product', 'variant'].includes(row.meta.type))
+            if (stores.length !== 2 || !assortment.length) throw new Error()
+            await reader.units()
+            for (const store of stores) {
+              for (let offset = 0; offset < assortment.length; offset += 32) {
+                const ids = assortment.slice(offset, offset + 32).map(row => row.id)
+                await reader.stock(store.id, ids)
+              }
+            }
+            console.log('MoySklad physical stock read access verified.')
+          } catch {
+            console.error('MoySklad physical stock read access check failed.')
+            process.exitCode = 1
+          }
+          NODE
