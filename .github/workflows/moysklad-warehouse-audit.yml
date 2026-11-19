@@ -54,7 +54,7 @@ jobs:
             const summary = JSON.parse(result.stdout)
             if (summary.storeId !== MOYSKLAD_STORE_ID || summary.endpoint !== STOCK_ENDPOINT ||
                 !summary.stockReportRead || !(summary.verifiedRows > 0)) throw new Error('Unverified stock')
-            return summary.status
+            return summary
           }
 
           let stage = 'configuration'
@@ -62,16 +62,31 @@ jobs:
           try {
             if (!MOYSKLAD_API_TOKEN || !isUuid(MOYSKLAD_STORE_ID)) throw new Error('Secrets required')
             stage = 'preflight'
-            if (run('preflight') !== 'preflight_complete') throw new Error('Preflight incomplete')
+            if (run('preflight').status !== 'preflight_complete') throw new Error('Preflight incomplete')
             stage = 'prepare_isolated_directory'
             webroot = await mkdtemp(join(tmpdir(), 'dekoray-stock-'))
             const generated = join(webroot, 'generated')
             await mkdir(generated, { mode: 0o700 })
             stage = 'write_isolated_snapshot'
-            if (run('publish', webroot) !== 'published') throw new Error('Snapshot incomplete')
+            const report = run('publish', webroot)
+            if (report.status !== 'published') throw new Error('Snapshot incomplete')
             stage = 'read_isolated_snapshot'
             const snapshot = parseInventory(JSON.parse(await readFile(join(generated, 'inventory.json'), 'utf8')), products)
             if (snapshot.expiresAt <= Date.now()) throw new Error('Expired snapshot')
+            const counts = {
+              matched: report.mapping.matched,
+              unmatched: report.mapping.unmatched - report.unitUnverified,
+              ambiguous: report.mapping.ambiguous,
+              invalidUnits: report.unitUnverified,
+            }
+            const values = Object.values(counts)
+            if (values.some(value => !Number.isSafeInteger(value) || value < 0) ||
+                values.reduce((sum, value) => sum + value, 0) !== products.length ||
+                !Number.isSafeInteger(report.verifiedRows) || report.verifiedRows > counts.matched) {
+              throw new Error('Invalid aggregate mapping totals')
+            }
+            console.log('INVENTORY_AUDIT_COUNTS ' + JSON.stringify({ ...counts,
+              verifiedProducts: report.verifiedRows, snapshotAt: snapshot.updatedAt }))
             console.log('Confirmed warehouse preflight and isolated snapshot verified.')
           } catch {
             console.error('Warehouse verification failed at ' + stage + ' (' + failureCode + ').')
