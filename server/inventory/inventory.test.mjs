@@ -46,6 +46,8 @@ function provider({ stocks = okRows, status, brokenPage, onRequest } = {}) {
     assert.equal(init.method, 'GET')
     assert.equal(init.redirect, 'error')
     assert.equal(init.headers.Authorization, 'Bearer synthetic')
+    assert.equal(init.headers.Accept, 'application/json;charset=utf-8')
+    assert.equal(init.headers['Accept-Encoding'], 'gzip')
     const route = url.pathname.replace('/api/remap/1.2/', '')
     onRequest?.(route)
     if (route === 'report/stock/bystore/current') {

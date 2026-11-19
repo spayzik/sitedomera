@@ -60,7 +60,7 @@ export function createStockReader(token, fetchImpl = fetch, { minimumIntervalMs 
     try {
       response = await fetchImpl(url, {
         method: 'GET', redirect: 'error', signal: AbortSignal.timeout(12_000),
-        headers: { Authorization: 'Bearer ' + token, 'Accept-Encoding': 'gzip', Accept: 'application/json', ...headers },
+        headers: { Authorization: 'Bearer ' + token, 'Accept-Encoding': 'gzip', Accept: 'application/json;charset=utf-8', ...headers },
       })
     } catch {
       throw new InventoryError('MOYSKLAD_NETWORK_ERROR', { endpoint: path })
