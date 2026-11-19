@@ -1,3 +1,4 @@
+import { StockAvailability } from './StockAvailability'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { sheetProducts, CONTACTS, formatDimensions } from '../data/products'
@@ -118,6 +119,8 @@ export function Calculator() {
               <div className="calc-row"><span>Цена материала</span><strong>{res.panel.priceRub.toLocaleString('ru-RU')} ₽/{res.panel.unit}</strong></div>
               <div className="calc-row total"><span>Стоимость</span><strong>{price.toLocaleString('ru-RU')} ₽</strong></div>
             </div> : <p role="status">Выберите листовой материал для расчёта.</p>}
+
+            {res.panel && <StockAvailability productId={res.panel.id} />}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '2rem' }}>
               <button

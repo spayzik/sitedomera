@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { StockAvailability } from '../components/StockAvailability'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { collections, products, type CollectionId, type Product, formatDimensions, filterProducts, catalogSummary } from '../data/products'
 import { useCart } from '../context/CartContext'
@@ -161,6 +162,7 @@ export function CatalogPage() {
                     <div>
                       <h3>{p.name}</h3>
                       <p>{p.sku ? `${p.sku} · ` : ''}{formatDimensions(p)}</p>
+                      <StockAvailability productId={p.id} />
                     </div>
                     <p className="card-arch-price">{p.priceRub.toLocaleString('ru-RU')} ₽/{p.unit}</p>
                   </div>

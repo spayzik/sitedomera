@@ -1,3 +1,4 @@
+import { StockAvailability } from './StockAvailability'
 import { useEffect, useMemo, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { collections, products, CONTACTS, type Product, productDetails } from '../data/products'
@@ -84,6 +85,7 @@ export function ProductModal({
                 <div className="gocek-price-pill">
                   {selected.priceRub.toLocaleString('ru-RU')} ₽/{selected.unit}
                 </div>
+                <StockAvailability productId={selected.id} details />
               </motion.div>
 
               {/* Top Right: Glassmorphism Specs */}

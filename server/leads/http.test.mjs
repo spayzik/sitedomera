@@ -7,6 +7,9 @@ import test from 'node:test'
 import { createLeadServer } from './http.mjs'
 import { createLedger } from './ledger.mjs'
 import { createMoySklad } from './moysklad.mjs'
+import { createStockReader } from '../inventory/moysklad.mjs'
+import { importInventory } from '../inventory/sync.mjs'
+import { availabilityFor, parseInventory } from '../../src/lib/inventory.ts'
 
 const origin = 'https://store.example'
 const organizationId = 'd9edcfd8-bd63-4f87-9a9c-786119447b04'
@@ -154,4 +157,69 @@ test('concurrent duplicate gets a retry response and unsupported upstream ACK ca
   }
   assert.equal((await first).status, 503)
   assert.deepEqual(app.logs, ['temporarily_unavailable'])
+})
+
+
+test('a five-sheet lead leaves the physical stock at 18; only a later provider change produces 13', async t => {
+  const storeId = 'd9edcfd8-bd63-4f87-9a9c-786119447b05'
+  const unitId = 'd9edcfd8-bd63-4f87-9a9c-786119447b06'
+  const product = { id: 'panel-blue', sku: 'A9001', unit: 'лист' }
+  let physical = 18
+  const reserve = 0
+  const writes = []
+  const page = rows => Response.json({ meta: { size: rows.length, limit: 1000, offset: 0 }, rows })
+  const fixture = async (input, init) => {
+    const url = new URL(input)
+    const path = url.pathname.replace('/api/remap/1.2/', '')
+    if (path === 'entity/store') {
+      assert.equal(init.method, 'GET')
+      return page([{ id: storeId, address: 'Москва, Алтуфьевское ш., 37с1', archived: false }])
+    }
+    if (path === 'entity/assortment') {
+      assert.equal(init.method, 'GET')
+      return page([{ id: mappedProduct, archived: false, article: 'A9001', meta: { type: 'product' },
+        uom: { meta: { type: 'uom', href: 'https://api.moysklad.ru/api/remap/1.2/entity/uom/' + unitId } } }])
+    }
+    if (path === 'entity/uom') {
+      assert.equal(init.method, 'GET')
+      return page([{ id: unitId, name: 'лист' }])
+    }
+    if (path === 'report/stock/bystore/current') {
+      assert.equal(init.method, 'GET')
+      assert.equal(url.searchParams.get('stockType'), 'stock')
+      assert.equal(url.searchParams.get('filter'), 'assortmentId=' + mappedProduct + ';storeId=' + storeId)
+      return Response.json([{ assortmentId: mappedProduct, storeId, stock: physical }])
+    }
+    if (path === 'entity/counterparty' && init.method === 'GET') {
+      return Response.json({ rows: [{ id: customerId, meta: { type: 'counterparty' } }] })
+    }
+    assert.equal(path, 'entity/customerorder')
+    assert.equal(init.method, 'POST')
+    writes.push(path)
+    const order = JSON.parse(init.body)
+    assert.equal(order.applicable, false)
+    assert.equal(order.positions[0].quantity, 5)
+    assert.deepEqual(Object.keys(order.positions[0]).sort(), ['assortment', 'price', 'quantity'])
+    assert.equal('reserve' in order, false)
+    assert.equal('payments' in order, false)
+    assert.equal('demands' in order, false)
+    // The isolated provider leaves both warehouse counters intact for this intake order.
+    return Response.json({ id: orderId, meta: { type: 'customerorder' }, syncId: order.syncId, applicable: false }, { status: 201 })
+  }
+  const app = await startTest(t, fixture)
+  const reader = createStockReader(config.token, fixture, { minimumIntervalMs: 0 })
+  const readQuantity = async () => {
+    const { snapshot } = await importInventory({ reader, products: [product], storeId })
+    return availabilityFor(parseInventory(snapshot, [product]), product.id).quantity
+  }
+  assert.equal(await readQuantity(), 18)
+  const cart = { ...lead, items: [{ id: product.id, qty: 5 }] }
+  assert.equal(await readQuantity(), 18)
+  assert.equal((await app.post(cart)).status, 201)
+  assert.deepEqual(writes, ['entity/customerorder'])
+  assert.equal(reserve, 0)
+  assert.equal(physical, 18)
+  assert.equal(await readQuantity(), 18)
+  physical = 13
+  assert.equal(await readQuantity(), 13)
 })

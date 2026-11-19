@@ -10,6 +10,8 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "sync:avito": "node scripts/sync-avito-reviews.mjs",
+    "sync:inventory": "node server/inventory/run.mjs",
+    "test:inventory": "node --test server/inventory/inventory.test.mjs server/leads/http.test.mjs",
     "test:avito": "node --test scripts/avito-reviews.test.mjs",
     "test:telegram": "node --test scripts/telegram-link.test.mjs",
     "test:seo": "node --test scripts/seo.test.mjs",

@@ -47,6 +47,8 @@ jobs:
         run: npm run test:calculator
       - name: Test catalog integrity
         run: npm run test:catalog
+      - name: Test inventory and isolated lead contract
+        run: npm run test:inventory
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact

@@ -138,6 +138,7 @@ async function verify() {
   for (const file of files) {
     const path = relative(dist, file).replaceAll('\\', '/')
     const parts = path.toLowerCase().split('/')
+    assert(path !== 'generated/inventory.json', 'Inventory must be published independently of the static build')
     assert(!/^catalog\/(?:pages\/|_labels\/|ocr\.json$)/i.test(path), `Catalog source in dist: ${path}`)
     assert(!parts.some((part) => blockedParts.has(part)), `Source/private directory in dist: ${path}`)
     assert(!parts.some((part) => /^\.env(?:\.|$)/.test(part)), `Environment file in dist: ${path}`)

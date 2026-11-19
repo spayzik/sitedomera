@@ -1568,3 +1568,35 @@ body:has(.analytics-banner, .hero-in-view) :is(.floating-cart, .tg-fab, .back-to
   .cat-card-text { transform: none; }
   .cat-panel.is-active .cat-panel-img { transform: none; }
 }
+
+/* Keep the shared inventory line readable alongside prices and on narrow cards. */
+.stock-availability {
+  color: var(--muted);
+  display: grid;
+  align-items: start;
+  gap: .3rem;
+  min-width: 0;
+  font-size: .78rem;
+  font-weight: 500;
+  line-height: 1.45;
+  margin-top: .45rem;
+}
+.stock-status {
+  display: inline-flex;
+  align-items: baseline;
+  gap: .45rem;
+  overflow-wrap: anywhere;
+}
+.stock-dot {
+  width: .38rem;
+  height: .38rem;
+  flex: 0 0 .38rem;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.stock-in_stock { color: var(--ink); }
+.stock-in_stock .stock-dot { background: #a1b29b; }
+.stock-unknown .stock-dot { background: transparent; border: 1px solid currentColor; }
+.stock-time { color: var(--muted); font-size: .7rem; }
+.gocek-top-left .stock-availability { color: #e0d8cc; }
+.gocek-top-left .stock-time { color: #c8bfb1; }

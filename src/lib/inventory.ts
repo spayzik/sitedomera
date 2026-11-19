@@ -1,0 +1,75 @@
+import type { Product } from '../data/catalogModel.ts'
+
+type StockProduct = Pick<Product, 'id' | 'unit'>
+type StockUnit = StockProduct['unit']
+type Entry =
+  | { id: string; unit: StockUnit; quantity: number }
+  | { id: string; reason: 'unmapped' | 'invalid_data' }
+
+export type StockAvailability =
+  | { status: 'in_stock'; quantity: number; unit: StockUnit; updatedAt: string }
+  | { status: 'out_of_stock'; quantity: 0; unit: StockUnit; updatedAt: string }
+  | { status: 'unknown'; reason: 'unmapped' | 'stale' | 'api_unavailable' | 'invalid_data' }
+
+export interface InventorySnapshot {
+  version: 1
+  source: 'moysklad'
+  updatedAt: string
+  items: Entry[]
+}
+
+export interface Inventory {
+  updatedAt: string
+  expiresAt: number
+  items: ReadonlyMap<string, Entry>
+}
+
+export const STOCK_MAX_AGE_MS = 45 * 60_000
+const MAX_CLOCK_SKEW_MS = 2 * 60_000
+
+function record(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
+}
+
+export function isStockQuantity(quantity: unknown): quantity is number {
+  return typeof quantity === 'number' && Number.isFinite(quantity) && quantity >= 0 && quantity <= Number.MAX_SAFE_INTEGER
+}
+
+export function parseInventory(raw: unknown, catalog: readonly StockProduct[], now = Date.now()): Inventory {
+  if (!record(raw) || Object.keys(raw).length !== 4 || raw.version !== 1 || raw.source !== 'moysklad' ||
+      typeof raw.updatedAt !== 'string' || !Array.isArray(raw.items) || raw.items.length !== catalog.length) {
+    throw new Error('Invalid inventory snapshot')
+  }
+  const updated = Date.parse(raw.updatedAt)
+  if (!Number.isFinite(updated) || new Date(updated).toISOString() !== raw.updatedAt || updated > now + MAX_CLOCK_SKEW_MS) {
+    throw new Error('Invalid inventory timestamp')
+  }
+  const units = new Map(catalog.map(p => [p.id, p.unit]))
+  const items = new Map<string, Entry>()
+  for (const entry of raw.items) {
+    if (!record(entry) || typeof entry.id !== 'string' || items.has(entry.id)) throw new Error('Invalid inventory item')
+    const unit = units.get(entry.id)
+    if (!unit) throw new Error('Unexpected inventory item')
+    if (Object.keys(entry).length === 2 && (entry.reason === 'unmapped' || entry.reason === 'invalid_data')) {
+      items.set(entry.id, { id: entry.id, reason: entry.reason })
+    } else if (Object.keys(entry).length === 3 && entry.unit === unit && isStockQuantity(entry.quantity)) {
+      items.set(entry.id, { id: entry.id, unit, quantity: entry.quantity })
+    } else {
+      throw new Error('Invalid inventory quantity or unit')
+    }
+  }
+  return { updatedAt: raw.updatedAt, expiresAt: updated + STOCK_MAX_AGE_MS, items }
+}
+
+export function availabilityFor(inventory: Inventory | null, id: string, now = Date.now(),
+  unavailable: 'api_unavailable' | 'invalid_data' = 'api_unavailable'): StockAvailability {
+  if (!inventory) return { status: 'unknown', reason: unavailable }
+  if (now >= inventory.expiresAt) return { status: 'unknown', reason: 'stale' }
+  const item = inventory.items.get(id)
+  if (!item) return { status: 'unknown', reason: 'unmapped' }
+  if ('reason' in item) return { status: 'unknown', reason: item.reason }
+  const { unit, quantity } = item
+  const updatedAt = inventory.updatedAt
+  return quantity === 0 ? { status: 'out_of_stock', quantity: 0, unit, updatedAt }
+    : { status: 'in_stock', quantity, unit, updatedAt }
+}

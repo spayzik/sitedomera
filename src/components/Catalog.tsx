@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { StockAvailability } from './StockAvailability'
 import { motion, AnimatePresence } from 'framer-motion'
 import { collections, products, type CollectionId, type Product, formatDimensions } from '../data/products'
 import { useCart } from '../context/CartContext'
@@ -87,6 +88,7 @@ export function Catalog() {
                     <div>
                       <h3>{p.name}</h3>
                       <p>{p.sku ? `${p.sku} · ` : ''}{formatDimensions(p)}</p>
+                      <StockAvailability productId={p.id} />
                     </div>
                     <p className="card-arch-price">{p.priceRub.toLocaleString('ru-RU')} ₽/{p.unit}</p>
                   </div>

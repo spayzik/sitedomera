@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useState, useCallback, type ReactNode } from 'react'
+import { InventoryProvider } from './context/InventoryContext'
 import { CartProvider } from './context/CartContext'
 import { Header } from './components/Header'
 import { Hero } from './components/Hero'
@@ -203,7 +204,9 @@ export default function App() {
   return (
     <MotionConfig reducedMotion="user">
       <PrivacyProvider>
-        <Wrapper onIntroComplete={finishIntro}>{page}</Wrapper>
+        <InventoryProvider>
+          <Wrapper onIntroComplete={finishIntro}>{page}</Wrapper>
+        </InventoryProvider>
       </PrivacyProvider>
     </MotionConfig>
   )
