@@ -77,6 +77,22 @@ test('direct pages expose prices, product and breadcrumb schema, canonical navig
   assert(!renderSeoPage(profile, stylesheet).includes('#calculator"'))
 })
 
+test('editorial product gallery separates the canonical sample from relevant visualizations', () => {
+  const stylesheet = 'assets/index-a1b2c3d4.css'
+  const wood = seoPages.find(page => page.kind === 'product' && page.product.categoryId === 'wood')
+  const html = renderSeoPage(wood, stylesheet)
+  assert.equal([...html.matchAll(/<h1>/g)].length, 1)
+  assert(html.includes(wood.product.image))
+  assert.equal([...html.matchAll(/interior-\w+-480\.webp 480w/g)].length, 2)
+  assert.match(html, /Образец артикула показан отдельно/)
+  const profile = seoPages.find(page => page.kind === 'product' && page.product.kind === 'profile')
+  assert(!renderSeoPage(profile, stylesheet).includes('seo-room-scenes'))
+  for (const route of ['/montazh/','/dostavka/','/showroom/','/kontakty/','/proekty/','/opt/','/dizayneram/']) {
+    const page = seoPages.find(item => item.path === route)
+    assert.equal([...renderSeoPage(page, stylesheet).matchAll(/class="seo-main-action"/g)].length, 1, route)
+  }
+})
+
 test('price feed uses stable ids and verified product facts without inventing stock or business terms', () => {
   const feed = renderYml(new Date('2026-11-20T12:30:00.000Z'))
   assert.match(feed, /<yml_catalog date="2026-11-20 12:30">/)

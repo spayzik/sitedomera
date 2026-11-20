@@ -20,7 +20,7 @@ const assessment = product => {
 const pageFor = path => seoPages.find(page => page.path === path)
 const ogCover = 'catalog/og-cover.jpg'
 const categoryImage = id => 'catalog/categories/carousel-2026-' + id + '.webp'
-const linkPath = (path, prefix) => path.startsWith('https://') ? path : path === '/' ? prefix : prefix + path.slice(1)
+const linkPath = (path, prefix) => /^(?:https:\/\/|tel:)/.test(path) ? path : path === '/' ? prefix : prefix + path.slice(1)
 const anchor = (path, label, prefix) => `<a href="${escape(linkPath(path, prefix))}">${escape(label)}</a>`
 const picture = (path, alt, prefix, lazy = true) =>
   `<img src="${escape(prefix + path)}" alt="${escape(alt)}"${lazy ? ' loading="lazy"' : ''} decoding="async">`
@@ -70,8 +70,7 @@ function listing(items, prefix) {
       ${picture(product.image, '', prefix)}
       <strong>${escape(product.name)}</strong>
     </a>
-    ${product.sku && product.name !== product.sku ? `<p>Артикул ${escape(product.sku)}</p>` : ''}
-    <p>${escape(formatDimensions(product))}</p>
+    <p class="seo-card-meta">${product.sku && product.name !== product.sku ? escape(product.sku) + ' · ' : ''}${escape(formatDimensions(product))}</p>
     <p class="seo-price">${htmlPrice(product)} ${assessment(product)}</p>${stockLabel(product)}
   </li>`).join('')}</ul>`
 }
@@ -101,26 +100,64 @@ function home(page, prefix) {
     `<details><summary>${escape(q)}</summary><p>${escape(a)}</p></details>`).join('')}</section>`
 }
 
+const productScenes = {
+  wood: ['bedroom', 'dining'],
+  slats: ['living', 'bedroom'],
+  fabric: ['fabric'],
+  metal: ['metal'],
+}
+const sceneCaptions = {
+  bedroom: 'Акцентная стена в спальне',
+  dining: 'Отделка обеденной зоны',
+  living: 'Рейки в гостиной',
+  metal: 'Металлическая фактура с подсветкой',
+  fabric: 'Тканевая фактура в гостиной',
+}
+
+const mapOrganization = 'https://yandex.ru/maps/org/55177309503/'
+const commercialActions = {
+  '/montazh/': ['/kalkulyator/', 'Рассчитать количество листов'],
+  '/dostavka/': [buildTelegramDraftUrl(CONTACTS.telegram, 'Здравствуйте! Хочу уточнить условия доставки материалов ДЕКОРАЙ.'), 'Уточнить доставку'],
+  '/showroom/': [mapOrganization, 'Открыть в Яндекс Картах'],
+  '/kontakty/': ['tel:' + CONTACTS.phoneRaw, 'Позвонить ' + CONTACTS.phone],
+  '/proekty/': ['/catalog/derevo/', 'Смотреть древесные фактуры'],
+  '/opt/': [buildTelegramDraftUrl(CONTACTS.telegram, 'Здравствуйте! Хочу обсудить поставку материалов ДЕКОРАЙ для объекта.'), 'Обсудить поставку'],
+  '/dizayneram/': ['/showroom/', 'Посмотреть образцы в шоуруме'],
+}
+
 function productBody(product, prefix) {
   const similar = products.filter(item => item.categoryId === product.categoryId && item.id !== product.id).slice(0, 3)
   const calculator = '/kalkulyator/?material=' + encodeURIComponent(product.id)
   const category = collections.find(item => item.id === product.categoryId)
   const telegram = buildTelegramDraftUrl(CONTACTS.telegram, formatProductTelegramMessage(product, category.name))
-  return `<div class="seo-product-detail">
-    <div class="seo-sample">${picture(product.image, product.name, prefix, false)}</div>
-    <div>
+  const scenes = productScenes[product.categoryId] ?? []
+  return `<div class="seo-product-detail${scenes.length ? ' has-scenes' : ''}">
+    <figure class="seo-material"><div class="seo-sample"><img src="${escape(prefix + product.image)}" alt="${escape(product.name)}"
+      decoding="async" fetchpriority="high"></div><figcaption>Образец материала</figcaption></figure>
+    ${scenes.length ? `<aside class="seo-room-scenes" aria-label="Идеи для коллекции">
+      ${scenes.map(scene => {
+        const original = prefix + 'catalog/rooms/interior-' + scene + '.webp'
+        const compact = prefix + 'catalog/rooms/interior-' + scene + '-480.webp'
+        return `<figure><img src="${original}" srcset="${compact} 480w, ${original} ${scene === 'metal' ? 1448 : 1122}w"
+          sizes="(max-width: 520px) 90vw, 350px" width="${scene === 'metal' ? 1448 : 1122}" height="${scene === 'metal' ? 1086 : 1402}"
+          loading="lazy" decoding="async" alt="${sceneCaptions[scene]}"><figcaption>${sceneCaptions[scene]}</figcaption></figure>`
+      }).join('')}
+      <p>Интерьерные визуализации коллекции. Образец артикула показан отдельно.</p>
+    </aside>` : ''}
+    <div class="seo-product-purchase">
+      <div>
+      <h1>${escape(product.name)}</h1>
+      ${product.sku && product.sku !== product.name ? `<p class="seo-card-meta">Артикул ${escape(product.sku)}</p>` : ''}
       <p>${escape(productDescription(product))}</p>
       <p class="seo-price">${htmlPrice(product)} ${assessment(product)}</p>${stockLabel(product)}
-      <dl>${productDetails(product).map(([name, value]) =>
-        `<div><dt>${escape(name)}</dt><dd>${escape(value)}</dd></div>`).join('')}</dl>
-      <div class="seo-actions">
-        ${sheetPricePerSquareMeter(product) === null ? '' : anchor(calculator, 'Рассчитать для моей стены', prefix)}
-        ${anchor(categoryPath(product.categoryId), 'Вся коллекция', prefix)}
-      </div>
       <div class="seo-tool-actions" data-storefront-tools="product" data-product-id="${escape(product.id)}" data-asset-base="${prefix}">
         ${anchor(telegram, 'Связаться с менеджером в Telegram', prefix)}
         <noscript><p>Для сохранения подборки в браузере включите JavaScript.</p></noscript>
       </div>
+      ${sheetPricePerSquareMeter(product) === null ? '' : `<div class="seo-actions">${anchor(calculator, 'Рассчитать для моей стены', prefix)}</div>`}
+      </div>
+      <dl>${productDetails(product).map(([name, value]) =>
+        `<div><dt>${escape(name)}</dt><dd>${escape(value)}</dd></div>`).join('')}</dl>
     </div>
   </div>${similar.length ? `<section><h2>Другие материалы коллекции</h2>${listing(similar, prefix)}</section>` : ''}`
 }
@@ -139,23 +176,29 @@ function body(page, prefix) {
         <section><h2>Материалы и цены</h2>${listing(products.filter(product => product.categoryId === page.categoryId), prefix)}</section>`
       break
     case 'product':
-      contents = productBody(page.product, prefix)
-      break
+      return breadcrumbs(page, prefix) + productBody(page.product, prefix)
     case 'articles':
       contents = seoPages.filter(item => item.kind === 'article').map(item =>
         `<section><h2>${anchor(item.path, item.heading, prefix)}</h2><p>${escape(item.description)}</p></section>`).join('')
       break
-    default:
-      contents = `<div class="seo-copy"><p>${escape(page.description)}</p>
+    default: {
+      const action = commercialActions[page.path]
+      const map = page.path === '/showroom/' || page.path === '/kontakty/'
+      contents = `<div class="seo-copy${action ? ' seo-commercial' : ''}"><header class="seo-copy-intro"><p>${escape(page.description)}</p>
+        ${action ? `<a class="seo-main-action" href="${escape(linkPath(action[0], prefix))}">${escape(action[1])}</a>` : ''}</header>
         ${page.copy.image ? `<figure>
           <img src="${escape(prefix + page.copy.image)}" alt="${escape(page.heading)}" decoding="async"${page.copy.imageSmall
             ? ` srcset="${escape(prefix + page.copy.imageSmall)} 720w, ${escape(prefix + page.copy.image)} 1440w" sizes="(max-width: 768px) 100vw, 48rem"`
             : ''}>
           ${page.copy.imageCaption ? `<figcaption>${escape(page.copy.imageCaption)}</figcaption>` : ''}
         </figure>` : ''}
-        ${page.copy.blocks.map(({ heading, text }) => `<section><h2>${escape(heading)}</h2><p>${escape(text)}</p></section>`).join('')}
-        <div class="seo-actions">${(page.copy.links ?? []).map(({ path, label }) => anchor(path, label, prefix)).join('')}
-        ${page.kind === 'info' ? contactLinks : ''}${page.path === '/showroom/' ? '<a href="https://yandex.ru/maps/-/CXWSyOoT">ДЕКОРАЙ на Яндекс Картах</a>' : ''}</div></div>`
+        ${map ? '<iframe class="seo-venue-map" title="Шоурум ДЕКОРАЙ на Яндекс Картах" src="https://yandex.ru/map-widget/v1/?ol=biz&amp;oid=55177309503" width="880" height="420" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>' : ''}
+        <div class="seo-copy-blocks">${page.copy.blocks.map(({ heading, text }) => `<section><h2>${escape(heading)}</h2><p>${escape(text)}</p></section>`).join('')}</div>
+        <div class="seo-actions">${(page.copy.links ?? []).filter(({ path }) => path !== action?.[0] &&
+          !(action && path === '/#lead') && !(map && path === '/#showroom')).map(({ path, label }) => anchor(path, label, prefix)).join('')}
+        ${map && page.path === '/kontakty/' ? anchor(mapOrganization, 'Открыть в Яндекс Картах', prefix) : ''}
+        ${page.kind === 'info' && page.path !== '/kontakty/' ? contactLinks : ''}</div></div>`
+    }
   }
   if (page.path === '/otzyvy/') {
     contents += `<section class="seo-map-reviews"><h2>Отзывы на Яндекс Картах</h2>

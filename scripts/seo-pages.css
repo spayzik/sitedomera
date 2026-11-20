@@ -23,23 +23,50 @@
 .seo-link-grid a { display: flex; align-items: center; min-height: 44px; }
 .seo-link-grid span, .seo-area-price { color: var(--muted); }
 .seo-cards { grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); }
-.seo-product-card { border: 1px solid var(--line); padding: 1rem; min-width: 0; }
+.seo-product-card { border-block-end: 1px solid var(--line); padding: 0 0 1rem; min-width: 0; }
 .seo-product-card a { display: grid; gap: .75rem; overflow-wrap: anywhere; }
+.seo-product-card strong { color: var(--ink); font: 500 1.3rem/1.22 var(--font-display); }
+.seo-card-meta { color: var(--muted); font-size: .84rem; margin: .4rem 0; overflow-wrap: anywhere; }
 .seo-product-card img, .seo-sample img { display: block; width: 100%; height: 100%; object-fit: scale-down; background: var(--surface); }
 .seo-product-card img { height: auto; aspect-ratio: 3 / 4; }
-.seo-price { font-size: 1.17rem; color: var(--accent-light); }
+.seo-price { font-size: 1.17rem; color: var(--accent-light); font-variant-numeric: tabular-nums; margin-block: .65rem .3rem; }
 .seo-area-price { display: inline-block; font-size: .9rem; margin-inline-start: .35rem; }
-.seo-product-detail { display: grid; gap: clamp(1rem, 5vw, 4rem); grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); margin-block-start: 1rem; }
-.seo-sample { aspect-ratio: 4 / 3; min-width: 0; }
+.seo-product-detail { display: grid; gap: clamp(1rem, 4vw, 3rem); grid-template-columns: repeat(2, minmax(0, 1fr)); margin-block-start: 1rem; }
+.seo-main:has(> .seo-product-detail) { padding-block-start: clamp(1.25rem, 3vw, 2.5rem); }
+.seo-material, .seo-room-scenes figure { margin: 0; min-width: 0; }
+.seo-material figcaption, .seo-room-scenes figcaption, .seo-room-scenes > p { margin: .6rem 0 0; color: var(--muted); font-size: .84rem; }
+.seo-sample { aspect-ratio: 5 / 4; min-width: 0; border: 1px solid var(--line); }
+.seo-room-scenes { display: grid; gap: .75rem; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; }
+.seo-room-scenes:has(> figure:only-of-type) { grid-template-columns: 1fr; }
+.seo-room-scenes img { display: block; width: 100%; height: auto; }
+.seo-room-scenes:has(> figure:only-of-type) img { max-height: clamp(16rem, 42vw, 26rem); object-fit: contain; background: var(--surface); }
+.seo-room-scenes > p { grid-column: 1 / -1; }
+.seo-product-purchase { min-width: 0; }
+.seo-product-purchase h1 { font-size: clamp(2.15rem, 5vw, 4.5rem); }
+.seo-product-purchase .seo-price { font-size: clamp(1.35rem, 3vw, 1.75rem); }
+.has-scenes .seo-product-purchase { display: grid; gap: clamp(1rem, 4vw, 3rem); grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .seo-product-detail dl div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .4rem 1rem; padding: .75rem 0; border-block-end: 1px solid var(--line); }
 .seo-product-detail dd { margin: 0; }
+@media (min-width: 56rem) {
+  .has-scenes .seo-sample, .has-scenes .seo-room-scenes img { max-height: min(43vh, 28rem); }
+  .has-scenes .seo-room-scenes img { object-fit: contain; background: var(--surface); }
+}
 .seo-copy figure { margin: 1rem 0; width: min(48rem, 100%); }
 .seo-copy figure img { width: 100%; height: auto; }
+.seo-commercial .seo-copy-intro { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1rem 2rem; align-items: center; padding-block: 1rem; border-block: 1px solid var(--line); margin-block: 1.5rem; }
+.seo-main-action { display: inline-flex; align-items: center; justify-content: center; text-align: center; border: 1px solid var(--accent); width: fit-content; min-height: 44px; padding: .65rem 1.1rem; }
+.seo-commercial .seo-copy-blocks { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); gap: 1.5rem; margin-block: 2rem; }
+.seo-commercial .seo-copy-blocks section { margin: 0; padding-block-start: 1rem; border-block-start: 1px solid var(--line); }
+.seo-commercial .seo-copy-blocks h2 { font-size: clamp(1.35rem, 3vw, 2rem); }
+.seo-venue-map { display: block; width: 100%; height: clamp(18rem, 42vw, 25rem); border: 1px solid var(--line); }
 .seo-main details { padding-block: .65rem; border-block-end: 1px solid var(--line); }
 .seo-main summary { cursor: pointer; }
 .seo-footer { border-block-start: 1px solid var(--line); padding-block: 2rem; }
 @media (max-width: 44rem) {
   .seo-product-detail { grid-template-columns: minmax(0, 1fr); }
+  .seo-room-scenes { order: 2; grid-template-columns: 1fr; }
+  .has-scenes .seo-product-purchase { grid-template-columns: minmax(0, 1fr); }
+  .seo-commercial .seo-copy-intro { grid-template-columns: minmax(0, 1fr); }
 }
 
 .seo-static, .seo-static * { cursor: auto !important; }

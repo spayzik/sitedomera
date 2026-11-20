@@ -46,7 +46,7 @@ function InteriorCard({
       transition={{ duration: reducedMotion ? 0 : 0.8, delay: reducedMotion ? 0 : i * 0.1, ease: [0.22, 1, 0.36, 1] }}
     >
       <button type="button" className="interior-photo" aria-label={`Открыть интерьер: ${r.caption}`} onClick={() => onOpen(i)}>
-        <img src={roomSrc(r)} alt={r.caption} loading="lazy" width={r.width} height={r.height} />
+        <img src={roomSrc(r)} alt="" loading="lazy" decoding="async" width={r.width} height={r.height} />
         <span className="interior-zoom" aria-hidden="true"><ZoomIn size={18} /></span>
       </button>
       <p className="interior-caption">{r.caption}</p>
@@ -58,15 +58,16 @@ export function Interiors() {
   const [lightbox, setLightbox] = useState<number | null>(null)
 
   return (
-    <section className="section interiors" id="interiors">
+    <section className="section interiors interiors-commerce" id="interiors" aria-labelledby="interiors-heading">
       <div className="container">
         <div className="section-head-flex">
           <div>
             <p className="eyebrow">В интерьере</p>
-            <h2>Декорай<br/>в пространстве</h2>
+            <h2 id="interiors-heading">Декорай<br/>в пространстве</h2>
           </div>
           <p className="lead">
-            Посмотрите, как фактуры выглядят рядом с мебелью и при разном освещении.
+            Посмотрите, как фактуры работают рядом с мебелью и при разном освещении.
+            Нажмите на изображение, чтобы рассмотреть детали.
           </p>
         </div>
 
@@ -85,12 +86,12 @@ export function Interiors() {
           </div>
           <div className="interior-concept-media">
             <div className="interior-concept-sample">
-              <img src="catalog/products/C807601-36.webp" alt="Образец панели «Ясень песочный»" loading="lazy" width="360" height="360" />
+              <img src="catalog/products/C807601-36.webp" alt="Образец панели «Ясень песочный»" loading="lazy" decoding="async" width="1000" height="1000" />
               <small>Фото образца · C807601-36</small>
             </div>
             <img src="catalog/rooms/concept-wood.webp" srcSet="catalog/rooms/concept-wood-small.webp 720w, catalog/rooms/concept-wood.webp 1440w"
-              sizes="(max-width: 700px) 88vw, 66vw" alt="Варианты отделки стен в столовой и прихожей"
-              loading="lazy" width="1440" height="960" />
+              sizes="(max-width: 700px) 88vw, min(66vw, 800px)" alt="Варианты отделки стен в столовой и прихожей"
+              loading="lazy" decoding="async" width="1440" height="960" />
           </div>
           <figcaption>AI-визуализация применения. Фактура и цвет в интерьере приведены для примера.</figcaption>
         </figure>

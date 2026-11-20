@@ -1,15 +1,13 @@
 import { categoryPath } from '../data/seoPaths'
 import { LeadAction } from '../components/LeadProvider'
-import { SheetUnitPrice } from '../components/SheetUnitPrice'
 import { useEffect, useState } from 'react'
-import { StockAvailability } from '../components/StockAvailability'
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
-import { collections, products, type CollectionId, type Product, formatDimensions, filterProducts, catalogSummary } from '../data/products'
+import { motion, useReducedMotion } from 'framer-motion'
+import { collections, products, type CollectionId, type Product, filterProducts, catalogSummary } from '../data/products'
 import { useCart } from '../context/CartContext'
 import { ProductModal } from '../components/ProductModal'
-import { TiltCard } from '../components/TiltCard'
+import { CatalogCard } from '../components/CatalogCard'
 import { Counter } from '../components/Counter'
-import { ArrowUpRight, ArrowDown, Ruler, Scale, ShoppingBag } from 'lucide-react'
+import { ArrowDown, Ruler, Scale } from 'lucide-react'
 import { parseCatalogHash, updateCatalogHash } from '../lib/catalogNavigation'
 
 export function CatalogPage() {
@@ -73,11 +71,11 @@ export function CatalogPage() {
           <motion.div className="catalog-page-cta" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.4 }}>
             <a href="#/catalog" className="btn btn-white interactive" onClick={(event) => {
               event.preventDefault()
-              document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })
+              document.getElementById('products')?.scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth' })
             }}>
               Посмотреть материалы <ArrowDown size={16} />
             </a>
-            <a href="#calculator" className="btn btn-outline interactive" style={{ borderColor: 'rgba(255,255,255,0.25)', color: '#fff' }}>
+            <a href={import.meta.env.BASE_URL + 'kalkulyator/'} className="btn btn-outline interactive" style={{ borderColor: 'rgba(255,255,255,0.25)', color: '#fff' }}>
               Рассчитать проект
             </a>
             <a className="btn btn-outline interactive" href={import.meta.env.BASE_URL + (filter === 'all' ? 'catalog/' : categoryPath(filter).slice(1))}>Страница каталога</a>
@@ -101,16 +99,17 @@ export function CatalogPage() {
           {/* Toolbar */}
           <div className="catalog-toolbar">
             <div className="filters-arch">
-              <button className={filter === 'all' ? 'active' : ''} onClick={() => setFilter('all')}>
+              <button className={filter === 'all' ? 'active' : ''} aria-pressed={filter === 'all'} onClick={() => setFilter('all')}>
                 Все ({products.length})
               </button>
               {collections.map((c) => (
                 <button
                   key={c.id}
                   className={filter === c.id ? 'active' : ''}
+                  aria-pressed={filter === c.id}
                   onClick={() => setFilter(c.id)}
                 >
-                  {c.name} ({products.filter(p => p.categoryId === c.id).length})
+                  {c.name} ({c.count})
                 </button>
               ))}
             </div>
@@ -130,53 +129,12 @@ export function CatalogPage() {
             Показано <strong>{list.length}</strong> из {products.length} позиций
           </p>
 
-          <motion.div className="grid-arch catalog-page-grid" layout={!reducedMotion}>
-            <AnimatePresence mode="popLayout">
-              {list.map((p, i) => (
-                <motion.div
-                  key={p.id}
-                  className={`card-arch${p.kind === 'profile' ? ' is-profile' : ''}`}
-                  initial={reducedMotion ? false : { opacity: 0, scale: 0.95, y: 60 }}
-                  whileInView={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                  viewport={{ once: true, amount: 0.1 }}
-                  transition={{ duration: reducedMotion ? 0 : 0.8, delay: reducedMotion ? 0 : (i % 3) * 0.08, ease: [0.22, 1, 0.36, 1] }}
-                  onClick={() => openProduct(p)}
-                >
-                  <div className="card-arch-img">
-                    <TiltCard>
-                      <img src={p.image} alt={p.name} loading="lazy" decoding="async" />
-                    </TiltCard>
-                    <div className="card-arch-tag">
-                      {collections.find(c => c.id === p.categoryId)?.name}
-                    </div>
-                    <div className="card-arch-num">{(String(i + 1)).padStart(2, '0')}</div>
-                    <div className="card-arch-overlay">
-                      <button className="btn-view" aria-label={`Подробнее: ${p.name}`} onClick={(e) => { e.stopPropagation(); openProduct(p) }}>Смотреть детали <ArrowUpRight size={14} /></button>
-                      <button
-                        className="btn-mini-add interactive"
-                        onClick={(e) => { e.stopPropagation(); add(p) }}
-                        aria-label="Добавить в подборку"
-                      >
-                        <ShoppingBag size={18} />
-                      </button>
-                    </div>
-                  </div>
-                  <div className="card-arch-info">
-                    <div>
-                      <h3>{p.name}</h3>
-                      <p>{p.sku ? `${p.sku} · ` : ''}{formatDimensions(p)}</p>
-                      <StockAvailability productId={p.id} />
-                    </div>
-                    <div className="card-arch-price-group">
-                      <p className="card-arch-price">{p.priceRub.toLocaleString('ru-RU')} ₽/{p.unit}</p>
-                      <SheetUnitPrice product={p} />
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </motion.div>
+          <div className="grid-arch catalog-page-grid">
+            {list.map(p => (
+              <CatalogCard key={p.id} product={p} onDetails={openProduct} onAdd={add}
+                category={filter === 'all' ? collections.find(c => c.id === p.categoryId)?.name : undefined} />
+            ))}
+          </div>
 
           {list.length === 0 && (
             <div className="catalog-empty">

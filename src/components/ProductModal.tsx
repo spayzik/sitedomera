@@ -83,6 +83,7 @@ export function ProductModal({
                 transition={{ duration: 0.7, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
               >
                 <h2>{selected.name}</h2>
+                {selected.sku && selected.sku !== selected.name && <p className="gocek-sku">Артикул {selected.sku}</p>}
                 <p>
                   {productDescription(selected)}
                 </p>
@@ -90,8 +91,8 @@ export function ProductModal({
                   {selected.priceRub.toLocaleString('ru-RU')} ₽/{selected.unit}
                 </div>
                 <SheetUnitPrice product={selected} />
-                <img src={selected.image} alt={selected.name} className="gocek-sample" decoding="async" />
                 <StockAvailability productId={selected.id} details />
+                <img src={selected.image} alt={selected.name} className="gocek-sample" decoding="async" />
                 {sheetArea(selected) > 0 && <ProductEstimate key={selected.id} product={selected} />}
               </motion.div>
 

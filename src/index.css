@@ -532,7 +532,8 @@ h4 { font-size: 1.25rem; font-weight: 500; }
 /* === GOCEK MARINA LOFT MODAL === */
 .gocek-modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; background: rgba(7, 7, 7, 0.4); backdrop-filter: blur(8px); padding: 2rem; }
 .gocek-box { position: relative; width: 100%; max-width: 1300px; height: min(85vh, 800px); min-height: 560px; max-height: 850px; background: #111; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,0.4); }
-.gocek-sample { max-width: 100%; width: min(12rem, 100%); height: clamp(4.5rem, 13vh, 8rem); display: block; margin-top: .85rem; object-fit: scale-down; object-position: left center; }
+.gocek-sample { max-width: 100%; width: min(18rem, 100%); height: clamp(7rem, 22vh, 12rem); display: block; margin-block: .85rem; object-fit: scale-down; object-position: left center; }
+.gocek-top-left .gocek-sku { color: var(--muted); font-size: .83rem; margin-block: .35rem .7rem; }
 .gocek-gradient {
   position: absolute; inset: 0;
   background: linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 50%, transparent 100%), linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 40%); pointer-events: none;

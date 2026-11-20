@@ -1,9 +1,9 @@
-import { motion, useScroll, useTransform, useReducedMotion, useInView } from 'framer-motion'
+import { motion, useReducedMotion, useInView } from 'framer-motion'
 import { ArrowRight, ArrowDown } from 'lucide-react'
 import { useRef } from 'react'
 import { EditorialReveal } from './EditorialReveal'
-import { LeadAction } from './LeadProvider'
-import { catalogSummary, formatRange } from '../data/products'
+import { catalogSummary } from '../data/products'
+import './HomeCommerce.css'
 
 const easeOutQuint = [0.22, 1, 0.36, 1] as const
 
@@ -26,40 +26,18 @@ export function Hero({ ready = true }: { ready?: boolean }) {
   const ref = useRef(null)
   const visible = useInView(ref)
   const reducedMotion = useReducedMotion()
-  
-  // Parallax effect for the background
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] })
-  const y = useTransform(scrollYProgress, [0, 1], ['0%', '30%'])
-  const opacity = useTransform(scrollYProgress, [0, 1], [1, 0.4])
-  const scale = useTransform(scrollYProgress, [0, 1], [1, 1.12])
-
   return (
-    <section ref={ref} className={`hero-arch ${visible ? 'hero-in-view' : ''}`} id="top">
-      {/* Background Mask Reveal + Parallax */}
-      <motion.div 
-        className="hero-arch-bg"
-        initial={{ clipPath: 'inset(100% 0% 0% 0%)' }}
-        animate={{ clipPath: 'inset(0% 0% 0% 0%)' }}
-        transition={{ duration: 1.6, ease: [0.7, 0, 0.1, 1] }}
-        style={{ y: reducedMotion ? 0 : y, opacity: reducedMotion ? 1 : opacity, scale: reducedMotion ? 1 : scale }}
-      >
-        <motion.img 
-          src="catalog/hero/hero.webp" 
+    <section ref={ref} className={`hero-arch hero-commerce ${visible ? 'hero-in-view' : ''}`} id="top">
+      <div className="hero-arch-bg">
+        <img
+          src="catalog/hero/hero.webp"
           alt="Визуализация гостиной с бамбуковыми панелями тёплого оттенка ореха"
           fetchPriority="high"
           decoding="async"
-          initial={{ scale: 1.25 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 3, ease: easeOutQuint }}
-          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 42%', willChange: 'transform' }}
+          width="1672"
+          height="941"
         />
         <div className="hero-arch-veil" />
-      </motion.div>
-
-      <div className="hero-blobs" aria-hidden="true">
-        <span className="blob b1" />
-        <span className="blob b2" />
-        <span className="blob b3" />
       </div>
 
       <div className="container hero-arch-content">
@@ -81,46 +59,31 @@ export function Hero({ ready = true }: { ready?: boolean }) {
 
           <motion.div variants={fadeUp}>
             <p className="hero-lead">
-              Стеновые панели, рейки и профили для интерьеров. Посмотрите фактуры
-              в московском шоуруме или рассчитайте материалы для вашей стены.
+              Стеновые панели, рейки и профили для интерьера. Выберите фактуру в каталоге
+              или посмотрите образцы в московском шоуруме.
             </p>
           </motion.div>
 
-          <motion.div variants={fadeUp} style={{ marginTop: '2.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-            <a href="#calculator" className="btn btn-white interactive">
-              Рассчитать стены <ArrowDown size={16} />
+          <motion.div variants={fadeUp} className="hero-commerce-actions">
+            <a href="./catalog/" className="btn btn-primary interactive">
+              Открыть каталог <ArrowRight size={16} aria-hidden="true" />
             </a>
-            <LeadAction intent="consultation" className="btn btn-outline hero-lead-action interactive">
-              Получить консультацию
-            </LeadAction>
+            <a href="#calculator" className="btn btn-white interactive">
+              Рассчитать стены <ArrowDown size={16} aria-hidden="true" />
+            </a>
           </motion.div>
+          <motion.a variants={fadeUp} href="#showroom" className="hero-commerce-contact interactive">
+            Связаться с менеджером
+          </motion.a>
         </motion.div>
       </div>
 
-      <motion.div
-        className="hero-arch-bottom"
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1, delay: 1, ease: easeOutQuint }}
-      >
-        <div className="container bottom-grid">
-          <div className="bottom-stat">
-            <span className="label">Каталог</span>
-            <span className="val">{catalogSummary.productCount} позиций · {catalogSummary.categoryCount} категорий</span>
-          </div>
-          <div className="bottom-stat">
-            <span className="label">Панели</span>
-            <span className="val">{formatRange(catalogSummary.panelThickness)} мм · {formatRange(catalogSummary.panelWeight)} кг</span>
-          </div>
-          <div className="bottom-stat">
-            <span className="label">Материалы</span>
-            <span className="val">Листы, рейки и профили</span>
-          </div>
-          <a href="#/catalog" className="btn-explore interactive">
-            Открыть каталог <ArrowRight size={16} />
-          </a>
+      <div className="hero-arch-bottom">
+        <div className="container hero-commerce-facts">
+          <span>{catalogSummary.productCount} позиций · {catalogSummary.categoryCount} категорий</span>
+          <a href="#showroom" className="interactive">Шоурум в Москве <ArrowRight size={14} aria-hidden="true" /></a>
         </div>
-      </motion.div>
+      </div>
     </section>
   )
 }

@@ -1,0 +1,143 @@
+.hero-commerce .hero-arch-bg img {
+  display: block;
+  object-position: center 42%;
+}
+
+.hero-commerce .hero-arch-veil {
+  background: linear-gradient(100deg, rgba(12, 9, 6, .76), rgba(12, 9, 6, .30) 60%, transparent),
+    linear-gradient(to top, rgba(12, 9, 6, .60), transparent 35%);
+}
+
+.hero-commerce .hero-arch-content { padding-bottom: 2.5rem; }
+.hero-commerce .hero-lead { max-width: 40ch; }
+
+.hero-commerce-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem;
+  margin-top: clamp(1.25rem, 4vw, 2.25rem);
+}
+
+.hero-commerce .hero-commerce-actions .btn { min-height: 48px; }
+.hero-commerce .hero-commerce-actions .btn-white { border-color: rgba(247, 240, 232, .55); }
+
+.hero-commerce-contact,
+.hero-commerce-facts a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  gap: .5rem;
+  color: var(--accent-light);
+}
+
+.hero-commerce-contact {
+  margin-top: .45rem;
+  text-decoration: underline;
+  text-underline-offset: .28em;
+}
+
+.hero-commerce .hero-arch-bottom {
+  background: rgba(13, 10, 8, .86);
+  backdrop-filter: none;
+}
+
+.hero-commerce-facts {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .25rem 1.5rem;
+  min-height: 56px;
+  font-size: .9rem;
+}
+
+.hero-commerce :is(a, button):focus-visible,
+.showroom-commerce :is(a, button, iframe):focus-visible,
+.interiors-commerce button:focus-visible {
+  outline: 2px solid var(--accent-light);
+  outline-offset: 4px;
+}
+
+.interiors-commerce .interiors-grid {
+  max-width: 1120px;
+  gap: clamp(1rem, 2.5vw, 2.25rem);
+}
+
+.interiors-commerce .interior-photo { border: 1px solid var(--line); border-radius: 0; }
+.interiors-commerce .interior-previews .interior-photo img {
+  object-fit: contain;
+  background: #171310;
+}
+
+.showroom-commerce-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(1.5rem, 5vw, 5rem);
+}
+
+.showroom-commerce-visit .lead { max-width: 40ch; }
+.showroom-commerce-address {
+  display: grid;
+  gap: .5rem;
+  margin: 1.4rem 0;
+  color: var(--muted);
+  font-style: normal;
+}
+.showroom-commerce-address strong { color: var(--ink); font-weight: 500; }
+
+.showroom-commerce-manager {
+  padding: clamp(1.25rem, 3vw, 2.6rem);
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+.showroom-commerce-manager h3 { margin-bottom: .65rem; }
+.showroom-commerce-manager p { margin-bottom: 1.25rem; color: var(--muted); line-height: 1.6; }
+.showroom-commerce-manager .btn { min-height: 48px; }
+.showroom-commerce-phone {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  min-height: 44px;
+  margin-top: .5rem;
+  color: var(--accent-light);
+}
+.showroom-commerce-sources {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 1rem;
+  margin-top: .75rem;
+  border-top: 1px solid var(--line);
+}
+.showroom-commerce-sources a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: .2em;
+}
+.showroom-commerce-map {
+  height: clamp(280px, 37vw, 430px);
+  margin-top: clamp(1.25rem, 3.5vw, 3.25rem);
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+.showroom-commerce-map iframe { display: block; width: 100%; height: 100%; border: 0; }
+
+@media (max-width: 768px) {
+  .hero-commerce .hero-arch-content { padding-bottom: 1.6rem; }
+  .hero-commerce-facts { font-size: .75rem; }
+  .interiors-commerce .interior-previews { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .showroom-commerce-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 420px) {
+  .hero-commerce .hero-commerce-actions .btn {
+    padding-inline: .8rem;
+    font-size: .72rem;
+    gap: .4rem;
+  }
+  .hero-commerce-facts a svg { display: none; }
+  .showroom-commerce-visit .btn,
+  .showroom-commerce-manager .btn { padding-inline: 1rem; }
+}
