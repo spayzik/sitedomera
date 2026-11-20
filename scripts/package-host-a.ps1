@@ -5,14 +5,14 @@ $archive = [IO.Path]::GetFullPath($OutputPath)
 if (Test-Path -LiteralPath $archive) { throw 'Release archive already exists' }
 
 Push-Location -LiteralPath (Split-Path -Parent $PSScriptRoot)
+$previousLeadApi = $env:VITE_DEKORAY_LEAD_API
 try {
+    $env:VITE_DEKORAY_LEAD_API = '/api/lead'
+    npm run build
+    if ($LASTEXITCODE) { throw 'Static release build failed' }
     npm run verify:production
     if ($LASTEXITCODE) { throw 'Static release verifier failed' }
     $dist = (Resolve-Path 'dist').Path
-    if (!(Get-ChildItem -LiteralPath (Join-Path $dist 'assets') -Filter '*.js' |
-        Select-String -SimpleMatch '"/api/lead"' -List)) {
-        throw 'Build first with VITE_DEKORAY_LEAD_API=/api/lead'
-    }
     $files = [ordered]@{}
     foreach ($file in (Get-ChildItem -LiteralPath $dist -Recurse -File -Force | Sort-Object FullName)) {
         $relative = [IO.Path]::GetRelativePath($dist, $file.FullName).Replace('\', '/')
@@ -53,4 +53,7 @@ try {
         }
     } finally { $zip.Dispose() }
     'Verified {0} entries. SHA-256 {1}' -f $expected.Count, (Get-FileHash -LiteralPath $archive).Hash.ToLowerInvariant()
-} finally { Pop-Location }
+} finally {
+    $env:VITE_DEKORAY_LEAD_API = $previousLeadApi
+    Pop-Location
+}
