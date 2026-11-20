@@ -1,3 +1,4 @@
+import { SheetUnitPrice } from '../components/SheetUnitPrice'
 import { useEffect, useState } from 'react'
 import { StockAvailability } from '../components/StockAvailability'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
@@ -164,7 +165,10 @@ export function CatalogPage() {
                       <p>{p.sku ? `${p.sku} · ` : ''}{formatDimensions(p)}</p>
                       <StockAvailability productId={p.id} />
                     </div>
-                    <p className="card-arch-price">{p.priceRub.toLocaleString('ru-RU')} ₽/{p.unit}</p>
+                    <div className="card-arch-price-group">
+                      <p className="card-arch-price">{p.priceRub.toLocaleString('ru-RU')} ₽/{p.unit}</p>
+                      <SheetUnitPrice product={p} />
+                    </div>
                   </div>
                 </motion.div>
               ))}

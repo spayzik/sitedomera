@@ -1,3 +1,4 @@
+import { SheetUnitPrice } from './SheetUnitPrice'
 import { StockAvailability } from './StockAvailability'
 import { avitoProfile } from '../lib/avitoProfile'
 import { useCart } from '../context/CartContext'
@@ -72,6 +73,7 @@ export function CartDrawer() {
                     <strong>{i.product.name}</strong>
                     <span>{i.product.sku ? `Артикул: ${i.product.sku}` : formatDimensions(i.product)}</span>
                     <span className="price">{i.product.priceRub.toLocaleString('ru-RU')} ₽/{i.product.unit} · {(i.product.priceRub * i.qty).toLocaleString('ru-RU')} ₽</span>
+                    <SheetUnitPrice product={i.product} />
                     <StockAvailability productId={i.product.id} />
                     <div className="qty-controls">
                       <button onClick={() => setQty(i.product.id, i.qty - 1)} aria-label="Уменьшить">

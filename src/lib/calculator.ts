@@ -7,6 +7,12 @@ export function sheetArea(product: Product | null): number {
   return widthMm * lengthMm / 1_000_000
 }
 
+export function sheetPricePerSquareMeter(product: Product | null): number | null {
+  if (!product || !Number.isFinite(product.priceRub) || product.priceRub <= 0) return null
+  const area = sheetArea(product)
+  return area > 0 ? Math.round(product.priceRub / area) : null
+}
+
 export function calculatePanels(length: string, height: string, openings: string, product: Product | null) {
   const inputs = [length, height, openings]
   const values = inputs.map(value => Number(value.trim().replace(',', '.')))

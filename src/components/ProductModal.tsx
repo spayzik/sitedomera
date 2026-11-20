@@ -1,3 +1,4 @@
+import { SheetUnitPrice } from './SheetUnitPrice'
 import { StockAvailability } from './StockAvailability'
 import { useEffect, useMemo, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -85,6 +86,7 @@ export function ProductModal({
                 <div className="gocek-price-pill">
                   {selected.priceRub.toLocaleString('ru-RU')} ₽/{selected.unit}
                 </div>
+                <SheetUnitPrice product={selected} />
                 <StockAvailability productId={selected.id} details />
               </motion.div>
 

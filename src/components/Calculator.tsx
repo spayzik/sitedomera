@@ -1,3 +1,4 @@
+import { SheetUnitPrice } from './SheetUnitPrice'
 import { StockAvailability } from './StockAvailability'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
@@ -116,7 +117,7 @@ export function Calculator() {
             </div>}
             {res.panel ? <div className="calc-rows">
               <div className="calc-row"><span>Площадь стен</span><strong>{res.area.toLocaleString('ru-RU', { maximumFractionDigits: 2 })} м²</strong></div>
-              <div className="calc-row"><span>Цена материала</span><strong>{res.panel.priceRub.toLocaleString('ru-RU')} ₽/{res.panel.unit}</strong></div>
+              <div className="calc-row"><span>Цена материала</span><strong>{res.panel.priceRub.toLocaleString('ru-RU')} ₽/{res.panel.unit}<SheetUnitPrice product={res.panel} /></strong></div>
               <div className="calc-row total"><span>Стоимость</span><strong>{price.toLocaleString('ru-RU')} ₽</strong></div>
             </div> : <p role="status">Выберите листовой материал для расчёта.</p>}
 

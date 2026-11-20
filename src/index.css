@@ -521,7 +521,9 @@ h4 { font-size: 1.25rem; font-weight: 500; }
 .btn-mini-add:hover { background: var(--accent); color: #000; transform: scale(1.08); }
 .card-arch-info { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
 .card-arch-info > div { min-width: 0; flex: 1; overflow-wrap: anywhere; }
-.card-arch-price { flex-shrink: 0; }
+.card-arch-info > .card-arch-price-group { flex: 0 0 auto; text-align: right; }
+.sheet-unit-price { display: block; color: var(--muted); font-size: 0.76rem; font-weight: 400; margin-top: 0.25rem; white-space: nowrap; }
+.gocek-top-left .sheet-unit-price { color: #e0d8cc; }
 .card-arch-info h3 { font-family: var(--font-display); font-size: 1.2rem; margin-bottom: 0.4rem; }
 .card-arch-info p { margin: 0; color: var(--muted); font-size: 0.8rem; }
 .card-arch-price { font-size: 0.95rem !important; font-weight: 600; color: var(--ink) !important; white-space: nowrap; margin-top: 0.25rem !important; }
