@@ -157,7 +157,8 @@ export function Calculator() {
                 <p>Менеджер уточнит детали проекта. Расчёт попадёт в черновик Telegram только после вашего нажатия; сообщение вы отправите сами.</p>
                 {res.panel && res.valid && res.sheets > 0 && res.sheets <= 9999 && (
                   <LeadAction intent="calculation" className="btn btn-outline btn-full interactive"
-                    context={res.panel.name + ' · ' + res.sheets + ' лист. · ' + price.toLocaleString('ru-RU') + ' ₽'}>
+                    context={[res.panel.name, res.panel.sku && res.panel.sku !== res.panel.name ? 'Артикул: ' + res.panel.sku : '',
+                      res.sheets + ' лист.', price.toLocaleString('ru-RU') + ' ₽'].filter(Boolean).join(' · ')}>
                     Отправить расчёт в заявку
                   </LeadAction>
                 )}

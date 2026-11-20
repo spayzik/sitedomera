@@ -1,0 +1,13 @@
+Options -Indexes
+ErrorDocument 404 /404.html
+
+RewriteEngine On
+
+RewriteCond %{THE_REQUEST} "\s/+((?:[a-z0-9-]+/)*)index\.html(?:[?\s])"
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^((?:[a-z0-9-]+/)*)index\.html$ https://xn--80ahdrdyo.xn--p1ai/$1 [R=301,L]
+
+RewriteCond %{HTTP_HOST} ^www\.xn--80ahdrdyo\.xn--p1ai(?::[0-9]+)?$ [NC]
+RewriteRule ^ https://xn--80ahdrdyo.xn--p1ai%{REQUEST_URI} [R=301,L,NE]
+
+RewriteRule ^api/lead$ api/lead.php [END]

@@ -93,7 +93,7 @@ export function LeadForm({ endpoint, terms, fields, attempt }: Props) {
         : 'Укажите контакты, чтобы менеджер мог ответить на ваш запрос.'}</p>
       <label>Имя <input name="name" autoComplete="name" required minLength={2} maxLength={80} /></label>
       <label>Телефон <input name="phone" type="tel" autoComplete="tel" required minLength={10} maxLength={32} /></label>
-      {cart && <label>Email (необязательно) <input name="email" type="email" autoComplete="email" maxLength={254} /></label>}
+      <label>Email (необязательно) <input name="email" type="email" autoComplete="email" maxLength={254} /></label>
       <label>Комментарий (необязательно) <textarea name="comment" rows={3} maxLength={1000} /></label>
       <div hidden aria-hidden="true"><input name="website" tabIndex={-1} autoComplete="off" /></div>
       <div className="cart-lead-consent">

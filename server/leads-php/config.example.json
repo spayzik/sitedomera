@@ -1,0 +1,13 @@
+{
+  "enabled": false,
+  "crmSafetyVerified": false,
+  "token": "",
+  "organizationId": "",
+  "intakeStateId": "",
+  "consentVersion": "",
+  "consentPath": "/legal/lead-consent.html",
+  "consentSha256": "",
+  "retentionDays": null,
+  "hashKey": "",
+  "catalog": {}
+}
