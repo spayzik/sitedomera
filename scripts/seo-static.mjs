@@ -139,7 +139,7 @@ function productBody(product, prefix) {
         const original = prefix + 'catalog/rooms/interior-' + scene + '.webp'
         const compact = prefix + 'catalog/rooms/interior-' + scene + '-480.webp'
         return `<figure><img src="${original}" srcset="${compact} 480w, ${original} ${scene === 'metal' ? 1448 : 1122}w"
-          sizes="(max-width: 520px) 90vw, 350px" width="${scene === 'metal' ? 1448 : 1122}" height="${scene === 'metal' ? 1086 : 1402}"
+          sizes="(max-width: 44rem) 90vw, 350px" width="${scene === 'metal' ? 1448 : 1122}" height="${scene === 'metal' ? 1086 : 1402}"
           loading="lazy" decoding="async" alt="${sceneCaptions[scene]}"><figcaption>${sceneCaptions[scene]}</figcaption></figure>`
       }).join('')}
       <p>Интерьерные визуализации коллекции. Образец артикула показан отдельно.</p>
