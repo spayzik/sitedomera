@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import { CONTACTS, collections, faq, formatDimensions, productDetails, products } from '../src/data/products.ts'
-import { productDescription } from '../src/lib/productPresentation.ts'
+import { productDescription, productEditorialNote, relatedProducts, suggestedComplements } from '../src/lib/productPresentation.ts'
 import { sheetPricePerSquareMeter } from '../src/lib/calculator.ts'
 import { buildTelegramDraftUrl, formatProductTelegramMessage } from '../src/lib/telegramLink.ts'
 import { canonicalUrl, categoryPath, productPath, seoAssetPrefix, seoPages } from '../src/data/seoRoutes.ts'
@@ -38,7 +38,7 @@ const header = prefix => `<header class="seo-header"><div class="container">
 const footer = (prefix, interactive) => `<footer class="seo-footer"><div class="container">
   <strong>${escape(CONTACTS.brand)}</strong><p>${escape(CONTACTS.address)} · ${escape(CONTACTS.hours)}</p>
   <div class="seo-actions">${contactLinks}${anchor('/dostavka/', 'Доставка и оплата', prefix)}${anchor('/stati/', 'Статьи', prefix)}
-  ${anchor('/#/privacy', 'Политика конфиденциальности', prefix)}${interactive ? '<span data-cookie-settings></span>' : ''}</div>
+  ${anchor('/privacy/', 'Политика конфиденциальности', prefix)}${interactive ? '<span data-cookie-settings></span>' : ''}</div>
 </div></footer>`
 
 function crumbs(page) {
@@ -126,7 +126,8 @@ const commercialActions = {
 }
 
 function productBody(product, prefix) {
-  const similar = products.filter(item => item.categoryId === product.categoryId && item.id !== product.id).slice(0, 3)
+  const similar = relatedProducts(product, products)
+  const complements = suggestedComplements(product, products)
   const calculator = '/kalkulyator/?material=' + encodeURIComponent(product.id)
   const category = collections.find(item => item.id === product.categoryId)
   const telegram = buildTelegramDraftUrl(CONTACTS.telegram, formatProductTelegramMessage(product, category.name))
@@ -149,6 +150,7 @@ function productBody(product, prefix) {
       <h1>${escape(product.name)}</h1>
       ${product.sku && product.sku !== product.name ? `<p class="seo-card-meta">Артикул ${escape(product.sku)}</p>` : ''}
       <p>${escape(productDescription(product))}</p>
+      <p>${escape(productEditorialNote(product))}</p>
       <p class="seo-price">${htmlPrice(product)} ${assessment(product)}</p>${stockLabel(product)}
       <div class="seo-tool-actions" data-storefront-tools="product" data-product-id="${escape(product.id)}" data-asset-base="${prefix}">
         ${anchor(telegram, 'Связаться с менеджером в Telegram', prefix)}
@@ -159,7 +161,8 @@ function productBody(product, prefix) {
       <dl>${productDetails(product).map(([name, value]) =>
         `<div><dt>${escape(name)}</dt><dd>${escape(value)}</dd></div>`).join('')}</dl>
     </div>
-  </div>${similar.length ? `<section><h2>Другие материалы коллекции</h2>${listing(similar, prefix)}</section>` : ''}`
+  </div>${similar.length ? `<section><h2>Похожие материалы</h2>${listing(similar, prefix)}</section>` : ''}
+  ${complements.length ? `<section><h2>Сопутствующие материалы</h2><p>Сравните доступные варианты. Совместимость с выбранным изделием уточнит менеджер.</p>${listing(complements, prefix)}</section>` : ''}`
 }
 
 function body(page, prefix) {

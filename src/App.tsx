@@ -82,7 +82,7 @@ function Footer() {
         <div className="footer-bottom">
           <p>&copy; {new Date().getFullYear()} {CONTACTS.brand}. Все права защищены.</p>
           <div className="footer-legal">
-            <a href="#/privacy">Политика конфиденциальности</a>
+            <a href={import.meta.env.BASE_URL + 'privacy/'}>Политика конфиденциальности</a>
             <CookieSettingsLink />
             <a href="#/offer">Условия приобретения</a>
           </div>

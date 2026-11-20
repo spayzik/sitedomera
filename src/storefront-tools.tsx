@@ -9,6 +9,8 @@ import { InventoryProvider } from './context/InventoryContext'
 import { InventoryContext } from './context/inventoryState'
 import { formatDimensions, products, type Product } from './data/products'
 import { availabilityFor, stockLabel } from './lib/inventory'
+import { sheetArea } from './lib/calculator'
+import { ProductEstimate } from './components/ProductEstimate'
 
 const Calculator = lazy(() => import('./components/Calculator').then(module => ({ default: module.Calculator })))
 const CartDrawer = lazy(() => import('./components/CartDrawer').then(module => ({ default: module.CartDrawer })))
@@ -52,6 +54,7 @@ export function StorefrontTools({ product, assetBase }: { product?: Product; ass
       <ProductAvailability product={product} />
       <button type="button" className="btn btn-primary" onClick={() => add(product)}>Добавить в подборку</button>
       <LeadAction className="btn btn-outline" intent="consultation" context={context}>Связаться с менеджером</LeadAction>
+      {sheetArea(product) > 0 && <ProductEstimate product={product} calculatorBase={assetBase} />}
     </> : <Suspense fallback={null}><Calculator /></Suspense>}
     {count > 0 && <button type="button" className="btn btn-outline"
       onClick={() => setOpen(true)}>Моя подборка · {count}</button>}
@@ -71,7 +74,7 @@ if (root) {
           <InventoryProvider snapshotUrl={assetBase + 'generated/inventory.json'}>
             <LeadProvider>
               <CartProvider><StorefrontTools product={product} assetBase={assetBase} /></CartProvider>
-              <AnalyticsBanner privacyHref={assetBase + '#/privacy'} />
+              <AnalyticsBanner privacyHref={assetBase + 'privacy/'} />
               {cookieSettings && createPortal(<CookieSettingsLink />, cookieSettings)}
             </LeadProvider>
           </InventoryProvider>

@@ -93,6 +93,18 @@ test('editorial product gallery separates the canonical sample from relevant vis
   }
 })
 
+test('the direct privacy document and six articles are indexed and render meaningful HTML without JS', () => {
+  const privacy = seoPages.find(page => page.path === '/privacy/')
+  const stylesheet = 'assets/index-a1b2c3d4.css'
+  const html = renderSeoPage(privacy, stylesheet)
+  assert.match(html, /<h1>Политика конфиденциальности<\/h1>/)
+  assert.match(html, /Яндекс\.Метрика/)
+  assert.match(html, /href="\.\.\/#\/privacy"/)
+  const articles = seoPages.filter(page => page.kind === 'article')
+  assert.equal(articles.length, 6)
+  assert(articles.every(page => page.copy.blocks.length >= 3 && renderSeoPage(page, stylesheet).includes('"@type":"Article"')))
+})
+
 test('price feed uses stable ids and verified product facts without inventing stock or business terms', () => {
   const feed = renderYml(new Date('2026-11-20T12:30:00.000Z'))
   assert.match(feed, /<yml_catalog date="2026-11-20 12:30">/)

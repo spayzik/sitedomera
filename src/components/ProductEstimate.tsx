@@ -2,7 +2,7 @@ import { useId, useState } from 'react'
 import type { Product } from '../data/products'
 import { calculateProjectPanels } from '../lib/calculator'
 
-export function ProductEstimate({ product }: { product: Product }) {
+export function ProductEstimate({ product, calculatorBase = import.meta.env.BASE_URL }: { product: Product; calculatorBase?: string }) {
   const id = useId()
   const [length, setLength] = useState('')
   const [height, setHeight] = useState('')
@@ -23,7 +23,7 @@ export function ProductEstimate({ product }: { product: Product }) {
           ? result.sheets.toLocaleString('ru-RU') + ' лист. с запасом 10% · ' + (result.sheets * product.priceRub).toLocaleString('ru-RU') + ' ₽'
           : 'Введите ширину и высоту стены'}
       </output>
-      <a href={import.meta.env.BASE_URL + 'kalkulyator/?material=' + encodeURIComponent(product.id)}>Учесть проёмы и другие стены</a>
+      <a href={calculatorBase + 'kalkulyator/?material=' + encodeURIComponent(product.id)}>Учесть проёмы и другие стены</a>
     </details>
   )
 }
