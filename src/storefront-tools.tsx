@@ -1,4 +1,4 @@
-import { lazy, Suspense, useContext, useLayoutEffect } from 'react'
+import { lazy, Suspense, useContext, useEffect, useLayoutEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { MotionConfig } from 'framer-motion'
 import { AnalyticsBanner, PrivacyProvider } from './components/AnalyticsConsent'
@@ -39,6 +39,8 @@ function ProductAvailability({ product }: { product: Product }) {
 
 export function StorefrontTools({ product, assetBase }: { product?: Product; assetBase: string }) {
   const { add, count, open, setOpen } = useCart()
+  const [drawerActivated, setDrawerActivated] = useState(false)
+  useEffect(() => { if (open) setDrawerActivated(true) }, [open])
   const context = product && [
     product.name, product.sku && product.sku !== product.name ? 'Артикул: ' + product.sku : '',
     formatDimensions(product),
@@ -52,7 +54,7 @@ export function StorefrontTools({ product, assetBase }: { product?: Product; ass
     </> : <Suspense fallback={null}><Calculator /></Suspense>}
     {count > 0 && <button type="button" className="btn btn-outline"
       onClick={() => setOpen(true)}>Моя подборка · {count}</button>}
-    {open && <Suspense fallback={null}><CartDrawer assetBase={assetBase} /></Suspense>}
+    {(open || drawerActivated) && <Suspense fallback={null}><CartDrawer assetBase={assetBase} /></Suspense>}
   </>
 }
 
@@ -67,7 +69,7 @@ if (root) {
           <InventoryProvider snapshotUrl={assetBase + 'generated/inventory.json'}>
             <LeadProvider>
               <CartProvider><StorefrontTools product={product} assetBase={assetBase} /></CartProvider>
-              <AnalyticsBanner />
+              <AnalyticsBanner privacyHref={assetBase + '#/privacy'} />
             </LeadProvider>
           </InventoryProvider>
         </PrivacyProvider>

@@ -43,7 +43,7 @@ export function PrivacyProvider({ children }: { children: ReactNode }) {
   return <ConsentContext.Provider value={{ consent, choose }}>{children}</ConsentContext.Provider>
 }
 
-export function AnalyticsBanner() {
+export function AnalyticsBanner({ privacyHref = '#/privacy' }: { privacyHref?: string }) {
   const { consent, choose } = useConsent()
   const standalone = isPageRoute(useRoute())
   const eligible = isAnalyticsConfigured() && consent === 'unknown'
@@ -76,7 +76,7 @@ export function AnalyticsBanner() {
       <div className="analytics-banner-copy">
         <h2 className="analytics-banner-title" id="cookie-banner-title"><span><Cookie size={17} aria-hidden="true" /></span> Настройки cookie</h2>
         <p>Сайт сохраняет корзину и настройки. С вашего разрешения мы собираем статистику посещений, чтобы улучшать сайт.</p>
-        <a href="#/privacy">Подробнее о данных</a>
+        <a href={privacyHref}>Подробнее о данных</a>
       </div>
       <ConsentChoices choose={choose} />
     </aside>
