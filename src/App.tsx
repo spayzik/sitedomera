@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState, useCallback, type ReactNode } from 'react'
 import { InventoryProvider } from './context/InventoryContext'
+import { LeadProvider } from './components/LeadProvider'
 import { CartProvider } from './context/CartContext'
 import { Header } from './components/Header'
 import { Hero } from './components/Hero'
@@ -54,15 +55,19 @@ function Footer() {
           <div className="footer-navs">
             <div className="footer-nav-col">
               <strong>Навигация</strong>
-              <a href="#/catalog">Каталог 2026</a>
+              <a href="./catalog/">Каталог 2026</a>
               <a href="#specs">Технологии</a>
               <a href="#interiors">Интерьеры</a>
-              <a href="#installation">Монтаж под ключ</a>
+              <a href="./montazh/">Монтаж</a>
+              <a href="./kalkulyator/">Калькулятор</a>
+              <a href="./stati/">Статьи</a>
             </div>
             <div className="footer-nav-col">
-              <strong>Шоурум</strong>
+              <strong><a href="./showroom/">Шоурум</a></strong>
               <span>{CONTACTS.address}</span>
               <span>{CONTACTS.hours}</span>
+              <a href="./dostavka/">Доставка и оплата</a>
+              <a href="./kontakty/">Контакты</a>
               <a href={`tel:${CONTACTS.phoneRaw}`} className="footer-phone">{CONTACTS.phone}</a>
             </div>
           </div>
@@ -87,7 +92,7 @@ function Footer() {
   )
 }
 
-const firstLazySectionIds = ['installation', 'interiors', 'calculator']
+const firstLazySectionIds = ['installation', 'interiors', 'calculator', 'reviews']
 const contactSectionIds = ['showroom']
 
 function SectionAnchor({ route, ids }: { route: string; ids: string[] }) {
@@ -205,7 +210,9 @@ export default function App() {
     <MotionConfig reducedMotion="user">
       <PrivacyProvider>
         <InventoryProvider>
-          <Wrapper onIntroComplete={finishIntro}>{page}</Wrapper>
+          <LeadProvider>
+            <Wrapper onIntroComplete={finishIntro}>{page}</Wrapper>
+          </LeadProvider>
         </InventoryProvider>
       </PrivacyProvider>
     </MotionConfig>

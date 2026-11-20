@@ -1,3 +1,7 @@
+import { productPath } from '../data/seoPaths'
+import { LeadAction } from './LeadProvider'
+import { ProductEstimate } from './ProductEstimate'
+import { sheetArea } from '../lib/calculator'
 import { SheetUnitPrice } from './SheetUnitPrice'
 import { StockAvailability } from './StockAvailability'
 import { useEffect, useMemo, useRef } from 'react'
@@ -65,7 +69,6 @@ export function ProductModal({
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           >
-            <img src={selected.image} alt={selected.name} className="gocek-bg" />
             <div className="gocek-gradient" />
             <button className="gocek-close-mobile icon-btn" onClick={onClose} aria-label="Закрыть карточку">
               <X size={20} />
@@ -87,7 +90,9 @@ export function ProductModal({
                   {selected.priceRub.toLocaleString('ru-RU')} ₽/{selected.unit}
                 </div>
                 <SheetUnitPrice product={selected} />
+                <img src={selected.image} alt={selected.name} className="gocek-sample" decoding="async" />
                 <StockAvailability productId={selected.id} details />
+                {sheetArea(selected) > 0 && <ProductEstimate key={selected.id} product={selected} />}
               </motion.div>
 
               {/* Top Right: Glassmorphism Specs */}
@@ -123,6 +128,8 @@ export function ProductModal({
                   <span>ДОБАВИТЬ В ПОДБОРКУ</span>
                   <span style={{ fontSize: '1.25rem', lineHeight: 1 }}>+</span>
                 </button>
+                <LeadAction intent="samples" context={selected.name + (selected.sku ? ' · ' + selected.sku : '')} className="gocek-telegram-link">Запросить образец</LeadAction>
+                <a className="gocek-telegram-link" href={import.meta.env.BASE_URL + productPath(selected).slice(1)}>Страница материала</a>
                 {telegramDraftUrl && (
                   <a className="gocek-telegram-link" href={telegramDraftUrl} target="_blank" rel="noreferrer">
                     <span>СПРОСИТЬ В TELEGRAM</span>

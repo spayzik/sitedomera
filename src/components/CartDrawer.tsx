@@ -9,6 +9,8 @@ import { buildTelegramDraftUrl, formatCartTelegramMessage } from '../lib/telegra
 import { useDialog } from '../lib/useDialog'
 import { useRef } from 'react'
 import { CartLeadForm, type LeadAttempt } from './CartLeadForm'
+import { LeadAction } from './LeadProvider'
+import { contactLinks } from '../lib/contactLinks'
 
 export function CartDrawer() {
   const { open, setOpen, items, total, setQty, remove, migrationNotice, dismissMigrationNotice } = useCart()
@@ -57,7 +59,8 @@ export function CartDrawer() {
               {!items.length && (
                 <div className="empty-cart">
                   <p>Корзина пуста</p>
-                  <span>Добавьте материалы из каталога</span>
+                  <span>Добавьте материалы из каталога или попросите помочь с подбором.</span>
+                  <LeadAction intent="selection" className="btn btn-outline interactive">Помочь с подбором</LeadAction>
                 </div>
               )}
               {items.map((i) => (
@@ -105,8 +108,8 @@ export function CartDrawer() {
                     Обсудить подборку в Telegram <ArrowRight size={16} />
                   </a>
                 )}
-                <a className="contact-inline-phone interactive" href={`tel:${CONTACTS.phoneRaw}`}>
-                  Позвонить: {CONTACTS.phone}
+                <a className="contact-inline-phone interactive" href={contactLinks.phone}>
+                  Позвонить: {contactLinks.phoneLabel}
                 </a>
                 {avitoProfile && (<a className="contact-inline-phone interactive" href={avitoProfile} target="_blank" rel="noreferrer">
                   Открыть магазин на Авито

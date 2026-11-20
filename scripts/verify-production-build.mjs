@@ -4,6 +4,8 @@ import { extname, join, relative, resolve, sep } from 'node:path'
 import sharp from 'sharp'
 import { CONTACTS, products, sourceInventory } from '../src/data/products.ts'
 import { SEO } from '../src/data/seo.ts'
+import { canonicalUrl, seoPageFile, seoPages } from '../src/data/seoRoutes.ts'
+import { escape } from './seo-static.mjs'
 import { publicReleaseFiles, optionalPublicReleaseFiles } from '../src/data/publicReleaseFiles.ts'
 import { assertPublicAvitoSnapshot } from './public-avito-snapshot.mjs'
 
@@ -83,9 +85,12 @@ async function verify() {
   assert.equal(namedMeta('twitter:image'), ogImage, 'Social image mismatch')
 
   const jsonLd = one([...html.matchAll(/<script\b[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi)], 'JSON-LD script')
-  const business = JSON.parse(jsonLd[1])
-  assert.equal(business.url, canonical, 'JSON-LD URL mismatch')
+  const graph = JSON.parse(jsonLd[1])['@graph']
+  const business = graph.find(item => item['@type'] === 'LocalBusiness')
+  assert.equal(business?.url, canonical, 'JSON-LD URL mismatch')
   assert.equal(business.image, ogImage, 'JSON-LD image URL mismatch')
+  assert.equal(tags(html, 'h1').length, 1, 'Home must have one server-rendered H1')
+  assert.match(html, new RegExp(products.length + ' позиций · [0-9]+ категорий'))
 
   const robots = await readFile(await requireFile('robots.txt'), 'utf8')
   const sitemap = await readFile(await requireFile('sitemap.xml'), 'utf8')
@@ -93,7 +98,60 @@ async function verify() {
     !/^Disallow:/mi.test(robots), 'robots.txt must allow the document and assets')
   assert(robots.includes(`Sitemap: ${origin}/sitemap.xml`), 'robots.txt sitemap URL mismatch')
   const locations = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1])
-  assert.deepEqual(locations, [canonical], 'Sitemap must list only the served canonical document')
+  assert.deepEqual(locations, seoPages.map(page => canonicalUrl(page.path)), 'Sitemap must list exactly the generated pages')
+  const lastmod = [...sitemap.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)].map(match => match[1])
+  assert.deepEqual(lastmod, seoPages.map(page => page.lastmod), 'Sitemap modification dates must match content revisions')
+  const publicPaths = new Set(seoPages.map(page => page.path))
+  const titles = new Set([title])
+  const descriptions = new Set([namedMeta('description')])
+  for (const page of seoPages.slice(1)) {
+    const file = seoPageFile(page.path)
+    const document = await readFile(await requireFile(file), 'utf8')
+    const pageTitle = one([...document.matchAll(/<title>([^<]*)<\/title>/gi)], file + ' title')[1]
+    assert.equal(pageTitle, escape(page.title), file + ' title mismatch')
+    assert(!titles.has(pageTitle), file + ' duplicate title')
+    titles.add(pageTitle)
+    const pageMeta = tags(document, 'meta')
+    const metaValue = (key, value) => attribute(one(pageMeta.filter(tag => attribute(tag, key) === value), file + ' ' + value), 'content')
+    const description = metaValue('name', 'description')
+    assert.equal(description, escape(page.description), file + ' description mismatch')
+    assert(!descriptions.has(description), file + ' duplicate description')
+    descriptions.add(description)
+    assert.equal(metaValue('name', 'robots'), 'index, follow')
+    assert.equal(metaValue('property', 'og:url'), canonicalUrl(page.path))
+    await requireFile(localPath(metaValue('property', 'og:image'), canonical))
+    const documentLinks = tags(document, 'link')
+    const pageCanonical = one(documentLinks.filter(tag => attribute(tag, 'rel') === 'canonical'), file + ' canonical')
+    assert.equal(attribute(pageCanonical, 'href'), canonicalUrl(page.path))
+    assert.equal(tags(document, 'h1').length, 1, file + ' must have one server-rendered H1')
+    assert.match(document, /<main\b[^>]*>[\s\S]*<\/main>/i)
+    for (const rel of [...documentLinks.filter(tag => ['stylesheet', 'icon'].includes(attribute(tag, 'rel'))),
+      ...tags(document, 'img')]) {
+      const asset = attribute(rel, 'href') ?? attribute(rel, 'src')
+      for (const base of [canonical, previewBase]) {
+        await requireFile(localPath(asset, new URL(page.path.slice(1), base), base))
+      }
+    }
+    for (const tag of tags(document, 'a')) {
+      const href = attribute(tag, 'href')
+      if (!href || !href.startsWith('.')) continue
+      const target = new URL(href, canonicalUrl(page.path))
+      assert(publicPaths.has(target.pathname), file + ' links to missing public page: ' + target.pathname)
+    }
+    if (page.kind === 'product') {
+      const product = page.product
+      const payload = one([...document.matchAll(/<script type="application\/ld\+json">([^<]*)<\/script>/g)], file + ' JSON-LD')[1]
+      const record = JSON.parse(payload)['@graph'].find(item => item['@type'] === 'Product')
+      assert.equal(record?.name, product.name, file + ' schema product mismatch')
+      assert.equal(record.offers.price, product.priceRub)
+      assert.equal(record.offers.priceCurrency, 'RUB')
+      assert(!Object.hasOwn(record.offers, 'availability'), file + ' static availability cannot be assumed')
+    }
+  }
+  const feed = await readFile(await requireFile('yml.xml'), 'utf8')
+  assert.equal([...feed.matchAll(/<offer id="/g)].length, products.length, 'Feed must match the published catalog')
+  assert(!/\bavailable=/.test(feed), 'Feed includes unverified inventory')
+  assert.match(await readFile(await requireFile('404.html'), 'utf8'), /noindex, follow/)
 
   const assetLinks = links.filter((tag) => ['icon', 'preload', 'modulepreload', 'stylesheet'].includes(attribute(tag, 'rel')))
     .map((tag) => attribute(tag, 'href'))
@@ -133,7 +191,9 @@ async function verify() {
   const avito = JSON.parse(await readFile(await requireFile('generated/avito-reviews.json'), 'utf8'))
   assertPublicAvitoSnapshot(avito, { allowFallback: true })
 
-  const required = new Set(['index.html', ...publicReleaseFiles])
+  const required = new Set(['404.html', 'yml.xml', 'seo-pages.css', ...seoPages.map(page => seoPageFile(page.path)), ...publicReleaseFiles])
+  const catalogueHtml = await readFile(await requireFile('catalog/index.html'), 'utf8')
+  if (catalogueHtml.includes('seo-stock.js')) required.add('seo-stock.js')
   for (const path of required) await requireFile(path)
   const internalNames = /(?:^|[/_.-])(?:requirements?|roadmap|handoff|evidence|screenshots?|private|internal|codex|debug|fixtures?|test|spec|backup|manifest)(?:[/_.-]|$)/i
   const blockedText = /__SITE_[A-Z_]+__|AVITO_CLIENT_(?:SECRET|ID)|client_secret|access_token|Authorization:\s*Bearer|api\.telegram\.org\/bot|TELEGRAM_BOT_TOKEN|(?:S?FTP|REG(?:RU)?)[_ -]?(?:PASSWORD|TOKEN)|-----BEGIN [^-]*PRIVATE KEY-----|gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|(?:AKIA|ASIA)[A-Z0-9]{16}|sourceMappingURL|\bdomera\.ru\b|\blocalhost\b|\b127\.0\.0\.1\b|(?:[a-z]:[\\/]Users[\\/]|\/home\/[^/\s]+\/|file:\/\/)/i

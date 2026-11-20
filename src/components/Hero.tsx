@@ -2,6 +2,7 @@ import { motion, useScroll, useTransform, useReducedMotion, useInView } from 'fr
 import { ArrowRight, ArrowDown } from 'lucide-react'
 import { useRef } from 'react'
 import { EditorialReveal } from './EditorialReveal'
+import { LeadAction } from './LeadProvider'
 import { catalogSummary, formatRange } from '../data/products'
 
 const easeOutQuint = [0.22, 1, 0.36, 1] as const
@@ -80,18 +81,18 @@ export function Hero({ ready = true }: { ready?: boolean }) {
 
           <motion.div variants={fadeUp}>
             <p className="hero-lead">
-              Высокотехнологичный бамбуковый композит. Бесшовный монтаж,
-              абсолютная геометрия и премиальные фактуры для современных интерьеров.
+              Стеновые панели, рейки и профили для интерьеров. Посмотрите фактуры
+              в московском шоуруме или рассчитайте материалы для вашей стены.
             </p>
           </motion.div>
 
           <motion.div variants={fadeUp} style={{ marginTop: '2.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-            <a href="#/catalog" className="btn btn-white interactive" style={{ gap: '0.75rem' }}>
-              Смотреть каталог <ArrowDown size={16} />
+            <a href="#calculator" className="btn btn-white interactive">
+              Рассчитать стены <ArrowDown size={16} />
             </a>
-            <a href="#showroom" className="btn btn-outline interactive" style={{ borderColor: 'rgba(255,255,255,0.25)', color: '#fff' }}>
-              Посетить шоурум
-            </a>
+            <LeadAction intent="consultation" className="btn btn-outline hero-lead-action interactive">
+              Получить консультацию
+            </LeadAction>
           </motion.div>
         </motion.div>
       </div>

@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { CONTACTS } from '../src/data/products.ts'
+import { CONTACTS, collections, products } from '../src/data/products.ts'
 import { SEO, metadataForRoute } from '../src/data/seo.ts'
 import { domainToASCII } from 'node:url'
+import { canonicalUrl, categoryPath, productPath, seoAssetPrefix, seoPageFile, seoPages } from '../src/data/seoRoutes.ts'
+import { renderSeoPage, renderSitemap, renderYml, rootContent } from './seo-static.mjs'
 
 test('launch uses the owner-provided brand and IDN hostname', () => {
   assert.equal(CONTACTS.brand, 'ДЕКОРАЙ')
@@ -29,4 +31,57 @@ test('hash page views have distinct client-side metadata', () => {
 test('unknown and section hashes retain the home document metadata', () => {
   assert.equal(metadataForRoute('/something-invalid'), SEO.home)
   assert.equal(metadataForRoute('showroom'), SEO.home)
+})
+
+test('public SEO routes resolve the complete price and product inventory, without duplicate or hash paths', () => {
+  const paths = seoPages.map(page => page.path)
+  assert.equal(new Set(paths).size, paths.length)
+  assert(paths.every(path => /^\/(?:[a-z0-9-]+\/)*$/.test(path)))
+  assert.equal(seoPages.filter(page => page.kind === 'category').length, collections.length)
+  const entries = seoPages.filter(page => page.kind === 'product')
+  assert.equal(entries.length, products.length)
+  assert.deepEqual(entries.map(page => page.product.id), products.map(product => product.id))
+  assert.equal(categoryPath('wood'), '/catalog/derevo/')
+  for (const path of ['/opt/', '/dizayneram/', '/otzyvy/', '/o-kompanii/', '/proekty/']) assert(paths.includes(path))
+  assert(entries.every(page => page.path === productPath(page.product)))
+  assert.equal(seoPageFile('/'), 'index.html')
+  assert.equal(seoAssetPrefix(entries[0].path), '../../../')
+  const sitemap = renderSitemap()
+  assert.deepEqual([...sitemap.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)].map(match => match[1]), seoPages.map(page => page.lastmod))
+  assert(seoPages.every(page => page.lastmod === '2026-11-20'))
+  assert.deepEqual([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1]), paths.map(canonicalUrl))
+})
+
+test('direct pages expose prices, product and breadcrumb schema, canonical navigation and calculator links without JS', () => {
+  const stylesheet = 'assets/index-a1b2c3d4.css'
+  const wood = seoPages.find(page => page.kind === 'category' && page.categoryId === 'wood')
+  const home = rootContent(seoPages[0])
+  assert.match(home, /45 позиций · 9 категорий/)
+  const category = renderSeoPage(wood, stylesheet)
+  assert.match(category, /href="\.\.\/\.\.\/assets\/index-a1b2c3d4\.css"/)
+  assert.match(category, /Ясень серый/)
+  assert.match(category, /7[\u00a0\u202f ]000 ₽\/шт\./)
+  assert.match(category, /1[\u00a0\u202f ]913 ₽\/м²/)
+  assert.match(category, /href="\.\.\/\.\.\/#\/catalog\?category=wood"/)
+  const product = seoPages.find(page => page.kind === 'product' && page.product.sku === 'A9001')
+  const html = renderSeoPage(product, stylesheet)
+  const graph = JSON.parse(html.match(/<script type="application\/ld\+json">([^<]+)<\/script>/)[1])['@graph']
+  const offer = graph.find(item => item['@type'] === 'Product').offers
+  assert.deepEqual(offer, { '@type': 'Offer', url: canonicalUrl(product.path), priceCurrency: 'RUB', price: product.product.priceRub })
+  assert(graph.some(item => item['@type'] === 'BreadcrumbList'))
+  assert.match(html, /href="\.\.\/\.\.\/\.\.\/\?material=[a-z0-9-]+#calculator"/)
+  assert.match(html, /href="\.\.\/\.\.\/\.\.\/#\/catalog\?category=fabric&amp;sku=A9001"/)
+  const profile = seoPages.find(page => page.kind === 'product' && page.product.kind === 'profile')
+  assert(!renderSeoPage(profile, stylesheet).includes('#calculator"'))
+})
+
+test('price feed uses stable ids and verified product facts without inventing stock or business terms', () => {
+  const feed = renderYml(new Date('2026-11-20T12:30:00.000Z'))
+  assert.match(feed, /<yml_catalog date="2026-11-20 12:30">/)
+  const offers = [...feed.matchAll(/<offer id="([a-f0-9]{20})">/g)].map(match => match[1])
+  assert.equal(offers.length, products.length)
+  assert.equal(new Set(offers).size, offers.length)
+  assert(!/\bavailable=|<delivery|<pickup|<oldprice>/.test(feed))
+  assert.match(feed, /<price>7000<\/price><currencyId>RUR<\/currencyId>/)
+  assert.match(feed, /<vendorCode>A9001<\/vendorCode>/)
 })

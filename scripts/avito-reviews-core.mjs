@@ -1,3 +1,5 @@
+import { avitoDisplayName, avitoImageUrl, MAX_REVIEW_PHOTOS } from '../src/lib/avitoReviewDetails.ts'
+
 export const MAX_REVIEWS = 8
 export const REQUEST_LIMIT = 12
 
@@ -20,7 +22,32 @@ function publicText(value) {
     .slice(0, 600)
 }
 
-export function createAvitoSnapshot(info, list, now = new Date()) {
+function publicDetails(raw) {
+  const displayName = avitoDisplayName(raw.sender?.name)
+  const photos = []
+  const images = Array.isArray(raw.images) ? raw.images.filter(image =>
+    isRecord(image) && Number.isSafeInteger(image.number) && Array.isArray(image.sizes),
+  ).sort((a, b) => a.number - b.number) : []
+  for (const image of images) {
+    const variants = image.sizes.flatMap(variant => {
+      if (!isRecord(variant) || typeof variant.size !== 'string') return []
+      const url = avitoImageUrl(variant.url)
+      const dimensions = /^([1-9]\d{0,4})x([1-9]\d{0,4})$/.exec(variant.size)
+      if (!url || !dimensions) return []
+      const width = Number(dimensions[1])
+      return [{ url, width, area: width * Number(dimensions[2]) }]
+    }).sort((a, b) => a.area - b.area)
+    if (variants.length === 0) continue
+    const imageUrl = variants.at(-1).url
+    if (photos.some(photo => photo.imageUrl === imageUrl)) continue
+    const thumbnailUrl = (variants.find(variant => variant.width >= 160) ?? variants.at(-1)).url
+    photos.push({ thumbnailUrl, imageUrl })
+    if (photos.length === MAX_REVIEW_PHOTOS) break
+  }
+  return { ...(displayName && { displayName }), ...(photos.length > 0 && { photos }) }
+}
+
+export function createAvitoSnapshot(info, list, now = new Date(), { includePublicDetails = false } = {}) {
   if (!isRecord(info) || info.isEnabled !== true || !isRecord(info.rating)) {
     throw new Error('Ratings API returned no enabled rating')
   }
@@ -49,7 +76,7 @@ export function createAvitoSnapshot(info, list, now = new Date()) {
     const key = `${createdAt}:${text}`
     if (seen.has(key)) continue
     seen.add(key)
-    reviews.push({ rating: raw.score, text, createdAt })
+    reviews.push({ rating: raw.score, text, createdAt, ...(includePublicDetails && publicDetails(raw)) })
   }
   reviews.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
   if (reviews.length === 0) throw new Error('Ratings API returned no usable reviews')

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Menu, X, ShoppingBag } from 'lucide-react'
 import { useCart } from '../context/CartContext'
-import { CONTACTS } from '../data/products'
+import { contactLinks } from '../lib/contactLinks'
+import { LeadAction } from './LeadProvider'
 import { LogoIcon } from './Logo'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useDialog } from '../lib/useDialog'
@@ -80,8 +81,8 @@ export function Header() {
           </nav>
 
           <div className="header-actions">
-            <a className="header-phone" href={`tel:${CONTACTS.phoneRaw}`}>
-              {CONTACTS.phone}
+            <a className="header-phone" href={contactLinks.phone}>
+              {contactLinks.phoneLabel}
             </a>
             <button
               className="cart-btn"
@@ -137,15 +138,16 @@ export function Header() {
                 </motion.a>
               ))}
               <motion.a
-                href={`tel:${CONTACTS.phoneRaw}`}
+                href={contactLinks.phone}
                 className="mobile-phone"
                 onClick={() => setMobile(false)}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
               >
-                {CONTACTS.phone}
+                {contactLinks.phoneLabel}
               </motion.a>
+              <LeadAction intent="consultation" className="btn btn-outline interactive">Получить консультацию</LeadAction>
             </nav>
           </motion.div>
         )}

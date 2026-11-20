@@ -13,11 +13,36 @@ export function sheetPricePerSquareMeter(product: Product | null): number | null
   return area > 0 ? Math.round(product.priceRub / area) : null
 }
 
+function roundUpSheets(area: number, pieceArea: number) {
+  const sheets = area / pieceArea
+  const nearest = Math.round(sheets)
+  // Arithmetic such as 40.26 / 3.66 can land a few bits above 11.
+  return nearest > 0 && Math.abs(sheets - nearest) <= 4 * Number.EPSILON * Math.max(1, sheets)
+    ? nearest
+    : Math.ceil(sheets)
+}
+
 export function calculatePanels(length: string, height: string, openings: string, product: Product | null) {
   const inputs = [length, height, openings]
   const values = inputs.map(value => Number(value.trim().replace(',', '.')))
   const panelArea = sheetArea(product)
   const valid = panelArea > 0 && inputs.every(value => value.trim() !== '') && values.every(value => Number.isFinite(value) && value >= 0 && value <= 10000)
   const area = valid ? Math.max(values[0] * values[1] - values[2], 0) : 0
-  return { valid, area, sheets: valid ? Math.ceil(area / panelArea) : 0 }
+  return { valid, area, sheets: valid ? roundUpSheets(area, panelArea) : 0 }
+}
+
+export interface WallDimensions {
+  length: string
+  height: string
+}
+
+export function calculateProjectPanels(walls: readonly WallDimensions[], openings: string, reserve: string, product: Product | null) {
+  const inputs = [...walls.flatMap(wall => [wall.length, wall.height]), openings, reserve]
+  const parse = (value: string) => Number(value.trim().replace(',', '.'))
+  const valid = walls.length > 0 && walls.length <= 20 && sheetArea(product) > 0 &&
+    inputs.every(value => /^[0-9]+(?:[.,][0-9]+)?$/.test(value.trim()) && parse(value) <= 10000) &&
+    parse(reserve) <= 100
+  const area = valid ? Math.max(0, walls.reduce((sum, wall) => sum + parse(wall.length) * parse(wall.height), 0) - parse(openings)) : 0
+  const estimatedArea = valid ? area * (1 + parse(reserve) / 100) : 0
+  return { valid, area, estimatedArea, sheets: valid ? roundUpSheets(estimatedArea, sheetArea(product)) : 0 }
 }

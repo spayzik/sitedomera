@@ -1,5 +1,6 @@
 import { LeadError, UUID, plainObject } from './validation.mjs'
 import { syncId } from './ledger.mjs'
+import { leadIntents } from '../../src/lib/leadIntents.ts'
 
 const base = 'https://api.moysklad.ru/api/remap/1.2/entity'
 const requestTimeoutMs = 4000
@@ -78,11 +79,13 @@ export function createMoySklad(config, fetcher = fetch) {
       organization: entityRef('organization', config.organizationId),
       agent: entityRef('counterparty', counterpartyId),
       state: entityRef('state', config.intakeStateId, 'customerorder/metadata/states'),
-      positions,
+      ...(lead.intent ? {} : { positions }),
       syncId: id,
       applicable: false,
       description: [
         'Запрос с сайта ДЕКОРАЙ. Наличие, цены и условия уточняются менеджером.',
+        ...(lead.intent ? ['Тема: ' + leadIntents[lead.intent].subject] : []),
+        ...(lead.context ? ['Контекст клиента: ' + lead.context] : []),
         'Имя для связи: ' + lead.name,
         'Телефон: ' + lead.phone,
         ...(lead.email ? ['Email: ' + lead.email] : []),

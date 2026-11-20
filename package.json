@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && node scripts/prerender.mjs",
     "verify:production": "node scripts/verify-production-build.mjs",
     "verify:production:host": "node scripts/verify-production-host.mjs",
     "test:release": "node --test scripts/release-boundary.test.mjs",

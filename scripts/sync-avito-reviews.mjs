@@ -54,7 +54,9 @@ async function sync() {
   const reviewsUrl = new URL('https://api.avito.ru/ratings/v1/reviews')
   reviewsUrl.search = new URLSearchParams({ offset: '0', limit: String(REQUEST_LIMIT) }).toString()
   const list = await requestJson(reviewsUrl, { headers }, 'Review list')
-  const snapshot = createAvitoSnapshot(info, list)
+  const snapshot = createAvitoSnapshot(info, list, new Date(), {
+    includePublicDetails: publish && process.env.AVITO_REVIEW_DETAILS_APPROVED === '1',
+  })
 
   if (!publish) {
     console.log(`[avito] Ratings API returned ${snapshot.reviews.length} usable reviews. Existing snapshot preserved.`)

@@ -1,7 +1,12 @@
+import { parseAvitoReviewDetails, type AvitoReviewPhoto } from './avitoReviewDetails.ts'
+
 export type AvitoReview = {
   rating: number
   text: string
   createdAt: string
+  displayName?: string
+  avatarUrl?: string
+  photos?: AvitoReviewPhoto[]
 }
 
 export type AvitoSnapshot = {
@@ -33,7 +38,7 @@ export function parseAvitoSnapshot(value: unknown): AvitoSnapshot | null {
         (review.rating as number) < 1 || (review.rating as number) > 5 ||
         typeof review.text !== 'string' || !review.text.trim() || review.text.length > 600 ||
         typeof review.createdAt !== 'string' || !Number.isFinite(Date.parse(review.createdAt))) return null
-    reviews.push({ rating: review.rating as number, text: review.text, createdAt: review.createdAt })
+    reviews.push({ rating: review.rating as number, text: review.text, createdAt: review.createdAt, ...parseAvitoReviewDetails(review) })
   }
   return {
     source: 'avito',
@@ -42,6 +47,32 @@ export function parseAvitoSnapshot(value: unknown): AvitoSnapshot | null {
     reviewsCount: value.reviewsCount as number,
     reviews,
   }
+}
+
+function hasOnlyKeys(record: Record<string, unknown>, keys: readonly string[]) {
+  return Object.keys(record).length === keys.length && keys.every(key => Object.hasOwn(record, key))
+}
+
+export function isPublicAvitoSnapshot(value: unknown, allowEmpty = false): boolean {
+  if (!isRecord(value) || !hasOnlyKeys(value, ['source', 'updatedAt', 'rating', 'reviewsCount', 'reviews']) ||
+      value.source !== 'avito' || !Array.isArray(value.reviews)) return false
+
+  if (value.reviews.length === 0) {
+    return allowEmpty && value.updatedAt === null && value.rating === null && value.reviewsCount === null
+  }
+
+  const snapshot = parseAvitoSnapshot(value)
+  if (!snapshot) return false
+  return value.reviews.every((review, index) => {
+    const parsed = snapshot.reviews[index]
+    if (!isRecord(review) || !hasOnlyKeys(review, Object.keys(parsed)) ||
+        review.displayName !== parsed.displayName || review.avatarUrl !== parsed.avatarUrl) return false
+    if (!parsed.photos) return true
+    return Array.isArray(review.photos) && review.photos.length === parsed.photos.length &&
+      review.photos.every((photo, photoIndex) => isRecord(photo) && hasOnlyKeys(photo, ['thumbnailUrl', 'imageUrl']) &&
+        photo.thumbnailUrl === parsed.photos?.[photoIndex].thumbnailUrl &&
+        photo.imageUrl === parsed.photos?.[photoIndex].imageUrl)
+  })
 }
 
 export async function loadAvitoSnapshot(): Promise<AvitoSnapshot | null> {

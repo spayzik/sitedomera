@@ -1,0 +1,25 @@
+import type { CollectionId, Product } from './catalogModel.ts'
+
+const categorySlug: Record<CollectionId, string> = {
+  wood: 'derevo',
+  fabric: 'tkan',
+  metal: 'metall',
+  bamboo_stone: 'bambuk-pod-kamen',
+  soft: 'soft-tach',
+  flexible_stone: 'gibkiy-kamen',
+  plaster: 'shtukaturka',
+  slats: 'reyki',
+  profiles: 'profili',
+}
+
+const transliteration: Record<string, string> = {
+  а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'yo', ж: 'zh', з: 'z', и: 'i', й: 'y',
+  к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f',
+  х: 'kh', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'shch', ъ: '', ы: 'y', ь: '', э: 'e', ю: 'yu', я: 'ya',
+}
+const slug = (value: string) => [...value.toLowerCase()]
+  .map(character => transliteration[character] ?? character).join('').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+
+export const categoryPath = (id: CollectionId) => '/catalog/' + categorySlug[id] + '/'
+export const productPath = (product: Product) => categoryPath(product.categoryId) +
+  slug(product.name === product.sku || !product.sku ? product.name : product.name + ' ' + product.sku) + '/'

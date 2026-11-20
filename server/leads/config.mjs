@@ -15,14 +15,18 @@ export function loadConfig(env = process.env, storefront = products) {
       return url.origin === input && url.protocol === 'https:'
     } catch { return false }
   })
-  const file = required('DEKORAY_CATALOG_MAP_FILE', isAbsolute)
-  let mapping
-  try { mapping = JSON.parse(readFileSync(file, 'utf8')) }
-  catch { throw new Error('invalid configuration: DEKORAY_CATALOG_MAP_FILE') }
-  if (!plainObject(mapping)) throw new Error('invalid configuration: DEKORAY_CATALOG_MAP_FILE')
+  const enableGeneralLeads = env.DEKORAY_ENABLE_GENERAL_LEADS === '1'
+  const cartEnabled = !enableGeneralLeads || Boolean(env.DEKORAY_CATALOG_MAP_FILE?.trim())
+  let mapping = {}
+  if (cartEnabled) {
+    const file = required('DEKORAY_CATALOG_MAP_FILE', isAbsolute)
+    try { mapping = JSON.parse(readFileSync(file, 'utf8')) }
+    catch { throw new Error('invalid configuration: DEKORAY_CATALOG_MAP_FILE') }
+    if (!plainObject(mapping)) throw new Error('invalid configuration: DEKORAY_CATALOG_MAP_FILE')
+  }
   const catalog = new Map()
   const mapped = new Set()
-  for (const product of storefront) {
+  for (const product of cartEnabled ? storefront : []) {
     const item = mapping[product.id]
     if (!plainObject(item) || !['product', 'variant', 'bundle'].includes(item.type) ||
         typeof item.id !== 'string' || !UUID.test(item.id) || !Number.isSafeInteger(item.priceMinor) ||
@@ -36,6 +40,7 @@ export function loadConfig(env = process.env, storefront = products) {
   return {
     origin,
     catalog,
+    enableGeneralLeads,
     token: required('MOYSKLAD_API_TOKEN', value => /^[!-~]{20,300}$/.test(value)),
     organizationId: required('MOYSKLAD_ORGANIZATION_ID', value => UUID.test(value)),
     intakeStateId: required('MOYSKLAD_INTAKE_STATE_ID', value => UUID.test(value)),

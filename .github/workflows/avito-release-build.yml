@@ -31,6 +31,7 @@ jobs:
           AVITO_CLIENT_SECRET: ${{ secrets.AVITO_CLIENT_SECRET }}
           AVITO_ACCOUNT_ID: ${{ vars.AVITO_ACCOUNT_ID }}
           AVITO_REVIEW_PUBLICATION_APPROVED: ${{ vars.AVITO_REVIEW_PUBLICATION_APPROVED }}
+          AVITO_REVIEW_DETAILS_APPROVED: ${{ vars.AVITO_REVIEW_DETAILS_APPROVED }}
       - run: npm run build
         env:
           VITE_YM_ID: ${{ vars.VITE_YM_ID }}

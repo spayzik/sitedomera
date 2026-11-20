@@ -27,11 +27,8 @@ function siteMetadata(): Plugin {
     name: 'site-metadata',
     configResolved(config) {
       const robots = readFileSync(resolve(config.root, 'public/robots.txt'), 'utf8')
-      const sitemap = readFileSync(resolve(config.root, 'public/sitemap.xml'), 'utf8')
-      const locations = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1])
-      if (!robots.includes(`Sitemap: ${CONTACTS.origin}/sitemap.xml`) ||
-          locations.length !== 1 || locations[0] !== canonicalUrl) {
-        throw new Error('robots.txt and sitemap.xml must name only the served canonical document')
+      if (!robots.includes(`Sitemap: ${CONTACTS.origin}/sitemap.xml`)) {
+        throw new Error('robots.txt must name the production sitemap')
       }
     },
     transformIndexHtml(html) {

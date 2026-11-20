@@ -1,3 +1,5 @@
+import { categoryPath } from '../data/seoPaths'
+import { LeadAction } from '../components/LeadProvider'
 import { SheetUnitPrice } from '../components/SheetUnitPrice'
 import { useEffect, useState } from 'react'
 import { StockAvailability } from '../components/StockAvailability'
@@ -78,6 +80,8 @@ export function CatalogPage() {
             <a href="#calculator" className="btn btn-outline interactive" style={{ borderColor: 'rgba(255,255,255,0.25)', color: '#fff' }}>
               Рассчитать проект
             </a>
+            <a className="btn btn-outline interactive" href={import.meta.env.BASE_URL + (filter === 'all' ? 'catalog/' : categoryPath(filter).slice(1))}>Страница каталога</a>
+            <LeadAction intent="consultation" className="btn btn-outline interactive">Оставить заявку</LeadAction>
           </motion.div>
         </div>
 
@@ -141,8 +145,7 @@ export function CatalogPage() {
                 >
                   <div className="card-arch-img">
                     <TiltCard>
-                      <img src={p.image} alt={p.name} loading="lazy" className="img-main" />
-                      <img src={p.swatch} alt="" loading="lazy" className="img-hover" />
+                      <img src={p.image} alt={p.name} loading="lazy" decoding="async" />
                     </TiltCard>
                     <div className="card-arch-tag">
                       {collections.find(c => c.id === p.categoryId)?.name}

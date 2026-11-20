@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { calculatePanels, sheetArea, sheetPricePerSquareMeter } from '../src/lib/calculator.ts'
+import { calculatePanels, calculateProjectPanels, sheetArea, sheetPricePerSquareMeter } from '../src/lib/calculator.ts'
 import { products } from '../src/data/products.ts'
 const material = products.find(p => p.sku === 'C807601-36')
 
@@ -30,4 +30,22 @@ test('derived area price uses the sheet dimensions and never changes the selling
   assert.equal(sheetPricePerSquareMeter({ ...sheet, unit: 'шт' }), 1913)
   for (const kind of ['slat', 'profile']) assert.equal(sheetPricePerSquareMeter({ ...sheet, kind }), null)
   assert.equal(sheet.priceRub, 7000)
+})
+
+test('multiple walls apply openings before reserve and preserve per-item sheet dimensions', () => {
+  const walls = [{ length: '3', height: '2,5' }, { length: '4', height: '2' }]
+  const result = calculateProjectPanels(walls, '1,5', '10', material)
+  assert.equal(result.area, 14)
+  assert.ok(Math.abs(result.estimatedArea - 15.4) < 0.00001)
+  assert.equal(result.sheets, 5)
+  assert.equal(calculateProjectPanels(walls, '100', '10', material).sheets, 0)
+  assert.equal(calculateProjectPanels(walls, '0', '101', material).valid, false)
+  assert.equal(calculateProjectPanels([{length: '', height: '2'}], '0', '10', material).valid, false)
+})
+
+test('floating-point noise at the exact sheet boundary does not add a whole sheet', () => {
+  assert.equal(calculatePanels('1.52', '3', '0.9', material).sheets, 1)
+  assert.equal(calculateProjectPanels([{ length: '10.8', height: '3.5' }], '1.2', '10', material).sheets, 11)
+  assert.equal(calculateProjectPanels([{ length: '10.80001', height: '3.5' }], '1.2', '10', material).sheets, 12)
+  assert.equal(calculateProjectPanels([{ length: '0.00001', height: '0.00001' }], '0', '10', material).sheets, 1)
 })

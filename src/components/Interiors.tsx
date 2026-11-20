@@ -1,3 +1,4 @@
+import { LogoIcon } from './Logo'
 import { useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { ZoomIn } from 'lucide-react'
@@ -77,6 +78,22 @@ export function Interiors() {
             ))}
           </div>
         </div>
+        <figure className="interior-concept">
+          <div className="interior-concept-heading">
+            <LogoIcon size={30} />
+            <h3>Древесная фактура в двух интерьерах</h3>
+          </div>
+          <div className="interior-concept-media">
+            <div className="interior-concept-sample">
+              <img src="catalog/products/C807601-36.webp" alt="Образец панели «Ясень песочный»" loading="lazy" width="360" height="360" />
+              <small>Фото образца · C807601-36</small>
+            </div>
+            <img src="catalog/rooms/concept-wood.webp" srcSet="catalog/rooms/concept-wood-small.webp 720w, catalog/rooms/concept-wood.webp 1440w"
+              sizes="(max-width: 700px) 88vw, 66vw" alt="Варианты отделки стен в столовой и прихожей"
+              loading="lazy" width="1440" height="960" />
+          </div>
+          <figcaption>AI-визуализация применения. Фактура и цвет в интерьере приведены для примера.</figcaption>
+        </figure>
       </div>
 
       {lightbox != null && (

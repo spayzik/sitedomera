@@ -6,7 +6,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { test } from 'node:test'
 import { createAvitoSnapshot } from './avito-reviews-core.mjs'
-import { featuredAvitoReviews, parseAvitoSnapshot } from '../src/lib/avitoReviews.ts'
+import { featuredAvitoReviews, isPublicAvitoSnapshot, parseAvitoSnapshot } from '../src/lib/avitoReviews.ts'
 
 const fixture = JSON.parse(await readFile(new URL('./fixtures/avito-responses.json', import.meta.url), 'utf8'))
 
@@ -154,4 +154,74 @@ test('preflight and API failures preserve an existing snapshot', async () => {
     await rmdir(join(cwd, 'public'))
     await rmdir(cwd)
   }
+})
+test('approved review details carry only public display names and safe attachment variants', () => {
+  const small = 'https://10.img.avito.st/reviews/small.webp'
+  const large = 'https://10.img.avito.st/reviews/large.webp'
+  const review = {
+    ...fixture.list.reviews[0],
+    sender: { name: 'Ирина Иванова', id: 912345, phone: '+7 999 123-45-67' },
+    images: [
+      { number: 2, sizes: [{ size: '900x600', url: large }, { size: '200x130', url: small }] },
+      { number: 1, sizes: [{ size: '500x500', url: 'https://img.avito.st.example.com/a.webp' }] },
+      { number: 3, sizes: [{ size: '500x500', url: 'https://img.avito.st/a.webp?token=private' }] },
+    ],
+  }
+  const snapshot = createAvitoSnapshot(fixture.info, { ...fixture.list, reviews: [review] }, now, { includePublicDetails: true })
+  assert.equal(snapshot.reviews[0].displayName, 'Ирина И.')
+  assert.deepEqual(snapshot.reviews[0].photos, [{ thumbnailUrl: small, imageUrl: large }])
+  assert.deepEqual(parseAvitoSnapshot(snapshot), snapshot)
+  assert.equal(isPublicAvitoSnapshot(snapshot), true)
+  assert.doesNotMatch(JSON.stringify(snapshot), /Иванова|912345|example\.com|token=private|avatarUrl/)
+})
+
+test('publication gate rejects unprojected snapshot, review and attachment fields', () => {
+  const snapshot = createAvitoSnapshot(fixture.info, fixture.list, now)
+  const review = {
+    ...snapshot.reviews[0],
+    displayName: 'Ирина И.',
+    photos: [{ thumbnailUrl: 'https://img.avito.st/small.webp', imageUrl: 'https://img.avito.st/large.webp' }],
+  }
+  const publicSnapshot = { ...snapshot, reviews: [review] }
+
+  assert.equal(isPublicAvitoSnapshot(snapshot), true)
+  assert.equal(isPublicAvitoSnapshot(publicSnapshot), true)
+  assert.equal(isPublicAvitoSnapshot({ ...snapshot, accessToken: 'private' }), false)
+  assert.equal(isPublicAvitoSnapshot({ ...snapshot, reviews: [{ ...review, displayName: 'Ирина Иванова' }] }), false)
+  assert.equal(isPublicAvitoSnapshot({ ...snapshot, reviews: [{ ...review, sender: { name: 'private' } }] }), false)
+  assert.equal(isPublicAvitoSnapshot({
+    ...snapshot,
+    reviews: [{ ...review, photos: [{ ...review.photos[0], token: 'private' }] }],
+  }), false)
+  assert.equal(isPublicAvitoSnapshot({
+    ...snapshot,
+    reviews: [{ ...review, photos: [{ ...review.photos[0], imageUrl: 'https://img.avito.st/large.webp?token=private' }] }],
+  }), false)
+})
+
+test('an empty Avito fallback is accepted only when the release gate permits it', () => {
+  const fallback = { source: 'avito', updatedAt: null, rating: null, reviewsCount: null, reviews: [] }
+  assert.equal(isPublicAvitoSnapshot(fallback), false)
+  assert.equal(isPublicAvitoSnapshot(fallback, true), true)
+  assert.equal(isPublicAvitoSnapshot({ ...fallback, reviewsCount: 0 }, true), false)
+  assert.equal(isPublicAvitoSnapshot({ ...fallback, source: 'manual' }, true), false)
+})
+
+test('malformed optional media and unsafe names never hide a valid review', () => {
+  const snapshot = createAvitoSnapshot(fixture.info, fixture.list, now)
+  Object.assign(snapshot.reviews[0], {
+    displayName: 'user@example.com',
+    avatarUrl: 'https://img.avito.st@evil.example/avatar.png',
+    photos: [
+      { thumbnailUrl: 'javascript:alert(1)', imageUrl: 'https://img.avito.st/review.png' },
+      { thumbnailUrl: 'https://img.avito.st/a.png', imageUrl: 'https://img.avito.st/b.png' },
+    ],
+  })
+  const parsed = parseAvitoSnapshot(snapshot)
+  assert.equal(parsed.reviews.length, 1)
+  assert.deepEqual(parsed.reviews[0].photos, [{ thumbnailUrl: 'https://img.avito.st/a.png', imageUrl: 'https://img.avito.st/b.png' }])
+  assert.equal(parsed.reviews[0].displayName, undefined)
+  assert.equal(parsed.reviews[0].avatarUrl, undefined)
+  snapshot.reviews[0].avatarUrl = 'https://img.avito.st/avatar.png'
+  assert.equal(parseAvitoSnapshot(snapshot).reviews[0].avatarUrl, 'https://img.avito.st/avatar.png')
 })

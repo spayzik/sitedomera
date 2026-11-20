@@ -30,12 +30,12 @@ const lead = {
   items: [{ id: 'panel-blue', qty: 3 }], consent: { accepted: true, version: config.consentVersion },
 }
 
-async function startTest(t, provider) {
+async function startTest(t, provider, options = config) {
   const directory = await mkdtemp(join(tmpdir(), 'dekoray-lead-test-'))
   const ledgerPath = join(directory, 'ledger.sqlite')
   const ledger = createLedger(ledgerPath, config.hashKey, 90)
   const logs = []
-  const server = createLeadServer({ config, ledger, moysklad: createMoySklad(config, provider), log: code => logs.push(code) })
+  const server = createLeadServer({ config: options, ledger, moysklad: createMoySklad(options, provider), log: code => logs.push(code) })
   server.listen(0, '127.0.0.1')
   await once(server, 'listening')
   t.after(async () => {
@@ -222,4 +222,42 @@ test('a five-sheet lead leaves the physical stock at 18; only a later provider c
   assert.equal(await readQuantity(), 18)
   physical = 13
   assert.equal(await readQuantity(), 13)
+})
+
+test('standalone callbacks accept an acknowledged contact request without reserving or mapping stock', async t => {
+  const options = { ...config, catalog: new Map(), enableGeneralLeads: true }
+  const calls = []
+  const app = await startTest(t, async (url, request) => {
+    if (request.method === 'GET') return Response.json({ rows: [{ id: customerId, meta: { type: 'counterparty' } }] })
+    assert.ok(url.endsWith('/customerorder'))
+    const draft = JSON.parse(request.body)
+    assert.equal(draft.applicable, false)
+    for (const forbidden of ['positions', 'reserve', 'payments', 'demands']) assert.equal(forbidden in draft, false)
+    calls.push(draft)
+    return Response.json({ id: orderId, meta: { type: 'customerorder' }, syncId: draft.syncId, applicable: false }, { status: 201 })
+  }, options)
+  const { items, ...emptyCart } = lead
+  const inquiry = { ...emptyCart, intent: 'samples', context: 'Панель / образец' }
+  const gate = await fetch(app.url, { headers: { Origin: origin } })
+  const ready = await gate.json()
+  assert.deepEqual(ready, {
+    status: 'ready', consentPath: config.consentPath, consentVersion: config.consentVersion,
+    cart: false, intents: ['consultation', 'selection', 'calculation', 'samples'],
+  })
+  assert.equal((await app.post({ ...inquiry, intent: 'invalid' })).status, 422)
+  assert.equal((await app.post({ ...inquiry, items })).status, 422)
+  assert.equal((await app.post({ ...inquiry, consent: { accepted: false, version: config.consentVersion } })).status, 422)
+  const submitted = await app.post(inquiry)
+  assert.equal(submitted.status, 201)
+  assert.deepEqual(await submitted.json(), { status: 'accepted', requestId: orderId })
+  assert.equal((await app.post(inquiry)).status, 200)
+  assert.equal(calls.length, 1)
+  assert.match(calls[0].description, /Запрос образцов/)
+  assert.match(calls[0].description, /Панель \/ образец/)
+})
+
+test('standalone callbacks stay disabled until explicitly configured', async t => {
+  const app = await startTest(t, () => assert.fail('disabled request must not reach provider'))
+  const { items: _items, ...emptyCart } = lead
+  assert.equal((await app.post({ ...emptyCart, intent: 'consultation' })).status, 422)
 })

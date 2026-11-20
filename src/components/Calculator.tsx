@@ -1,3 +1,5 @@
+import { contactLinks } from '../lib/contactLinks'
+import { LeadAction } from './LeadProvider'
 import { SheetUnitPrice } from './SheetUnitPrice'
 import { StockAvailability } from './StockAvailability'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -7,20 +9,23 @@ import { useCart } from '../context/CartContext'
 import { Counter } from './Counter'
 import { ArrowRight, ArrowUpRight } from 'lucide-react'
 import { buildTelegramDraftUrl, formatCalculatorTelegramMessage } from '../lib/telegramLink'
-import { calculatePanels, sheetArea } from '../lib/calculator'
+import { calculateProjectPanels, sheetArea, type WallDimensions } from '../lib/calculator'
 import { trackAnalyticsGoal } from '../lib/analytics'
 
 export function Calculator() {
   const { add } = useCart()
-  const [materialId, setMaterialId] = useState('')
+  const [materialId, setMaterialId] = useState(() => new URLSearchParams(window.location.search).get('material') ?? '')
   const selectedPanel = sheetProducts.find(p => p.id === materialId) ?? null
-  const [length, setLength] = useState('10')
-  const [height, setHeight] = useState('2.5')
+  const [walls, setWalls] = useState<Array<WallDimensions & { id: number }>>([{ id: 0, length: '10', height: '2.5' }])
+  const nextWall = useRef(1)
   const [openings, setOpenings] = useState('0')
+  const [reserve, setReserve] = useState('10')
+  const setDimension = (id: number, field: keyof WallDimensions, value: string) =>
+    setWalls(previous => previous.map(wall => wall.id === id ? { ...wall, [field]: value } : wall))
 
-  const res = useMemo(() => {
-    return { ...calculatePanels(length, height, openings, selectedPanel), panel: selectedPanel }
-  }, [length, height, openings, selectedPanel])
+  const res = useMemo(() => ({
+    ...calculateProjectPanels(walls, openings, reserve, selectedPanel), panel: selectedPanel,
+  }), [walls, openings, reserve, selectedPanel])
 
   const price = res.panel ? res.sheets * res.panel.priceRub : 0
   const completed = Boolean(res.panel && res.valid && res.sheets > 0)
@@ -30,10 +35,12 @@ export function Calculator() {
     reportedCompletion.current = true
     trackAnalyticsGoal('calculator_complete')
   }, [completed])
-  const telegramDraftUrl = res.panel && res.valid && res.sheets > 0
-    ? buildTelegramDraftUrl(CONTACTS.telegram, formatCalculatorTelegramMessage({
-      area: res.area, sheets: res.sheets, panel: res.panel, total: price,
-    }))
+  const draft = res.panel && res.valid && res.sheets > 0
+    ? formatCalculatorTelegramMessage({ area: res.area, sheets: res.sheets, panel: res.panel, total: price })
+    : null
+  const telegramDraftUrl = draft ? buildTelegramDraftUrl(CONTACTS.telegram, draft) : null
+  const whatsappDraftUrl = draft && contactLinks.whatsapp
+    ? contactLinks.whatsapp + '?text=' + encodeURIComponent(draft)
     : null
 
   const input = (
@@ -88,11 +95,22 @@ export function Calculator() {
                 </select>
                 {res.panel && <span>{formatDimensions(res.panel)}</span>}
               </div>
-              {input(length, setLength, 'Общая длина стен', 'м')}
-              {input(height, setHeight, 'Высота стен', 'м')}
-              {input(openings, setOpenings, 'Окна и двери (вычитаем)', 'м²')}
+              {walls.map((wall, index) => (
+                <fieldset key={wall.id} className="calc-wall">
+                  <legend>Стена {index + 1}</legend>
+                  {input(wall.length, value => setDimension(wall.id, 'length', value), 'Ширина стены ' + (index + 1), 'м')}
+                  {input(wall.height, value => setDimension(wall.id, 'height', value), 'Высота стены ' + (index + 1), 'м')}
+                  {walls.length > 1 && <button type="button" className="contact-inline-phone" onClick={() => setWalls(previous => previous.filter(value => value.id !== wall.id))}>Убрать стену {index + 1}</button>}
+                </fieldset>
+              ))}
+              <button type="button" className="btn btn-outline" disabled={walls.length >= 20} onClick={() => {
+                const id = nextWall.current++
+                setWalls(previous => [...previous, { id, length: '', height: '' }])
+              }}>Добавить стену</button>
+              {input(openings, setOpenings, 'Общая площадь проёмов', 'м²')}
+              {input(reserve, setReserve, 'Запас на подрезку', '%')}
             </div>
-            {res.panel && !res.valid && <p role="status">Введите числа от 0 до 10 000; дробную часть можно отделять точкой или запятой.</p>}
+            {res.panel && !res.valid && <p role="status">Введите размеры и площадь проёмов до 10 000, а запас — от 0 до 100%. Дробную часть можно отделять точкой или запятой.</p>}
 
             <div className="calc-note">
               <span className="calc-note-icon">i</span>
@@ -117,6 +135,7 @@ export function Calculator() {
             </div>}
             {res.panel ? <div className="calc-rows">
               <div className="calc-row"><span>Площадь стен</span><strong>{res.area.toLocaleString('ru-RU', { maximumFractionDigits: 2 })} м²</strong></div>
+              <div className="calc-row"><span>Площадь с запасом</span><strong>{res.estimatedArea.toLocaleString('ru-RU', { maximumFractionDigits: 2 })} м²</strong></div>
               <div className="calc-row"><span>Цена материала</span><strong>{res.panel.priceRub.toLocaleString('ru-RU')} ₽/{res.panel.unit}<SheetUnitPrice product={res.panel} /></strong></div>
               <div className="calc-row total"><span>Стоимость</span><strong>{price.toLocaleString('ru-RU')} ₽</strong></div>
             </div> : <p role="status">Выберите листовой материал для расчёта.</p>}
@@ -136,6 +155,15 @@ export function Calculator() {
               <div className="contact-inline">
                 <p className="eyebrow" style={{ margin: 0 }}>Точный расчёт с профилями</p>
                 <p>Менеджер уточнит детали проекта. Расчёт попадёт в черновик Telegram только после вашего нажатия; сообщение вы отправите сами.</p>
+                {res.panel && res.valid && res.sheets > 0 && res.sheets <= 9999 && (
+                  <LeadAction intent="calculation" className="btn btn-outline btn-full interactive"
+                    context={res.panel.name + ' · ' + res.sheets + ' лист. · ' + price.toLocaleString('ru-RU') + ' ₽'}>
+                    Отправить расчёт в заявку
+                  </LeadAction>
+                )}
+                {whatsappDraftUrl && <a className="btn btn-outline btn-full interactive" href={whatsappDraftUrl} target="_blank" rel="noreferrer">
+                  Отправить расчёт в WhatsApp
+                </a>}
                 {telegramDraftUrl && (
                   <a className="btn btn-white btn-full interactive" href={telegramDraftUrl} target="_blank" rel="noreferrer">
                     Уточнить расчёт в Telegram <ArrowUpRight size={16} />

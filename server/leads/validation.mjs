@@ -1,7 +1,10 @@
+import { isLeadIntent, leadContextLimit } from '../../src/lib/leadIntents.ts'
+
 export const UUID = /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i
 export const VERSION = /^[a-z0-9][a-z0-9._-]{0,63}$/i
 export const DOCUMENT_PATH = /^\/(?:[a-z0-9_-]+\/)*[a-z0-9_-]+\.html$/i
 export const MAX_BODY_BYTES = 16 * 1024
+const unsupportedControls = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/u
 
 export class LeadError extends Error {
   constructor(status, code) {
@@ -28,9 +31,16 @@ export function normalizePhone(value) {
 }
 
 export function validateLead(raw, config) {
-  if (!hasOnlyFields(raw, ['name', 'phone', 'email', 'comment', 'items', 'consent', 'website']) ||
+  const common = ['name', 'phone', 'email', 'comment', 'consent', 'website']
+  const isInquiry = plainObject(raw) && Object.hasOwn(raw, 'intent')
+  if (!hasOnlyFields(raw, [...common, ...(isInquiry ? ['intent', 'context'] : ['items'])]) ||
       raw.website !== '' || typeof raw.name !== 'string' || typeof raw.comment !== 'string' ||
-      typeof raw.email !== 'string' || !Array.isArray(raw.items) || raw.items.length < 1 || raw.items.length > 45) {
+      typeof raw.email !== 'string') {
+    throw new LeadError(422, 'invalid_request')
+  }
+  if (isInquiry ? config.enableGeneralLeads !== true || !isLeadIntent(raw.intent) ||
+      (raw.context !== undefined && typeof raw.context !== 'string') :
+      !Array.isArray(raw.items) || raw.items.length < 1 || raw.items.length > 45) {
     throw new LeadError(422, 'invalid_request')
   }
   if (!hasOnlyFields(raw.consent, ['accepted', 'version']) || raw.consent.accepted !== true ||
@@ -42,8 +52,17 @@ export function validateLead(raw, config) {
   const comment = raw.comment.trim().normalize('NFC')
   if (name.length < 2 || name.length > 80 || !/^[\p{L}\p{M} .’'-]+$/u.test(name) || !/\p{L}.*\p{L}/u.test(name) || !phone ||
       email.length > 254 || (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) ||
-      comment.length > 1000 || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/u.test(comment)) {
+      comment.length > 1000 || unsupportedControls.test(comment)) {
     throw new LeadError(422, 'invalid_contact')
+  }
+
+  const details = { name, phone, email, comment, version: config.consentVersion }
+  if (isInquiry) {
+    const context = (raw.context ?? '').trim().normalize('NFC')
+    if (context.length > leadContextLimit || unsupportedControls.test(context)) {
+      throw new LeadError(422, 'invalid_context')
+    }
+    return { ...details, items: [], intent: raw.intent, context }
   }
 
   const seen = new Set()

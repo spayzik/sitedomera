@@ -2,6 +2,7 @@ import { createServer } from 'node:http'
 import { isIP } from 'node:net'
 import { MAX_BODY_BYTES, UUID, LeadError, validateLead } from './validation.mjs'
 import { digest } from './ledger.mjs'
+import { leadIntents } from '../../src/lib/leadIntents.ts'
 
 const apiPath = '/api/lead'
 
@@ -67,7 +68,10 @@ export function createLeadServer({ config, ledger, moysklad, log = () => {} }) {
         return origin === config.origin ? reply(204) : reply(403, { error: 'origin_denied' })
       }
       if (request.method === 'GET') {
-        return reply(200, { status: 'ready', consentPath: config.consentPath, consentVersion: config.consentVersion })
+        return reply(200, {
+          status: 'ready', consentPath: config.consentPath, consentVersion: config.consentVersion,
+          ...(config.enableGeneralLeads ? { cart: config.catalog.size > 0, intents: Object.keys(leadIntents) } : {}),
+        })
       }
       if (request.method !== 'POST') return reply(405, { error: 'method_not_allowed' })
       if (origin !== config.origin) return reply(403, { error: 'origin_denied' })

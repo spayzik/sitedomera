@@ -68,8 +68,7 @@ export function Catalog() {
                 >
                   <div className="card-arch-img">
                     <TiltCard>
-                      <img src={p.image} alt={p.name} loading="lazy" className="img-main" />
-                      <img src={p.swatch} alt="" loading="lazy" className="img-hover" />
+                      <img src={p.image} alt={p.name} loading="lazy" decoding="async" />
                     </TiltCard>
                     <div className="card-arch-tag">
                       {collections.find(c => c.id === p.categoryId)?.name}

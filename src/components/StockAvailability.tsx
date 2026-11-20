@@ -12,8 +12,8 @@ function formatUnits(quantity: number, unit: 'шт' | 'лист') {
 
 export function StockAvailability({ productId, details = false }: { productId: string; details?: boolean }) {
   const stock = useStockAvailability(productId)
-  const label = stock.status === 'in_stock' ? 'В наличии на складе в Москве — ' + formatUnits(stock.quantity, stock.unit)
-    : stock.status === 'out_of_stock' ? 'Нет на складе' : 'Наличие уточняется'
+  const label = stock.status === 'in_stock' ? 'В наличии на складе в Москве · ' + formatUnits(stock.quantity, stock.unit)
+    : stock.status === 'out_of_stock' ? 'Нет в наличии' : 'Наличие уточняется'
   return (
     <div className={'stock-availability stock-' + stock.status} data-stock={stock.status}>
       <span className="stock-status"><span className="stock-dot" aria-hidden="true" />{label}</span>

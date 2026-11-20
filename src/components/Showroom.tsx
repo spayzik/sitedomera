@@ -3,9 +3,11 @@ import { CONTACTS } from '../data/products'
 import { useCart } from '../context/CartContext'
 import { motion } from 'framer-motion'
 import { ArrowUpRight, Phone } from 'lucide-react'
+import { LeadAction } from './LeadProvider'
 
-const mapSrc = `https://yandex.ru/map-widget/v1/?text=${encodeURIComponent(CONTACTS.address)}&z=16`
-const mapDir = `https://yandex.ru/maps/?text=${encodeURIComponent(CONTACTS.address)}`
+const mapOrganizationId = '55177309503'
+const mapSrc = `https://yandex.ru/map-widget/v1/?ol=biz&oid=${mapOrganizationId}`
+const mapOrganizationUrl = `https://yandex.ru/maps/org/${mapOrganizationId}/`
 
 export function Showroom() {
   const { items, total } = useCart()
@@ -44,7 +46,7 @@ export function Showroom() {
                 <span>Пишите — отвечаем в течение дня</span>
               </a>
               <a className="info-item" href={CONTACTS.telegramChannel} target="_blank" rel="noreferrer" style={{ display: 'block', textDecoration: 'none' }}>
-                <strong style={{ fontSize: '1.5rem', fontFamily: 'var(--font-display)', marginBottom: '0.5rem' }}>Телеграм-канал: @domerarf</strong>
+                <strong style={{ fontSize: '1.5rem', fontFamily: 'var(--font-display)', marginBottom: '0.5rem' }}>Канал ДЕКОРАЙ в Telegram</strong>
                 <span>Новинки коллекций и фото в интерьерах</span>
               </a>
               {[
@@ -71,7 +73,7 @@ export function Showroom() {
             <p className="eyebrow">На связи</p>
             <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.75rem', marginBottom: '1rem' }}>Обсудим ваш проект</h3>
             <p className="contact-panel-copy">
-              Расскажите менеджеру о задаче напрямую в Telegram — поможем выбрать фактуру,
+              Расскажите менеджеру о задаче — поможем выбрать фактуру,
               уточнить наличие и рассчитать материалы.
             </p>
 
@@ -82,8 +84,11 @@ export function Showroom() {
             )}
 
             <div className="contact-panel-actions">
-              <a className="btn btn-primary btn-full interactive" href={CONTACTS.telegram} target="_blank" rel="noreferrer">
-                Написать в Telegram <ArrowUpRight size={16} />
+              <LeadAction intent="consultation" className="btn btn-primary btn-full interactive">
+                Получить консультацию
+              </LeadAction>
+              <a className="btn btn-white btn-full interactive" href={CONTACTS.telegram} target="_blank" rel="noreferrer">
+                Написать в Telegram <ArrowUpRight size={16} aria-hidden="true" />
               </a>
               {avitoProfile && (<a className="btn btn-white btn-full interactive" href={avitoProfile} target="_blank" rel="noreferrer">
                 Открыть магазин на Авито <ArrowUpRight size={16} />
@@ -118,7 +123,8 @@ export function Showroom() {
             <h3>{CONTACTS.address}</h3>
             <p>Склад и шоурум — {CONTACTS.hours.toLowerCase()}.</p>
             <div className="map-actions">
-              <a className="btn btn-white interactive" href={mapDir} target="_blank" rel="noreferrer">Построить маршрут</a>
+              <a className="btn btn-white interactive" href={mapOrganizationUrl} target="_blank" rel="noreferrer">Открыть в Яндекс Картах</a>
+              <a className="btn btn-outline interactive" href="https://yandex.ru/maps/?mode=routes&amp;rtext=~&amp;rtt=auto&amp;ol=biz&amp;oid=55177309503" target="_blank" rel="noreferrer">Построить маршрут</a>
             </div>
           </div>
         </motion.div>

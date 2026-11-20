@@ -1,0 +1,49 @@
+.seo-static { color: var(--ink); background: var(--bg); }
+.seo-header, .seo-footer { border-block-end: 1px solid var(--line); }
+.seo-header .container { display: flex; flex-wrap: wrap; gap: 1rem 2rem; align-items: center; padding-block: 1rem; }
+.seo-header .container > a, .seo-footer strong { font-family: var(--font-display); font-size: 1.8rem; letter-spacing: 0.075em; }
+.seo-header nav, .seo-actions, .seo-crumbs { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; align-items: center; }
+.seo-static a { color: var(--accent-light); }
+.seo-static a:hover { text-decoration: underline; }
+.seo-static a:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.seo-main { padding-block: clamp(2rem, 6vw, 6rem); }
+.seo-main h1 { max-width: 24ch; font-size: clamp(2.25rem, 6vw, 5rem); line-height: 1.1; overflow-wrap: anywhere; }
+.seo-main h2 { font-size: clamp(1.6rem, 4vw, 2.6rem); line-height: 1.15; }
+.seo-main p { max-width: 72ch; line-height: 1.65; }
+.seo-main section { margin-block-start: clamp(2rem, 5vw, 4.5rem); }
+.seo-crumbs { color: var(--muted); margin-block-end: 1rem; font-size: .9rem; }
+.seo-crumbs > * + *::before { content: '/'; color: var(--muted); margin-inline-end: .65rem; }
+.seo-home-hero { min-height: 22rem; display: grid; align-items: end; position: relative; isolation: isolate; }
+.seo-home-hero img { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; }
+.seo-home-hero::before { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, rgba(7, 7, 7, .92), rgba(7, 7, 7, .38)); }
+.seo-home-hero > div { padding: clamp(1.25rem, 5vw, 4rem); }
+.seo-actions a { display: inline-flex; align-items: center; min-height: 44px; text-decoration: underline; text-underline-offset: .2em; }
+.seo-link-grid, .seo-cards { list-style: none; margin: 1.25rem 0 0; padding: 0; display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); }
+.seo-link-grid li { display: flex; align-items: center; justify-content: space-between; gap: 1rem; border: 1px solid var(--line); padding: .65rem 1rem; }
+.seo-link-grid a { display: flex; align-items: center; min-height: 44px; }
+.seo-link-grid span, .seo-area-price { color: var(--muted); }
+.seo-cards { grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); }
+.seo-product-card { border: 1px solid var(--line); padding: 1rem; min-width: 0; }
+.seo-product-card a { display: grid; gap: .75rem; overflow-wrap: anywhere; }
+.seo-product-card img, .seo-sample img { display: block; width: 100%; height: 100%; object-fit: scale-down; background: var(--surface); }
+.seo-product-card img { height: auto; aspect-ratio: 3 / 4; }
+.seo-price { font-size: 1.17rem; color: var(--accent-light); }
+.seo-area-price { display: inline-block; font-size: .9rem; margin-inline-start: .35rem; }
+.seo-product-detail { display: grid; gap: clamp(1rem, 5vw, 4rem); grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); margin-block-start: 1rem; }
+.seo-sample { aspect-ratio: 4 / 3; min-width: 0; }
+.seo-product-detail dl div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .4rem 1rem; padding: .75rem 0; border-block-end: 1px solid var(--line); }
+.seo-product-detail dd { margin: 0; }
+.seo-copy figure { margin: 1rem 0; width: min(48rem, 100%); }
+.seo-copy figure img { width: 100%; height: auto; }
+.seo-main details { padding-block: .65rem; border-block-end: 1px solid var(--line); }
+.seo-main summary { cursor: pointer; }
+.seo-footer { border-block-start: 1px solid var(--line); padding-block: 2rem; }
+@media (max-width: 44rem) {
+  .seo-product-detail { grid-template-columns: minmax(0, 1fr); }
+}
+
+.seo-static, .seo-static * { cursor: auto !important; }
+.seo-static a, .seo-static summary { cursor: pointer !important; }
+.seo-stock { color: var(--muted); font-size: .82rem; margin-block: .45rem; }
+.seo-stock[data-stock="in_stock"] { color: var(--ink); }
+.seo-map-reviews iframe { display: block; width: min(100%, 560px); border: 1px solid var(--line); border-radius: 8px; }
