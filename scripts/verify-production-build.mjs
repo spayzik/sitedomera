@@ -4,6 +4,8 @@ import { extname, join, relative, resolve, sep } from 'node:path'
 import sharp from 'sharp'
 import { CONTACTS, products, sourceInventory } from '../src/data/products.ts'
 import { SEO } from '../src/data/seo.ts'
+import { publicReleaseFiles, optionalPublicReleaseFiles } from '../src/data/publicReleaseFiles.ts'
+import { assertPublicAvitoSnapshot } from './public-avito-snapshot.mjs'
 
 const dist = resolve('dist')
 const origin = CONTACTS.origin
@@ -45,6 +47,7 @@ async function filesUnder(directory) {
   const entries = await readdir(directory, { withFileTypes: true })
   return (await Promise.all(entries.map(async (entry) => {
     const path = join(directory, entry.name)
+    assert(entry.isDirectory() || entry.isFile(), 'Unsupported public filesystem entry: ' + relative(dist, path))
     return entry.isDirectory() ? filesUnder(path) : [path]
   }))).flat()
 }
@@ -128,31 +131,46 @@ async function verify() {
   }
 
   const avito = JSON.parse(await readFile(await requireFile('generated/avito-reviews.json'), 'utf8'))
-  assert(avito?.source === 'avito' && Array.isArray(avito.reviews), 'Invalid Avito snapshot/fallback')
+  assertPublicAvitoSnapshot(avito, { allowFallback: true })
 
-  const blockedParts = new Set(['.git', '.github', 'node_modules', 'src', 'scripts', 'docs', 'fixtures', 'public'])
-  const allowedExtensions = new Set(['.html', '.css', '.js', '.json', '.svg', '.jpg', '.jpeg', '.png', '.webp', '.avif', '.woff2', '.txt', '.xml', '.ico', '.webmanifest'])
-  const blockedText = /__SITE_[A-Z_]+__|AVITO_CLIENT_SECRET|AVITO_CLIENT_ID|client_secret|access_token|Authorization:\s*Bearer|api\.telegram\.org\/bot|TELEGRAM_BOT_TOKEN|FTP_PASSWORD|SFTP_PASSWORD|-----BEGIN [^-]*PRIVATE KEY-----|sourceMappingURL|\bdomera\.ru\b|\blocalhost\b|\b127\.0\.0\.1\b|(?:[a-z]:[\\/]Users[\\/]|\/home\/[^/\s]+\/|file:\/\/)/i
+  const required = new Set(['index.html', ...publicReleaseFiles])
+  for (const path of required) await requireFile(path)
+  const internalNames = /(?:^|[/_.-])(?:requirements?|roadmap|handoff|evidence|screenshots?|private|internal|codex|debug|fixtures?|test|spec|backup|manifest)(?:[/_.-]|$)/i
+  const blockedText = /__SITE_[A-Z_]+__|AVITO_CLIENT_(?:SECRET|ID)|client_secret|access_token|Authorization:\s*Bearer|api\.telegram\.org\/bot|TELEGRAM_BOT_TOKEN|(?:S?FTP|REG(?:RU)?)[_ -]?(?:PASSWORD|TOKEN)|-----BEGIN [^-]*PRIVATE KEY-----|gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|(?:AKIA|ASIA)[A-Z0-9]{16}|sourceMappingURL|\bdomera\.ru\b|\blocalhost\b|\b127\.0\.0\.1\b|(?:[a-z]:[\\/]Users[\\/]|\/home\/[^/\s]+\/|file:\/\/)/i
+  const integration = /MOYSKLAD_(?:API_TOKEN|STORE_ID)|api\.moysklad\.ru|api\.avito\.ru|\.dekoray-inventory|\b[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\b|(?:privateManifest|moyskladId|warehouseId|identityEvidence|imageEvidence|previewCrop|skuReview|pdfPage)\s*["']?\s*:/i
+  const internalText = /(?:ТЗ-доработка-сайта|SEO-стратегия\.md|тексты-для-сайта\.md|AGENTS\.md|SKILL\.md|DEKORAY-DELIVERY\.md|DESIGN-17S-CATEGORY-IMAGES\.md|begin (?:system|developer) prompt|(?:codex|ai)\s+(?:handoff|transcript|prompt)|private mapping manifest|owner_review_required)/i
   const textExtensions = new Set(['.html', '.css', '.js', '.json', '.txt', '.xml', '.svg'])
   const files = await filesUnder(dist)
-  for (const file of files) {
-    const path = relative(dist, file).replaceAll('\\', '/')
-    const parts = path.toLowerCase().split('/')
-    assert(path !== 'generated/inventory.json', 'Inventory must be published independently of the static build')
-    assert(!/^catalog\/(?:pages\/|_labels\/|ocr\.json$)/i.test(path), `Catalog source in dist: ${path}`)
-    assert(!parts.some((part) => blockedParts.has(part)), `Source/private directory in dist: ${path}`)
-    assert(!parts.some((part) => /^\.env(?:\.|$)/.test(part)), `Environment file in dist: ${path}`)
-    assert(allowedExtensions.has(extname(path).toLowerCase()), `Unreviewed file type in dist: ${path}`)
-    assert(!/\.map$|\.(?:pem|key|p12|pfx)$/i.test(path), `Source map or key file in dist: ${path}`)
-    assert(!/(?:secret|credential|password)/i.test(path), `Private-looking file in dist: ${path}`)
-    if (textExtensions.has(extname(path).toLowerCase())) {
-      const content = await readFile(file, 'utf8')
-      assert(!blockedText.test(content), `Private/config marker in dist: ${path}`)
-      assert(!/домэра|xn--80ahyhl1f/i.test(content), `Previous public brand in dist: ${path}`)
-      assert(!/MOYSKLAD_API_TOKEN|api\.moysklad\.ru|api\.avito\.ru/i.test(content), `Server integration marker in dist: ${path}`)
+  const reachableAssets = new Set()
+  const references = /(?:assets\/|\.\/)([A-Za-z0-9][A-Za-z0-9._-]*-[A-Za-z0-9_-]{8}\.(?:js|css))(?![A-Za-z0-9_.-])/g
+  const collect = text => {
+    for (const match of text.matchAll(references)) {
+      const path = 'assets/' + match[1]
+      reachableAssets.add(path)
     }
   }
-  assert(!files.some((file) => file.toLowerCase().endsWith(`${sep}cname`)), 'GitHub Pages CNAME must not target production')
+  collect(html)
+  for (const path of reachableAssets) collect(await readFile(await requireFile(path), 'utf8'))
+  for (const file of files) {
+    const path = relative(dist, file).replaceAll('\\', '/')
+    assert(required.has(path) || optionalPublicReleaseFiles.has(path) || reachableAssets.has(path), 'Unapproved public path: ' + path)
+    assert(!internalNames.test(path), 'Internal artifact name: ' + path)
+    const extension = extname(path)
+    const bytes = await readFile(file)
+    if (textExtensions.has(extension)) {
+      const content = new TextDecoder('utf-8', { fatal: true }).decode(bytes)
+      assert(!blockedText.test(content), 'Private/config marker in dist: ' + path)
+      assert(!/домэра|xn--80ahyhl1f/i.test(content), 'Previous public brand in dist: ' + path)
+      assert(!integration.test(content), 'Private integration marker in dist: ' + path)
+      assert(!internalText.test(content), 'Internal work marker in dist: ' + path)
+    } else {
+      const magic = bytes.subarray(0, 12).toString('ascii')
+      const valid = extension === '.webp' ? magic.startsWith('RIFF') && magic.endsWith('WEBP')
+        : extension === '.jpg' ? bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff
+          : extension === '.woff2' && magic.startsWith('wOF2')
+      assert(valid, 'Invalid public binary type: ' + path)
+    }
+  }
 
   console.log(`Production build verified: ${files.length} files, ${products.length} mapped product images, ${new Set(fontUrls).size} fonts; root and Pages subpath assets resolve.`)
 }

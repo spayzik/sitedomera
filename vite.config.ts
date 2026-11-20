@@ -1,8 +1,9 @@
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
-import { cpSync, readFileSync } from 'node:fs'
-import { relative, resolve, sep } from 'node:path'
-import { CONTACTS } from './src/data/products.ts'
+import { copyFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
+import { CONTACTS, products } from './src/data/products.ts'
+import { optionalPublicReleaseFiles, publicReleaseFiles } from './src/data/publicReleaseFiles.ts'
 import { SEO } from './src/data/seo.ts'
 
 // Keep the static SEO files aligned with the site data used by the app.
@@ -45,29 +46,47 @@ function siteMetadata(): Plugin {
   }
 }
 
+function publicCatalog(): Plugin {
+  // Node keeps the full source for audit and warehouse matching.
+  // The browser gets only the 45 display records and their public fields.
+  const catalog = products.map(({
+    id, sku, name, categoryId, kind, priceRub, unit, dimensions, thicknessMm, weightKg, material, description, image,
+  }) => ({
+    id, sku, name, categoryId, kind, priceRub, unit, dimensions, thicknessMm, weightKg, material, description, image,
+    status: 'verified',
+  }))
+  return {
+    name: 'public-catalog',
+    enforce: 'pre',
+    transform(_source, id) {
+      if (!id.replaceAll('\\', '/').endsWith('/src/data/catalog2026.ts')) return
+      return 'export const sourceInventory = ' + JSON.stringify(catalog) + ';\nexport const catalogSource = null;'
+    },
+  }
+}
+
 function publicReleaseAssets(): Plugin {
   let publicDir: string
-  const catalogSource = new Set(['pages', '_labels', 'ocr.json'])
   return {
     name: 'public-release-assets',
     apply: 'build',
     configResolved(config) { publicDir = config.publicDir },
     writeBundle(output) {
       if (!output.dir) throw new Error('A release directory is required for public assets')
-      cpSync(publicDir, output.dir, {
-        recursive: true,
-        filter(source) {
-          const [folder, entry] = relative(publicDir, source).split(sep)
-          return (folder !== 'catalog' || !catalogSource.has(entry)) && !/\.pdf$/i.test(source)
-        },
-      })
+      const required = [...publicReleaseFiles]
+      const optional = [...optionalPublicReleaseFiles].filter(file => existsSync(resolve(publicDir, file)))
+      for (const file of [...required, ...optional]) {
+        const target = resolve(output.dir, file)
+        mkdirSync(dirname(target), { recursive: true })
+        copyFileSync(resolve(publicDir, file), target)
+      }
     },
   }
 }
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), siteMetadata(), publicReleaseAssets()],
+  plugins: [react(), siteMetadata(), publicCatalog(), publicReleaseAssets()],
   base: './',
   build: {
     copyPublicDir: false,
