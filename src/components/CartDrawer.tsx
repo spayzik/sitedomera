@@ -12,7 +12,7 @@ import { CartLeadForm, type LeadAttempt } from './CartLeadForm'
 import { LeadAction } from './LeadProvider'
 import { contactLinks } from '../lib/contactLinks'
 
-export function CartDrawer() {
+export function CartDrawer({ assetBase = import.meta.env.BASE_URL }: { assetBase?: string }) {
   const { open, setOpen, items, total, setQty, remove, migrationNotice, dismissMigrationNotice } = useCart()
   const dialogRef = useDialog(open, () => setOpen(false))
   const leadAttempt = useRef<LeadAttempt | null>(null)
@@ -71,7 +71,7 @@ export function CartDrawer() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <img src={i.product.swatch} alt="" />
+                  <img src={assetBase + i.product.swatch} alt="" />
                   <div className="cart-info">
                     <strong>{i.product.name}</strong>
                     <span>{i.product.sku ? `Артикул: ${i.product.sku}` : formatDimensions(i.product)}</span>

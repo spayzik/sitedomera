@@ -1,9 +1,7 @@
-export function startStock(parseInventory, availabilityFor) {
+export function startStock(parseInventory, availabilityFor, stockLabel) {
   const state = document.querySelector('#stock-catalog')
   const catalog = JSON.parse(state.textContent)
   const labels = document.querySelectorAll('[data-stock-id]')
-  const amount = new Intl.NumberFormat('ru-RU', { maximumSignificantDigits: 21 })
-  const plural = new Intl.PluralRules('ru-RU')
   let inventory = null
   let loading = false
   let expiration
@@ -12,10 +10,7 @@ export function startStock(parseInventory, availabilityFor) {
     for (const label of labels) {
       const stock = availabilityFor(inventory, label.dataset.stockId)
       label.dataset.stock = stock.status
-      if (stock.status === 'in_stock') {
-        const suffix = stock.unit === 'шт' ? 'шт.' : ({ one: 'лист', few: 'листа', many: 'листов', other: 'листа' })[plural.select(stock.quantity)]
-        label.textContent = 'В наличии на складе в Москве · ' + amount.format(stock.quantity) + ' ' + suffix
-      } else label.textContent = stock.status === 'out_of_stock' ? 'Нет в наличии' : 'Наличие уточняется'
+      label.textContent = stockLabel(stock)
     }
   }
 

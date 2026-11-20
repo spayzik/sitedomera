@@ -125,8 +125,12 @@ async function verify() {
     assert.equal(attribute(pageCanonical, 'href'), canonicalUrl(page.path))
     assert.equal(tags(document, 'h1').length, 1, file + ' must have one server-rendered H1')
     assert.match(document, /<main\b[^>]*>[\s\S]*<\/main>/i)
+    const scripts = tags(document, 'script').filter(tag => attribute(tag, 'src'))
+    if (page.kind === 'product' || page.path === '/kalkulyator/') {
+      one(scripts.filter(tag => /\/assets\/storefront-tools-[\w-]+\.js$/.test(attribute(tag, 'src'))), file + ' storefront entry')
+    }
     for (const rel of [...documentLinks.filter(tag => ['stylesheet', 'icon'].includes(attribute(tag, 'rel'))),
-      ...tags(document, 'img')]) {
+      ...tags(document, 'img'), ...scripts]) {
       const asset = attribute(rel, 'href') ?? attribute(rel, 'src')
       for (const base of [canonical, previewBase]) {
         await requireFile(localPath(asset, new URL(page.path.slice(1), base), base))
@@ -140,6 +144,8 @@ async function verify() {
     }
     if (page.kind === 'product') {
       const product = page.product
+      assert(document.includes('data-product-id="' + product.id + '"'), file + ' is missing product tools')
+      assert(!document.includes('/#/catalog'), file + ' contains legacy catalog links')
       const payload = one([...document.matchAll(/<script type="application\/ld\+json">([^<]*)<\/script>/g)], file + ' JSON-LD')[1]
       const record = JSON.parse(payload)['@graph'].find(item => item['@type'] === 'Product')
       assert.equal(record?.name, product.name, file + ' schema product mismatch')
@@ -210,6 +216,7 @@ async function verify() {
     }
   }
   collect(html)
+  for (const page of seoPages.slice(1)) collect(await readFile(await requireFile(seoPageFile(page.path)), 'utf8'))
   for (const path of reachableAssets) collect(await readFile(await requireFile(path), 'utf8'))
   for (const file of files) {
     const path = relative(dist, file).replaceAll('\\', '/')

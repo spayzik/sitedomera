@@ -1,4 +1,15 @@
 import { collections, products, type CollectionId } from '../data/products.ts'
+import { productPath } from '../data/seoPaths.ts'
+
+export function legacyProductPath(hash: string): string | null {
+  if (!hash.startsWith('#/catalog?')) return null
+  const params = new URLSearchParams(hash.slice('#/catalog?'.length))
+  if ([...params.keys()].some(key => key !== 'category' && key !== 'sku') ||
+      params.getAll('sku').length !== 1 || params.getAll('category').length > 1) return null
+  const { product } = parseCatalogHash(hash)
+  const category = params.get('category')
+  return product && (!category || category === product.categoryId) ? productPath(product) : null
+}
 
 export function parseCatalogHash(hash: string) {
   const params = new URLSearchParams(hash.includes('?') ? hash.slice(hash.indexOf('?') + 1) : '')

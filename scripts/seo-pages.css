@@ -44,6 +44,8 @@
 
 .seo-static, .seo-static * { cursor: auto !important; }
 .seo-static a, .seo-static summary { cursor: pointer !important; }
+.seo-tool-actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-block-start: 1rem; }
+.seo-static button:not(:disabled) { cursor: pointer !important; }
 .seo-stock { color: var(--muted); font-size: .82rem; margin-block: .45rem; }
 .seo-stock[data-stock="in_stock"] { color: var(--ink); }
 .seo-map-reviews iframe { display: block; width: min(100%, 560px); border: 1px solid var(--line); border-radius: 8px; }

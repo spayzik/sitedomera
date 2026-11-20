@@ -73,3 +73,14 @@ export function availabilityFor(inventory: Inventory | null, id: string, now = D
   return quantity === 0 ? { status: 'out_of_stock', quantity: 0, unit, updatedAt }
     : { status: 'in_stock', quantity, unit, updatedAt }
 }
+
+const amount = new Intl.NumberFormat('ru-RU', { maximumSignificantDigits: 21 })
+const plural = new Intl.PluralRules('ru-RU')
+
+export function stockLabel(stock: StockAvailability): string {
+  if (stock.status === 'unknown') return 'Наличие уточняется'
+  if (stock.status === 'out_of_stock') return 'Нет в наличии'
+  const form = plural.select(stock.quantity)
+  const suffix = stock.unit === 'шт' ? 'шт.' : form === 'one' ? 'лист' : form === 'many' ? 'листов' : 'листа'
+  return 'В наличии на складе в Москве · ' + amount.format(stock.quantity) + ' ' + suffix
+}

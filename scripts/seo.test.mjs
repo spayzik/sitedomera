@@ -69,8 +69,10 @@ test('direct pages expose prices, product and breadcrumb schema, canonical navig
   const offer = graph.find(item => item['@type'] === 'Product').offers
   assert.deepEqual(offer, { '@type': 'Offer', url: canonicalUrl(product.path), priceCurrency: 'RUB', price: product.product.priceRub })
   assert(graph.some(item => item['@type'] === 'BreadcrumbList'))
-  assert.match(html, /href="\.\.\/\.\.\/\.\.\/\?material=[a-z0-9-]+#calculator"/)
-  assert.match(html, /href="\.\.\/\.\.\/\.\.\/#\/catalog\?category=fabric&amp;sku=A9001"/)
+  assert.match(html, /href="\.\.\/\.\.\/\.\.\/kalkulyator\/\?material=pdf2026-p10-r2c1"/)
+  assert.match(html, /data-product-id="pdf2026-p10-r2c1"/)
+  assert.match(html, /href="https:\/\/t\.me\/[^"]+\?text=[^"]*A9001/)
+  assert(!html.includes('/#/catalog'))
   const profile = seoPages.find(page => page.kind === 'product' && page.product.kind === 'profile')
   assert(!renderSeoPage(profile, stylesheet).includes('#calculator"'))
 })

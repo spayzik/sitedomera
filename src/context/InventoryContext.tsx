@@ -4,9 +4,9 @@ import { parseInventory } from '../lib/inventory'
 import { InventoryContext, initialInventoryState, type StockState } from './inventoryState'
 
 const REFRESH_MS = 2 * 60_000
-const snapshotUrl = import.meta.env.BASE_URL + 'generated/inventory.json'
+const defaultSnapshotUrl = import.meta.env.BASE_URL + 'generated/inventory.json'
 
-export function InventoryProvider({ children }: { children: ReactNode }) {
+export function InventoryProvider({ children, snapshotUrl = defaultSnapshotUrl }: { children: ReactNode; snapshotUrl?: string }) {
   const [state, setState] = useState(initialInventoryState)
   const [expired, setExpired] = useState(false)
 
@@ -48,7 +48,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
       window.clearInterval(interval)
       document.removeEventListener('visibilitychange', refresh)
     }
-  }, [])
+  }, [snapshotUrl])
 
   const expiresAt = state.inventory?.expiresAt
   useEffect(() => {

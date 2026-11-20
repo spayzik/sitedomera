@@ -88,7 +88,9 @@ export default defineConfig({
   build: {
     copyPublicDir: false,
     target: 'es2018',
+    manifest: '.asset-manifest.json',
     rollupOptions: {
+      input: { index: 'index.html', 'storefront-tools': 'src/storefront-tools.tsx' },
       output: {
         manualChunks(id: string) {
           if (id.includes('node_modules')) {

@@ -23,7 +23,7 @@ export function ProductEstimate({ product }: { product: Product }) {
           ? result.sheets.toLocaleString('ru-RU') + ' лист. с запасом 10% · ' + (result.sheets * product.priceRub).toLocaleString('ru-RU') + ' ₽'
           : 'Введите ширину и высоту стены'}
       </output>
-      <a href={'/?material=' + encodeURIComponent(product.id) + '#calculator'}>Учесть проёмы и другие стены</a>
+      <a href={import.meta.env.BASE_URL + 'kalkulyator/?material=' + encodeURIComponent(product.id)}>Учесть проёмы и другие стены</a>
     </details>
   )
 }

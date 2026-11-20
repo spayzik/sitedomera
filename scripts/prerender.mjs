@@ -1,6 +1,6 @@
 import { stripTypeScriptTypes } from 'node:module'
 import assert from 'node:assert/strict'
-import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises'
+import { copyFile, mkdir, readFile, unlink, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { loadEnv } from 'vite'
 import { seoPageFile, seoPages } from '../src/data/seoRoutes.ts'
@@ -9,8 +9,13 @@ import { jsonLd, notFound, renderSeoPage, renderSitemap, renderYml, rootContent 
 const dist = 'dist'
 const rootFile = join(dist, 'index.html')
 const index = await readFile(rootFile, 'utf8')
-const stylesheet = index.match(/<link rel="stylesheet"[^>]+href="\.\/(assets\/[^"]+\.css)"/)?.[1]
-assert(stylesheet, 'Vite stylesheet not found')
+const manifestPath = join(dist, '.asset-manifest.json')
+const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
+const toolsEntry = manifest['src/storefront-tools.tsx']
+assert(toolsEntry?.isEntry && toolsEntry.file, 'Storefront tools entry not found')
+await unlink(manifestPath)
+const stylesheets = [...index.matchAll(/<link rel="stylesheet"[^>]+href="\.\/(assets\/[^"]+\.css)"/g)].map(match => match[1])
+assert(stylesheets.length > 0, 'Vite stylesheet not found')
 assert(index.includes('<div id="root"></div>'), 'Expected a clean Vite application root')
 assert.equal(new Set(seoPages.map(page => page.path)).size, seoPages.length, 'Duplicate canonical paths')
 assert(seoPages.every(page => /^\/(?:[a-z0-9-]+\/)*$/.test(page.path)), 'Unstable canonical path')
@@ -22,12 +27,12 @@ const stockEnabled = loadEnv('production', process.cwd()).VITE_DEKORAY_INVENTORY
 if (stockEnabled) {
   const stockContract = stripTypeScriptTypes(await readFile('src/lib/inventory.ts', 'utf8'))
   const stockClient = await readFile('scripts/seo-stock-client.mjs', 'utf8')
-  await writeFile(join(dist, 'seo-stock.js'), stockContract + '\n' + stockClient + '\nstartStock(parseInventory, availabilityFor)\n')
+  await writeFile(join(dist, 'seo-stock.js'), stockContract + '\n' + stockClient + '\nstartStock(parseInventory, availabilityFor, stockLabel)\n')
 }
 for (const page of seoPages.slice(1)) {
   const path = join(dist, seoPageFile(page.path))
   await mkdir(dirname(path), { recursive: true })
-  await writeFile(path, renderSeoPage(page, stylesheet, stockEnabled))
+  await writeFile(path, renderSeoPage(page, stylesheets, stockEnabled, toolsEntry))
 }
 await writeFile(rootFile, index
   .replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/, () => jsonLd(home))

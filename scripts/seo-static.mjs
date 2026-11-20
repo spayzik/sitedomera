@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto'
 import { CONTACTS, collections, faq, formatDimensions, productDetails, products } from '../src/data/products.ts'
 import { productDescription } from '../src/lib/productPresentation.ts'
 import { sheetPricePerSquareMeter } from '../src/lib/calculator.ts'
+import { buildTelegramDraftUrl, formatProductTelegramMessage } from '../src/lib/telegramLink.ts'
 import { canonicalUrl, categoryPath, productPath, seoAssetPrefix, seoPages } from '../src/data/seoRoutes.ts'
 
 export const escape = value => String(value).replace(/[&<>"']/g, character => ({
@@ -102,8 +103,9 @@ function home(page, prefix) {
 
 function productBody(product, prefix) {
   const similar = products.filter(item => item.categoryId === product.categoryId && item.id !== product.id).slice(0, 3)
-  const modal = '/#/catalog?' + new URLSearchParams({ category: product.categoryId, ...(product.sku ? { sku: product.sku } : {}) })
-  const calculator = '/?material=' + encodeURIComponent(product.id) + '#calculator'
+  const calculator = '/kalkulyator/?material=' + encodeURIComponent(product.id)
+  const category = collections.find(item => item.id === product.categoryId)
+  const telegram = buildTelegramDraftUrl(CONTACTS.telegram, formatProductTelegramMessage(product, category.name))
   return `<div class="seo-product-detail">
     <div class="seo-sample">${picture(product.image, product.name, prefix, false)}</div>
     <div>
@@ -112,9 +114,12 @@ function productBody(product, prefix) {
       <dl>${productDetails(product).map(([name, value]) =>
         `<div><dt>${escape(name)}</dt><dd>${escape(value)}</dd></div>`).join('')}</dl>
       <div class="seo-actions">
-        ${anchor(modal, 'Интерактивный каталог и подборка', prefix)}
         ${sheetPricePerSquareMeter(product) === null ? '' : anchor(calculator, 'Рассчитать для моей стены', prefix)}
-        ${anchor('/#lead', 'Связаться с менеджером', prefix)}
+        ${anchor(categoryPath(product.categoryId), 'Вся коллекция', prefix)}
+      </div>
+      <div class="seo-tool-actions" data-storefront-tools="product" data-product-id="${escape(product.id)}" data-asset-base="${prefix}">
+        ${anchor(telegram, 'Связаться с менеджером в Telegram', prefix)}
+        <noscript><p>Для сохранения подборки в браузере включите JavaScript.</p></noscript>
       </div>
     </div>
   </div>${similar.length ? `<section><h2>Другие материалы коллекции</h2>${listing(similar, prefix)}</section>` : ''}`
@@ -157,6 +162,11 @@ function body(page, prefix) {
       <iframe title="Отзывы об организации на Яндекс Картах" src="https://yandex.ru/maps-reviews-widget/55177309503?comments"
         width="560" height="520" loading="lazy"></iframe>
       <p><a href="https://yandex.ru/maps/-/CXWSyOoT">Открыть карточку организации на Яндекс Картах</a></p></section>`
+  }
+  if (page.path === '/kalkulyator/') {
+    contents = `<div data-storefront-tools="calculator" data-asset-base="${prefix}"><noscript>
+      <p>Для интерактивного расчёта включите JavaScript. Инструкция по расчёту приведена ниже.</p>
+    </noscript></div>` + contents
   }
   return breadcrumbs(page, prefix) + `<h1>${escape(page.heading)}</h1>` + contents
 }
@@ -206,9 +216,11 @@ function schema(page) {
 export const rootContent = page => `<div class="seo-static">${header('./')}<main class="container seo-main">${body(page, './')}</main>${footer('./')}</div>`
 export const jsonLd = page => `<script type="application/ld+json">${schema(page)}</script>`
 
-export function renderSeoPage(page, stylesheet, stockEnabled = false) {
+export function renderSeoPage(page, stylesheets, stockEnabled = false, toolsEntry = null) {
   const prefix = seoAssetPrefix(page.path)
   const image = canonicalUrl('/' + socialImage(page))
+  const interactive = page.kind === 'product' || page.path === '/kalkulyator/' ? toolsEntry : null
+  const styles = new Set([].concat(stylesheets, interactive?.css ?? []))
   return `<!doctype html>
 <html lang="ru"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
@@ -218,7 +230,7 @@ export function renderSeoPage(page, stylesheet, stockEnabled = false) {
 <link rel="canonical" href="${escape(canonicalUrl(page.path))}">
 <link rel="icon" href="${prefix}favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="${prefix}fonts/fonts.css">
-<link rel="stylesheet" href="${prefix + escape(stylesheet)}">
+${[...styles].map(file => '<link rel="stylesheet" href="' + escape(prefix + file) + '">').join('')}
 <link rel="stylesheet" href="${prefix}seo-pages.css">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="${page.kind === 'article' ? 'article' : 'website'}">
@@ -228,8 +240,9 @@ export function renderSeoPage(page, stylesheet, stockEnabled = false) {
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="${escape(image)}">
 ${jsonLd(page)}
 </head><body class="seo-static">${header(prefix)}<main class="container seo-main">${body(page, prefix)}</main>${footer(prefix)}
-${stockEnabled && ['catalog', 'category', 'product'].includes(page.kind) ? '<script id="stock-catalog" type="application/json" data-url="' + prefix + 'generated/inventory.json">' +
-  JSON.stringify(products.map(({ id, unit }) => ({ id, unit }))) + '</script><script type="module" src="' + prefix + 'seo-stock.js"></script>' : ''}</body></html>
+${stockEnabled && ['catalog', 'category'].includes(page.kind) ? '<script id="stock-catalog" type="application/json" data-url="' + prefix + 'generated/inventory.json">' +
+  JSON.stringify(products.map(({ id, unit }) => ({ id, unit }))) + '</script><script type="module" src="' + prefix + 'seo-stock.js"></script>' : ''}
+${interactive ? '<script type="module" src="' + escape(prefix + interactive.file) + '"></script>' : ''}</body></html>
 `
 }
 

@@ -25,6 +25,16 @@ test('category navigation preserves product and other query parameters through p
   assert.equal(parseCatalogHash(updateCatalogHash(opened, { category: 'wood' })).product.sku, '671-A227')
 })
 
+test('unambiguous incoming product hashes migrate to clean URLs without losing filter context', async () => {
+  const { legacyProductPath } = await import('../src/lib/catalogNavigation.ts')
+  assert.equal(legacyProductPath('#/catalog?category=fabric&sku=A9001'), '/catalog/tkan/a9001/')
+  assert.equal(legacyProductPath('#/catalog?sku=pdf2026-p10-r2c1'), '/catalog/tkan/a9001/')
+  for (const hash of [
+    '#/catalog?category=fabric', '#/catalog?category=wood&sku=A9001', '#/catalog?sku=unknown',
+    '#/catalog?sku=A9001&sku=unknown', '#/catalog?category=fabric&sku=A9001&campaign=keep', '#lead',
+  ]) assert.equal(legacyProductPath(hash), null, hash)
+})
+
 test('quiz uses all three answers, restarts cleanly and never filters panels by project budget', async () => {
   const { quizQuestions, createQuizState, quizReducer, quizResultContext } = await import('../src/lib/quiz.ts')
   assert.equal(quizQuestions.length, 3)
