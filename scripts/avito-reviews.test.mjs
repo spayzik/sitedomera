@@ -155,3 +155,40 @@ test('preflight and API failures preserve an existing snapshot', async () => {
     await rmdir(cwd)
   }
 })
+test('approved review details carry only public display names and safe attachment variants', () => {
+  const small = 'https://10.img.avito.st/reviews/small.webp'
+  const large = 'https://10.img.avito.st/reviews/large.webp'
+  const review = {
+    ...fixture.list.reviews[0],
+    sender: { name: 'Ирина Иванова', id: 912345, phone: '+7 999 123-45-67' },
+    images: [
+      { number: 2, sizes: [{ size: '900x600', url: large }, { size: '200x130', url: small }] },
+      { number: 1, sizes: [{ size: '500x500', url: 'https://img.avito.st.example.com/a.webp' }] },
+      { number: 3, sizes: [{ size: '500x500', url: 'https://img.avito.st/a.webp?token=private' }] },
+    ],
+  }
+  const snapshot = createAvitoSnapshot(fixture.info, { ...fixture.list, reviews: [review] }, now, { includePublicDetails: true })
+  assert.equal(snapshot.reviews[0].displayName, 'Ирина И.')
+  assert.deepEqual(snapshot.reviews[0].photos, [{ thumbnailUrl: small, imageUrl: large }])
+  assert.deepEqual(parseAvitoSnapshot(snapshot), snapshot)
+  assert.doesNotMatch(JSON.stringify(snapshot), /Иванова|912345|example\.com|token=private|avatarUrl/)
+})
+
+test('malformed optional media and unsafe names never hide a valid review', () => {
+  const snapshot = createAvitoSnapshot(fixture.info, fixture.list, now)
+  Object.assign(snapshot.reviews[0], {
+    displayName: 'user@example.com',
+    avatarUrl: 'https://img.avito.st@evil.example/avatar.png',
+    photos: [
+      { thumbnailUrl: 'javascript:alert(1)', imageUrl: 'https://img.avito.st/review.png' },
+      { thumbnailUrl: 'https://img.avito.st/a.png', imageUrl: 'https://img.avito.st/b.png' },
+    ],
+  })
+  const parsed = parseAvitoSnapshot(snapshot)
+  assert.equal(parsed.reviews.length, 1)
+  assert.deepEqual(parsed.reviews[0].photos, [{ thumbnailUrl: 'https://img.avito.st/a.png', imageUrl: 'https://img.avito.st/b.png' }])
+  assert.equal(parsed.reviews[0].displayName, undefined)
+  assert.equal(parsed.reviews[0].avatarUrl, undefined)
+  snapshot.reviews[0].avatarUrl = 'https://img.avito.st/avatar.png'
+  assert.equal(parseAvitoSnapshot(snapshot).reviews[0].avatarUrl, 'https://img.avito.st/avatar.png')
+})

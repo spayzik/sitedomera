@@ -87,7 +87,7 @@ function Footer() {
   )
 }
 
-const firstLazySectionIds = ['installation', 'interiors', 'calculator']
+const firstLazySectionIds = ['installation', 'interiors', 'reviews', 'calculator']
 const contactSectionIds = ['showroom']
 
 function SectionAnchor({ route, ids }: { route: string; ids: string[] }) {

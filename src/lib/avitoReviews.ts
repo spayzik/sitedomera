@@ -1,7 +1,12 @@
+import { parseAvitoReviewDetails, type AvitoReviewPhoto } from './avitoReviewDetails.ts'
+
 export type AvitoReview = {
   rating: number
   text: string
   createdAt: string
+  displayName?: string
+  avatarUrl?: string
+  photos?: AvitoReviewPhoto[]
 }
 
 export type AvitoSnapshot = {
@@ -33,7 +38,7 @@ export function parseAvitoSnapshot(value: unknown): AvitoSnapshot | null {
         (review.rating as number) < 1 || (review.rating as number) > 5 ||
         typeof review.text !== 'string' || !review.text.trim() || review.text.length > 600 ||
         typeof review.createdAt !== 'string' || !Number.isFinite(Date.parse(review.createdAt))) return null
-    reviews.push({ rating: review.rating as number, text: review.text, createdAt: review.createdAt })
+    reviews.push({ rating: review.rating as number, text: review.text, createdAt: review.createdAt, ...parseAvitoReviewDetails(review) })
   }
   return {
     source: 'avito',

@@ -1,104 +1,152 @@
-import { avitoProfile } from '../lib/avitoProfile'
 import { useEffect, useRef, useState } from 'react'
-import { motion } from 'framer-motion'
-import { ChevronLeft, ChevronRight, ExternalLink, Star } from 'lucide-react'
-import { featuredAvitoReviews, loadAvitoSnapshot, type AvitoSnapshot } from '../lib/avitoReviews'
+import { ArrowUpRight, Images, Maximize2, Star, UserRound, X } from 'lucide-react'
+import { avitoProfile } from '../lib/avitoProfile'
+import { featuredAvitoReviews, loadAvitoSnapshot, type AvitoSnapshot, type AvitoReview } from '../lib/avitoReviews'
+import type { AvitoReviewPhoto } from '../lib/avitoReviewDetails'
 
-const dateFormatter = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Moscow' })
+const dateFormatter = new Intl.DateTimeFormat('ru-RU', { dateStyle: 'long', timeZone: 'Europe/Moscow' })
+const ratingFormatter = new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 const reviewPlural = new Intl.PluralRules('ru-RU')
 const reviewNoun = (count: number) => ({ zero: 'отзывов', one: 'отзыв', two: 'отзыва', few: 'отзыва', many: 'отзывов', other: 'отзыва' })[reviewPlural.select(count)]
+const initialCount = 3
+
+function ReviewAvatar({ review }: { review: AvitoReview }) {
+  const [failedUrl, setFailedUrl] = useState<string>()
+  const { avatarUrl, displayName } = review
+  const initials = displayName?.split(' ').map(word => Array.from(word)[0]).join('').toUpperCase()
+  return (
+    <span className="review-author-avatar" aria-hidden="true">
+      {avatarUrl && avatarUrl !== failedUrl
+        ? <img src={avatarUrl} alt="" loading="lazy" referrerPolicy="no-referrer" onError={() => setFailedUrl(avatarUrl)} />
+        : initials || <UserRound size={18} strokeWidth={1.4} />}
+    </span>
+  )
+}
+
+function ReviewPhoto({ photo, number, onOpen }: {
+  photo: AvitoReviewPhoto
+  number: number
+  onOpen: (photo: AvitoReviewPhoto) => void
+}) {
+  const [failed, setFailed] = useState(false)
+  if (failed) return null
+  return (
+    <button type="button" className="review-photo" onClick={() => onOpen(photo)}
+      aria-label={'Открыть фото покупателя ' + number}>
+      <img src={photo.thumbnailUrl} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => setFailed(true)} />
+      <Maximize2 size={14} aria-hidden="true" />
+    </button>
+  )
+}
 
 export function Reviews() {
-  const trackRef = useRef<HTMLDivElement>(null)
   const [snapshot, setSnapshot] = useState<AvitoSnapshot | null>(null)
-  const featured = snapshot ? featuredAvitoReviews(snapshot.reviews) : []
+  const [sort, setSort] = useState('recent')
+  const [expanded, setExpanded] = useState(false)
+  const [openedPhoto, setOpenedPhoto] = useState<AvitoReviewPhoto | null>(null)
+  const [fullImageFailed, setFullImageFailed] = useState(false)
+  const dialogRef = useRef<HTMLDialogElement>(null)
 
   useEffect(() => {
     let active = true
-    loadAvitoSnapshot().then((value) => { if (active) setSnapshot(value) })
+    loadAvitoSnapshot().then(value => { if (active) setSnapshot(value) })
     return () => { active = false }
   }, [])
 
+  useEffect(() => {
+    const dialog = dialogRef.current
+    if (openedPhoto && dialog && !dialog.open) dialog.showModal()
+  }, [openedPhoto])
 
-  const move = (direction: 1 | -1) => {
-    const track = trackRef.current
-    const card = track?.querySelector<HTMLElement>('.review-card')
-    if (!track || !card) return
-    const gap = Number.parseFloat(getComputedStyle(track).gap) || 0
-    track.scrollBy({ left: direction * (card.offsetWidth + gap), behavior: 'smooth' })
+  const featured = snapshot ? featuredAvitoReviews(snapshot.reviews) : []
+  featured.sort((a, b) => (sort === 'rating' ? b.rating - a.rating : 0) || b.createdAt.localeCompare(a.createdAt))
+  const gallery = [...new Map(featured.flatMap(review => (review.photos ?? []).map(photo => [photo.imageUrl, photo] as const))).values()].slice(0, 5)
+  const visible = expanded ? featured : featured.slice(0, initialCount)
+  const openPhoto = (photo: AvitoReviewPhoto) => {
+    setFullImageFailed(false)
+    setOpenedPhoto(photo)
   }
 
   return (
-    <section className="section reviews" id="reviews">
+    <section className="section reviews" id="reviews" aria-labelledby="reviews-title">
       <div className="container">
-        <div className="section-head-flex reviews-head">
+        <div className="reviews-head">
           <div>
-            <p className="eyebrow">Отзывы</p>
-            <h2>Что говорят<br />клиенты</h2>
+            <p className="eyebrow">ДЕКОРАЙ · Авито</p>
+            <h2 id="reviews-title">Отзывы покупателей</h2>
           </div>
-          <div className="reviews-head-side">
-            <p className="lead">
-              {snapshot
-                ? `Подборка отзывов из профиля на Авито. Данные на ${dateFormatter.format(new Date(snapshot.updatedAt))}.`
-                : 'Смотрите отзывы покупателей в профиле ДЕКОРАЙ на Авито.'}
-            </p>
-            {avitoProfile && (<a className="reviews-avito-link interactive" href={avitoProfile} target="_blank" rel="noreferrer">
-              Открыть профиль на Авито <ExternalLink size={15} />
-            </a>)}
-          </div>
+          <a className="reviews-avito-link interactive" href={avitoProfile} target="_blank" rel="noreferrer">
+            Все отзывы на Авито <ArrowUpRight size={17} aria-hidden="true" />
+          </a>
         </div>
 
-
-        {snapshot && (
-          <motion.div
-            className="reviews-carousel"
-            initial={{ opacity: 0, y: 28 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-40px' }}
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <div className="reviews-controls" aria-label="Управление каруселью отзывов">
-              <div className="reviews-summary">
-                <Star size={19} fill="currentColor" aria-hidden="true" />
-                <strong>{snapshot.rating.toFixed(1).replace('.', ',')}</strong>
-                <span>из 5 · {snapshot.reviewsCount} {reviewNoun(snapshot.reviewsCount)} на Авито</span>
+        {snapshot ? (
+          <>
+            <div className="reviews-summary">
+              <div className="reviews-score"><strong>{ratingFormatter.format(snapshot.rating)}</strong><span>из 5</span></div>
+              <div className="reviews-summary-copy">
+                <span>{snapshot.reviewsCount} {reviewNoun(snapshot.reviewsCount)} на Авито</span>
+                <small>Последние отзывы из профиля</small>
               </div>
-              {featured.length > 1 && <div className="reviews-arrows">
-                <button type="button" onClick={() => move(-1)} aria-label="Предыдущий отзыв">
-                  <ChevronLeft size={18} />
-                </button>
-                <button type="button" onClick={() => move(1)} aria-label="Следующий отзыв">
-                  <ChevronRight size={18} />
-                </button>
+              {gallery.length > 0 && <div className="reviews-gallery">
+                <span><Images size={15} aria-hidden="true" /> Фото покупателей</span>
+                <div className="reviews-gallery-strip">
+                  {gallery.map((photo, index) => <ReviewPhoto key={photo.imageUrl} photo={photo} number={index + 1} onOpen={openPhoto} />)}
+                </div>
               </div>}
             </div>
 
-            {featured.length > 0 && <div className="reviews-track" ref={trackRef}>
-              {featured.map((review, index) => (
-                <article className="review-card" key={`${review.createdAt}-${index}`}>
-                  <div className={`review-avatar avatar-${index % 5}`} aria-hidden="true">★</div>
-                  <div className="review-topline">
-                    <div>
-                      <strong>Отзыв на Авито</strong>
-                      <span><time dateTime={review.createdAt}>{dateFormatter.format(new Date(review.createdAt))}</time></span>
+            {featured.length > 0 && <>
+              <div className="reviews-toolbar">
+                <h3>Подборка отзывов</h3>
+                {featured.length > 1 && <select aria-label="Порядок отзывов" value={sort} onChange={event => setSort(event.target.value)}>
+                  <option value="recent">Сначала новые</option>
+                  <option value="rating">Сначала с высокой оценкой</option>
+                </select>}
+              </div>
+              <div className="reviews-list" id="reviews-list">
+                {visible.map(review => (
+                  <article className="review-entry" key={review.createdAt + ':' + review.text}>
+                    <div className="review-author">
+                      <ReviewAvatar review={review} />
+                      <div>
+                        <h4>{review.displayName || 'Покупатель на Авито'}</h4>
+                        <time dateTime={review.createdAt}>{dateFormatter.format(new Date(review.createdAt))}</time>
+                      </div>
                     </div>
-                    <div className="review-rating" aria-label={`Оценка ${review.rating} из 5`}>
-                      {Array.from({ length: 5 }).map((_, star) => (
-                        <Star key={star} size={14} fill={star < review.rating ? 'currentColor' : 'transparent'}
-                          strokeWidth={1.8} className={star < review.rating ? '' : 'muted'} />
-                      ))}
+                    <div className="review-body">
+                      <div className="review-rating" role="img" aria-label={'Оценка ' + review.rating + ' из 5'}>
+                        {Array.from({ length: 5 }, (_, star) => (
+                          <Star key={star} size={14} strokeWidth={1.5} aria-hidden="true"
+                            fill={star < review.rating ? 'currentColor' : 'none'} className={star < review.rating ? '' : 'review-star-empty'} />
+                        ))}
+                      </div>
+                      <blockquote>«{review.text}»</blockquote>
+                      {review.photos && <div className="review-attachments">
+                        {review.photos.map((photo, index) => <ReviewPhoto key={photo.imageUrl} photo={photo} number={index + 1} onOpen={openPhoto} />)}
+                      </div>}
                     </div>
-                  </div>
-                  <p className="review-text">«{review.text}»</p>
-                  {avitoProfile && (<a className="review-source" href={avitoProfile} target="_blank" rel="noreferrer">
-                    Открыть профиль на Авито <ExternalLink size={12} />
-                  </a>)}
-                </article>
-              ))}
-            </div>}
-          </motion.div>
-        )}
+                  </article>
+                ))}
+              </div>
+              {featured.length > initialCount && <button type="button" className="reviews-more"
+                aria-controls="reviews-list" aria-expanded={expanded} onClick={() => setExpanded(value => !value)}>
+                {expanded ? 'Свернуть подборку' : 'Показать ещё отзывы'}
+              </button>}
+            </>}
+          </>
+        ) : <p className="reviews-fallback">Отзывы покупателей доступны в профиле ДЕКОРАЙ на Авито.</p>}
       </div>
+
+      <dialog className="review-lightbox" aria-label="Фото покупателя" ref={dialogRef} onClose={() => setOpenedPhoto(null)}
+        onClick={event => { if (event.target === event.currentTarget) event.currentTarget.close() }}>
+        <div className="review-lightbox-content">
+          <button type="button" className="icon-btn" aria-label="Закрыть фото" onClick={() => dialogRef.current?.close()}><X size={20} /></button>
+          {openedPhoto && (fullImageFailed
+            ? <p>Фото временно недоступно.</p>
+            : <img src={openedPhoto.imageUrl} alt="Вложение к отзыву покупателя" referrerPolicy="no-referrer" onError={() => setFullImageFailed(true)} />)}
+        </div>
+      </dialog>
     </section>
   )
 }
