@@ -10,4 +10,10 @@ RewriteRule ^((?:[a-z0-9-]+/)*)index\.html$ https://xn--80ahdrdyo.xn--p1ai/$1 [R
 RewriteCond %{HTTP_HOST} ^www\.xn--80ahdrdyo\.xn--p1ai(?::[0-9]+)?$ [NC]
 RewriteRule ^ https://xn--80ahdrdyo.xn--p1ai%{REQUEST_URI} [R=301,L,NE]
 
+# Enable this configuration only after verifying Apache HTTPS=on for external HTTPS.
+# Use ispmanager for the scheme redirect if the reverse proxy terminates TLS.
+RewriteCond %{HTTP_HOST} ^xn--80ahdrdyo\.xn--p1ai(?::[0-9]+)?$ [NC]
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://xn--80ahdrdyo.xn--p1ai%{REQUEST_URI} [R=308,L,NE]
+
 RewriteRule ^api/lead$ api/lead.php [END]
