@@ -96,7 +96,6 @@ export function Reviews() {
 
               {featured.length > 0 && <>
                 <div className="reviews-toolbar">
-                  <h3>Подборка отзывов</h3>
                   {featured.length > 1 && <select aria-label="Порядок отзывов" value={sort} onChange={event => setSort(event.target.value)}>
                     <option value="recent">Сначала новые</option>
                     <option value="rating">Сначала с высокой оценкой</option>
