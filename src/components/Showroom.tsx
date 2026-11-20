@@ -122,9 +122,9 @@ export function Showroom() {
             <p className="eyebrow">Как добраться</p>
             <h3>{CONTACTS.address}</h3>
             <p>Склад и шоурум — {CONTACTS.hours.toLowerCase()}.</p>
+            <p>Чтобы построить маршрут, откройте карточку и нажмите «Маршрут».</p>
             <div className="map-actions">
               <a className="btn btn-white interactive" href={mapOrganizationUrl} target="_blank" rel="noreferrer">Открыть в Яндекс Картах</a>
-              <a className="btn btn-outline interactive" href="https://yandex.ru/maps/?mode=routes&amp;rtext=~&amp;rtt=auto&amp;ol=biz&amp;oid=55177309503" target="_blank" rel="noreferrer">Построить маршрут</a>
             </div>
           </div>
         </motion.div>

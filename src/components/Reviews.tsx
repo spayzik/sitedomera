@@ -80,6 +80,7 @@ export function Reviews() {
                 <strong>{ratingFormatter.format(snapshot.rating)}</strong><span>из 5</span>
               </div>
               <p>{snapshot.reviewsCount} {reviewNoun(snapshot.reviewsCount)} на Авито</p>
+              <p>Обновлено <time dateTime={snapshot.updatedAt}>{dateFormatter.format(new Date(snapshot.updatedAt))}</time></p>
             </div>}
             <a className="reviews-avito-link interactive" href={avitoProfile} target="_blank" rel="noreferrer">
               Все отзывы на Авито <ArrowUpRight size={16} aria-hidden="true" />
