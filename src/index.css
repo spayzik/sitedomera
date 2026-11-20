@@ -1350,11 +1350,12 @@ h4 { font-size: 1.25rem; font-weight: 500; }
 .reviews-toolbar option { color: var(--review-ink); background: var(--surface); }
 .reviews-more { display: block; margin: 0.6rem 0 0; padding-inline: 0; color: var(--review-accent); }
 .reviews-more:hover { text-decoration: underline; text-underline-offset: 0.3em; }
-.reviews-list { border-bottom: 1px solid var(--review-line); }
+.reviews-list { display: grid; gap: 0.85rem; }
 .review-entry {
   display: grid; grid-template-columns: minmax(8rem, 0.8fr) minmax(0, 4fr); align-items: start;
-  gap: 0.8rem clamp(0.85rem, 2.3vw, 1.75rem); padding: clamp(1rem, 2vw, 1.55rem) 0;
-  border-top: 1px solid var(--review-line);
+  gap: 0.8rem clamp(0.85rem, 2.3vw, 1.75rem); padding: clamp(1rem, 2vw, 1.55rem);
+  border: 1px solid var(--review-line); border-radius: 12px;
+  background: linear-gradient(135deg, rgba(194, 163, 120, 0.07), rgba(194, 163, 120, 0.025));
 }
 .review-author { display: grid; gap: 0.45rem; min-width: 0; padding-top: 0.1rem; }
 .review-byline { display: flex; align-items: center; gap: 0.5rem; }
@@ -1375,7 +1376,7 @@ h4 { font-size: 1.25rem; font-weight: 500; }
   position: relative; display: block; width: 68px; aspect-ratio: 1; padding: 0;
   border: 1px solid var(--review-line); border-radius: 5px; overflow: hidden; background: transparent;
 }
-.review-attachments .review-photo { width: min(100%, 9rem); aspect-ratio: 3/2; }
+.review-attachments .review-photo { width: min(100%, 11rem); aspect-ratio: 3/2; }
 .review-photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .review-photo svg {
   position: absolute; bottom: 0.3rem; right: 0.3rem; box-sizing: content-box; padding: 0.28rem;
