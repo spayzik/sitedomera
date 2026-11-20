@@ -27,8 +27,16 @@ if (strtolower($_SERVER['HTTP_HOST'] ?? '') !== 'xn--80ahdrdyo.xn--p1ai' ||
 try {
     $webroot = realpath(__DIR__ . '/..');
     $private = realpath(dirname($webroot, 2) . '/dekoray-leads');
-    if (!$private || $private !== dirname($webroot, 2) . DIRECTORY_SEPARATOR . 'dekoray-leads') {
+    if (!$private || $private !== dirname($webroot, 2) . DIRECTORY_SEPARATOR . 'dekoray-leads' ||
+        (DIRECTORY_SEPARATOR === '/' && (fileperms($private) & 0077) !== 0)) {
         throw new RuntimeException('private_directory_invalid');
+    }
+    foreach (['bootstrap.php', 'validation.php', 'config.php', 'ledger.php', 'moysklad.php', 'http.php'] as $file) {
+        $module = $private . '/' . $file;
+        if (!is_file($module) || is_link($module) ||
+            (DIRECTORY_SEPARATOR === '/' && (fileperms($module) & 0022) !== 0)) {
+            throw new RuntimeException('private_runtime_invalid');
+        }
     }
     require $private . '/bootstrap.php';
     $config = Dekoray\Leads\loadConfig($private, $webroot);
