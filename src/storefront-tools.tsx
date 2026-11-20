@@ -1,7 +1,8 @@
 import { lazy, Suspense, useContext, useEffect, useLayoutEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
+import { createPortal } from 'react-dom'
 import { MotionConfig } from 'framer-motion'
-import { AnalyticsBanner, PrivacyProvider } from './components/AnalyticsConsent'
+import { AnalyticsBanner, CookieSettingsLink, PrivacyProvider } from './components/AnalyticsConsent'
 import { LeadAction, LeadProvider } from './components/LeadProvider'
 import { CartProvider, useCart } from './context/CartContext'
 import { InventoryProvider } from './context/InventoryContext'
@@ -62,6 +63,7 @@ const root = document.querySelector<HTMLElement>('[data-storefront-tools]')
 if (root) {
   const assetBase = new URL(root.dataset.assetBase ?? './', document.baseURI).href
   const product = products.find(p => p.id === root.dataset.productId)
+  const cookieSettings = document.querySelector('[data-cookie-settings]')
   if (product || root.dataset.storefrontTools === 'calculator') {
     createRoot(root).render(
       <MotionConfig reducedMotion="user">
@@ -70,6 +72,7 @@ if (root) {
             <LeadProvider>
               <CartProvider><StorefrontTools product={product} assetBase={assetBase} /></CartProvider>
               <AnalyticsBanner privacyHref={assetBase + '#/privacy'} />
+              {cookieSettings && createPortal(<CookieSettingsLink />, cookieSettings)}
             </LeadProvider>
           </InventoryProvider>
         </PrivacyProvider>

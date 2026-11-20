@@ -35,10 +35,10 @@ const header = prefix => `<header class="seo-header"><div class="container">
   ${anchor('/', CONTACTS.brand, prefix)}
   <nav aria-label="Основное меню">${mainNav.map(([path, label]) => anchor(path, label, prefix)).join('')}</nav>
 </div></header>`
-const footer = prefix => `<footer class="seo-footer"><div class="container">
+const footer = (prefix, interactive) => `<footer class="seo-footer"><div class="container">
   <strong>${escape(CONTACTS.brand)}</strong><p>${escape(CONTACTS.address)} · ${escape(CONTACTS.hours)}</p>
   <div class="seo-actions">${contactLinks}${anchor('/dostavka/', 'Доставка и оплата', prefix)}${anchor('/stati/', 'Статьи', prefix)}
-  ${anchor('/#/privacy', 'Политика конфиденциальности', prefix)}</div>
+  ${anchor('/#/privacy', 'Политика конфиденциальности', prefix)}${interactive ? '<span data-cookie-settings></span>' : ''}</div>
 </div></footer>`
 
 function crumbs(page) {
@@ -239,7 +239,7 @@ ${[...styles].map(file => '<link rel="stylesheet" href="' + escape(prefix + file
 <meta property="og:url" content="${escape(canonicalUrl(page.path))}"><meta property="og:image" content="${escape(image)}">
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="${escape(image)}">
 ${jsonLd(page)}
-</head><body class="seo-static">${header(prefix)}<main class="container seo-main">${body(page, prefix)}</main>${footer(prefix)}
+</head><body class="seo-static">${header(prefix)}<main class="container seo-main">${body(page, prefix)}</main>${footer(prefix, interactive)}
 ${stockEnabled && ['catalog', 'category'].includes(page.kind) ? '<script id="stock-catalog" type="application/json" data-url="' + prefix + 'generated/inventory.json">' +
   JSON.stringify(products.map(({ id, unit }) => ({ id, unit }))) + '</script><script type="module" src="' + prefix + 'seo-stock.js"></script>' : ''}
 ${interactive ? '<script type="module" src="' + escape(prefix + interactive.file) + '"></script>' : ''}</body></html>
