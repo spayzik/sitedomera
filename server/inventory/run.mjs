@@ -30,10 +30,11 @@ async function privatePath(name, webroot, exists) {
 
 async function main() {
   const action = process.argv[2]
-  if (!['preflight', 'publish'].includes(action) || process.argv.length !== 3) throw new InventoryError('USAGE')
+  if (!['preflight', 'publish', 'reconcile'].includes(action) || process.argv.length !== 3) throw new InventoryError('USAGE')
+  const reconcile = action === 'reconcile'
   const reader = createStockReader(process.env.MOYSKLAD_API_TOKEN)
   const storeId = process.env.MOYSKLAD_STORE_ID
-  if ((storeId && !isUuid(storeId)) || (action === 'publish' && !storeId)) {
+  if ((storeId && !isUuid(storeId)) || ((action === 'publish' || reconcile) && !storeId)) {
     throw new InventoryError('STORE_SELECTION_HOLD')
   }
   const needsWebroot = action === 'publish' || process.env.DEKORAY_INVENTORY_MAP_FILE || process.env.DEKORAY_INVENTORY_MANIFEST_FILE
@@ -42,15 +43,18 @@ async function main() {
   if (generated && !isWithin(webroot, generated)) throw new InventoryError('CONFIG_HOLD', { variable: 'DEKORAY_INVENTORY_WEBROOT' })
   const mapPath = await privatePath('DEKORAY_INVENTORY_MAP_FILE', webroot, true)
   const manifestPath = await privatePath('DEKORAY_INVENTORY_MANIFEST_FILE', webroot, false)
-  if (manifestPath && manifestPath === mapPath) throw new InventoryError('CONFIG_HOLD', { variable: 'DEKORAY_INVENTORY_MANIFEST_FILE' })
+  if ((reconcile && !manifestPath) || (manifestPath && manifestPath === mapPath)) {
+    throw new InventoryError('CONFIG_HOLD', { variable: 'DEKORAY_INVENTORY_MANIFEST_FILE' })
+  }
   const manual = mapPath ? JSON.parse(await readFile(mapPath, 'utf8')) : {}
-  const { snapshot, manifest, summary } = await importInventory({ reader, products, storeId, manual })
+  const { snapshot, manifest, summary } = await importInventory({ reader, products, storeId, manual, reconcile })
   if (manifestPath) await savePrivateManifest(manifestPath, manifest)
   if (generated) {
     if (!summary.stockReportRead) throw new InventoryError('MAPPING_HOLD', summary)
     await publishSnapshot(resolve(generated, 'inventory.json'), snapshot, products)
   }
-  console.log(JSON.stringify({ status: generated ? 'published' : 'preflight_complete', endpoint: STOCK_ENDPOINT, ...summary }))
+  const status = generated ? 'published' : reconcile ? 'reconciliation_complete' : 'preflight_complete'
+  console.log(JSON.stringify({ status, endpoint: STOCK_ENDPOINT, ...summary }))
 }
 
 main().catch(error => {

@@ -224,3 +224,166 @@ test('preflight blocks writing a private manifest without a webroot or inside th
     assert.equal(JSON.parse(proc.stderr).status, 'CONFIG_HOLD')
   }
 })
+
+test('does not publish stock for exact articles with a different type or size', async () => {
+  const dimensions = { widthMm: 1220, lengthMm: 3000 }
+  const products = [
+    { id: 'same', sku: 'EXACT', unit: 'лист', kind: 'panel', dimensions, thicknessMm: 8 },
+    { id: 'wrong-width', sku: 'WIDTH', unit: 'лист', kind: 'panel', dimensions, thicknessMm: 8 },
+    { id: 'wrong-thickness', sku: 'THICK', unit: 'лист', kind: 'panel', dimensions, thicknessMm: 8 },
+    { id: 'wrong-type', sku: 'KIND', unit: 'лист', kind: 'panel', dimensions, thicknessMm: 8 },
+    { id: 'no-spec', sku: 'SPEC', unit: 'лист', kind: 'panel', dimensions, thicknessMm: 8 },
+    { id: 'conflicting-thickness', sku: 'CONFLICT-T', unit: 'лист', kind: 'panel', dimensions, thicknessMm: 8 },
+    { id: 'conflicting-type', sku: 'CONFLICT-K', unit: 'лист', kind: 'panel', dimensions, thicknessMm: 8 },
+  ]
+  const assortment = [
+    item(31, 'Exact', 'product', uuid(8), { name: 'Бамбуковая панель 1220 × 3000 × 8 мм' }),
+    item(32, 'WIDTH', 'product', uuid(8), { name: 'Панель 1210*3000*8мм' }),
+    item(33, 'THICK', 'product', uuid(8), { name: 'Панель 1220x3000x7 мм' }),
+    item(34, 'KIND', 'product', uuid(8), { name: 'Декоративная рейка 1220×3000×8 мм' }),
+    item(35, 'SPEC', 'product', uuid(8), { name: 'Панель SPEC' }),
+    item(36, 'CONFLICT-T', 'product', uuid(8), { name: 'Панель 1220×3000×5 мм', attributes: [{ name: 'Толщина (мм)', value: 8 }] }),
+    item(37, 'CONFLICT-K', 'product', uuid(8), { name: 'Рейка 1220×3000×8 мм', attributes: [{ name: 'Тип изделия', value: 'Панель' }] }),
+  ]
+  const requested = []
+  const reader = {
+    stores: async () => stores, assortment: async () => assortment,
+    units: async () => [{ id: uuid(8), name: 'лист' }],
+    stock: async (_store, ids) => {
+      requested.push(...ids)
+      return new Map(ids.map(id => [id, 12]))
+    },
+  }
+  const result = await importInventory({ reader, products, storeId, now: () => now })
+  assert.deepEqual(requested, [uuid(31)])
+  assert.deepEqual(result.manifest.entries.map(entry => entry.reason),
+    [undefined, 'dimensions_mismatch', 'dimensions_mismatch', 'type_mismatch', 'spec_unverified', 'dimensions_mismatch', 'type_mismatch'])
+  assert.deepEqual(result.snapshot.items, [
+    { id: 'same', unit: 'лист', quantity: 12 },
+    ...products.slice(1).map(({ id }) => ({ id, reason: 'unmapped' })),
+  ])
+})
+
+test('does not promote similar or alternate identifiers, but records them privately', async () => {
+  const products = [
+    { id: 'lookalike', sku: 'A9001', unit: 'лист' },
+    { id: 'other-field', sku: 'B9001', unit: 'лист' },
+    { id: 'archived-only', sku: 'Z9001', unit: 'лист' },
+    { id: 'missing-article', sku: null, unit: 'лист' },
+  ]
+  const assortment = [
+    item(31, 'А\u200b9001'),
+    item(32, 'B-DIFFERENT', 'product', uuid(8), { externalCode: 'B9001' }),
+    item(33, 'Z9001', 'product', uuid(8), { archived: true }),
+  ]
+  const reader = {
+    stores: async () => stores, assortment: async () => assortment,
+    units: async () => [{ id: uuid(8), name: 'лист' }],
+    stock: async () => assert.fail('a suspect item must not reach the stock request'),
+  }
+  const result = await importInventory({ reader, products, storeId, now: () => now })
+  assert.deepEqual(result.manifest.entries.map(({ reason }) => reason),
+    ['similar_article', 'alternate_identifier', 'archived_only', 'missing_catalog_sku'])
+  assert.deepEqual(result.manifest.entries.map(({ candidates }) => candidates.length), [1, 1, 1, 0])
+  assert.doesNotMatch(JSON.stringify(result.snapshot), /9001|a0000000/)
+})
+
+test('nextHref is checked without contacting its host or accepting a skipped page', async () => {
+  for (const target of [
+    base + 'entity/assortment?offset=4', 'https://elsewhere.invalid/api/remap/1.2/entity/assortment?offset=2',
+  ]) {
+    let requests = 0
+    const reader = make(async (url) => {
+      requests++
+      assert.equal(url.origin, 'https://api.moysklad.ru')
+      return Response.json({ meta: { size: 3, limit: 2, offset: 0, nextHref: target }, rows: entities.slice(0, 2) })
+    })
+    await assert.rejects(reader.assortment(), /MOYSKLAD_INCOMPLETE_PAGE/)
+    assert.equal(requests, 1)
+  }
+})
+
+test('confidential reconciliation counts complete named sources and does not use extra rows for public stock', async () => {
+  const providerFetch = provider()
+  const queries = []
+  const reader = make(async (url, init) => {
+    const route = url.pathname.replace('/api/remap/1.2/', '')
+    const filter = url.searchParams.get('filter')
+    queries.push([route, filter])
+    if (filter === 'archived=true' || route === 'entity/product' || route === 'entity/variant') {
+      const rows = filter === 'archived=true' ? [] : route === 'entity/product' ? [item(44, 'MISSING')] : []
+      return Response.json({ meta: { size: rows.length, limit: 2, offset: 0 }, rows })
+    }
+    return providerFetch(url, init)
+  })
+  const products = [{ id: 'absent-in-assortment', sku: 'MISSING', unit: 'лист' }]
+  const result = await importInventory({ reader, products, storeId, now: () => now, reconcile: true })
+  assert.ok(queries.some(([route, filter]) => route === 'entity/assortment' && filter === 'archived=true'))
+  assert.ok(queries.some(([route]) => route === 'entity/variant'))
+  assert.equal(result.summary.sources.activeProducts, 1)
+  assert.equal(result.summary.sources.productsMissingFromAssortment, 1)
+  assert.equal(result.manifest.entries[0].reason, 'excluded_from_assortment')
+  assert.equal(result.manifest.entries[0].candidates[0].id, uuid(44))
+  assert.deepEqual(result.snapshot.items, [{ id: 'absent-in-assortment', reason: 'unmapped' }])
+})
+
+test('retries transient read failures once and fails malformed or unauthorized responses without retry', async () => {
+  for (const [status, expectedRequests] of [[503, 2], [401, 1], [403, 1], [429, 1]]) {
+    let requests = 0
+    const reader = make(async () => {
+      requests++
+      if (requests === 1) return Response.json({}, { status })
+      return Response.json({ meta: { size: 0, limit: 2, offset: 0 }, rows: [] })
+    })
+    if (status === 503) assert.deepEqual(await reader.assortment(), [])
+    else await assert.rejects(reader.assortment(), /MOYSKLAD_HTTP_ERROR/)
+    assert.equal(requests, expectedRequests)
+  }
+})
+
+test('a variant uses explicit millimeter characteristics and its parent unit without inheriting parent stock', async () => {
+  const parent = item(61, 'PARENT', 'product', uuid(8), { name: 'Панель 1220 × 3000 × 5 мм', variantsCount: 1 })
+  const variant = item(62, 'VARIANT', 'variant', uuid(9), {
+    product: { meta: meta('product', parent.id) },
+    characteristics: [{ name: 'Толщина', value: '8 мм' }],
+  })
+  const products = [{ id: 'variant', sku: 'VARIANT', kind: 'panel', unit: 'лист',
+    dimensions: { widthMm: 1220, lengthMm: 3000 }, thicknessMm: 8 }]
+  const reader = {
+    stores: async () => stores, assortment: async () => [parent, variant],
+    units: async () => [{ id: uuid(8), name: 'лист' }],
+    stock: async (_store, ids) => {
+      assert.deepEqual(ids, [variant.id])
+      return new Map([[variant.id, 4]])
+    },
+  }
+  const report = await importInventory({ reader, products, storeId, now: () => now })
+  assert.deepEqual(report.snapshot.items, [{ id: 'variant', unit: 'лист', quantity: 4 }])
+})
+
+test('confirmed external ID is exact, unambiguous and cannot supersede a confirmed UUID', async () => {
+  const entity = item(62, 'SUPPLIER-ART', 'product', uuid(8), { externalCode: 'CaseSensitive' })
+  const products = [{ id: 'uuid', sku: null, unit: 'лист' }, { id: 'external', sku: null, unit: 'лист' }]
+  const read = (assortment, manual) => importInventory({
+    reader: {
+      stores: async () => stores, assortment: async () => assortment,
+      units: async () => [{ id: uuid(8), name: 'лист' }],
+      stock: async (_store, ids) => new Map(ids.map(id => [id, 4])),
+    },
+    products, storeId, manual, now: () => now,
+  })
+  const external = { external: { externalCode: 'CaseSensitive', type: 'product' } }
+  const linked = await read([entity], external)
+  assert.equal(linked.manifest.entries[1].via, 'externalCode')
+  assert.equal(linked.manifest.entries[1].candidateCount, 1)
+  assert.equal(linked.manifest.entries[1].candidates[0].field, 'approved_externalCode')
+  assert.equal(linked.snapshot.items[1].quantity, 4)
+  const conflicted = await read([entity, { ...entity, id: uuid(63) }], external)
+  assert.equal(conflicted.manifest.entries[1].reason, 'ambiguous')
+  assert.equal(conflicted.manifest.entries[1].candidateCount, 2)
+  const differentCase = await read([entity], { external: { ...external.external, externalCode: 'casesensitive' } })
+  assert.equal(differentCase.manifest.entries[1].reason, 'approved_entity_unavailable')
+  const uuidFirst = await read([entity], { ...external, uuid: { id: entity.id, type: 'product' } })
+  assert.equal(uuidFirst.snapshot.items[0].quantity, 4)
+  assert.deepEqual(uuidFirst.snapshot.items[1], { id: 'external', reason: 'unmapped' })
+})

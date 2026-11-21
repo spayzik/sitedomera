@@ -1,7 +1,8 @@
 import { setTimeout as delay } from 'node:timers/promises'
 
 const API = 'https://api.moysklad.ru/api/remap/1.2/'
-const COLLECTIONS = new Set(['entity/store', 'entity/assortment', 'entity/uom'])
+const COLLECTIONS = new Set(['entity/store', 'entity/assortment', 'entity/uom', 'entity/product', 'entity/variant'])
+const RETRYABLE_HTTP = new Set([502, 503, 504])
 export const STOCK_ENDPOINT = 'report/stock/bystore/current'
 export const isUuid = value => typeof value === 'string' && /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(value)
 
@@ -41,6 +42,16 @@ function pageSize(value, endpoint, offset, size) {
       !Array.isArray(value.rows) || value.rows.length !== Math.min(info.limit, info.size - offset)) {
     throw new InventoryError('MOYSKLAD_INCOMPLETE_PAGE', { endpoint })
   }
+  if (info.nextHref !== undefined) {
+    const next = URL.parse(info.nextHref)
+    const expected = new URL(endpoint, API)
+    const nextOffset = offset + value.rows.length
+    if (!next || next.origin !== expected.origin || next.pathname !== expected.pathname ||
+        next.username || next.password || nextOffset >= info.size ||
+        next.searchParams.getAll('offset').length !== 1 || next.searchParams.get('offset') !== String(nextOffset)) {
+      throw new InventoryError('MOYSKLAD_INCOMPLETE_PAGE', { endpoint })
+    }
+  }
   return info.size
 }
 
@@ -61,7 +72,7 @@ export function createStockReader(token, fetchImpl = fetch, { minimumIntervalMs 
   if (!token?.trim()) throw new InventoryError('AUTH_HOLD')
   let nextRequest = 0
 
-  async function get(path, params, headers) {
+  async function get(path, params, headers, retried = false) {
     const url = new URL(path, API)
     url.search = new URLSearchParams(params).toString()
     if (nextRequest > Date.now()) await delay(nextRequest - Date.now())
@@ -73,7 +84,12 @@ export function createStockReader(token, fetchImpl = fetch, { minimumIntervalMs 
         headers: { Authorization: 'Bearer ' + token, 'Accept-Encoding': 'gzip', Accept: 'application/json;charset=utf-8', ...headers },
       })
     } catch {
+      if (!retried) return get(path, params, headers, true)
       throw new InventoryError('MOYSKLAD_NETWORK_ERROR', { endpoint: path })
+    }
+    if (RETRYABLE_HTTP.has(response.status) && !retried) {
+      await response.body?.cancel()
+      return get(path, params, headers, true)
     }
     if (response.status !== 200) throw new InventoryError('MOYSKLAD_HTTP_ERROR', { endpoint: path, status: response.status })
     try {
@@ -83,11 +99,13 @@ export function createStockReader(token, fetchImpl = fetch, { minimumIntervalMs 
     }
   }
 
-  async function list(path) {
+  async function list(path, archived = false) {
     if (!COLLECTIONS.has(path)) throw new InventoryError('INVALID_READ_ENDPOINT')
     const items = new Map()
     const assortment = path === 'entity/assortment'
-    const params = assortment ? { filter: 'archived=false', groupBy: 'variant' } : {}
+    const entityType = ['entity/product', 'entity/variant'].includes(path) ? path.slice('entity/'.length) : undefined
+    const params = assortment ? { filter: 'archived=' + archived, groupBy: 'variant' }
+      : entityType ? { filter: 'archived=' + archived } : {}
     const headers = assortment ? { 'X-Lognex-Remap-Beta-Feature': 'assortmentWithoutStock' } : undefined
     let size
     do {
@@ -96,8 +114,9 @@ export function createStockReader(token, fetchImpl = fetch, { minimumIntervalMs 
       size = pageSize(value, path, offset, size)
       for (const record of value.rows) {
         if (!isUuid(record?.id) || items.has(record.id.toLowerCase()) ||
-            ((assortment || path === 'entity/store') && typeof record.archived !== 'boolean') ||
-            (assortment && !['product', 'variant', 'bundle', 'service'].includes(record.meta?.type))) {
+            ((assortment || entityType || path === 'entity/store') && typeof record.archived !== 'boolean') ||
+            (assortment && !['product', 'variant', 'bundle', 'service'].includes(record.meta?.type)) ||
+            (entityType && record.meta?.type !== entityType)) {
           throw new InventoryError('MOYSKLAD_INVALID_ENTITY', { endpoint: path })
         }
         items.set(record.id.toLowerCase(), { ...record, id: record.id.toLowerCase() })
@@ -157,6 +176,15 @@ export function createStockReader(token, fetchImpl = fetch, { minimumIntervalMs 
     return stocks
   }
 
+  async function reconciliationSources() {
+    const archivedAssortment = await list('entity/assortment', true)
+    const activeProducts = await list('entity/product')
+    const archivedProducts = await list('entity/product', true)
+    const activeVariants = await list('entity/variant')
+    const archivedVariants = await list('entity/variant', true)
+    return { archivedAssortment, activeProducts, archivedProducts, activeVariants, archivedVariants }
+  }
+
   return { stores: () => list('entity/store'), assortment: () => list('entity/assortment'),
-    units: () => list('entity/uom'), stock }
+    units: () => list('entity/uom'), stock, reconciliationSources }
 }
