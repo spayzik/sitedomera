@@ -143,3 +143,17 @@
 @media (prefers-reduced-motion: reduce) {
   .commerce-card-open { transition: none; }
 }
+
+/* Keep the original sample crisp when the source is smaller than the display slot. */
+.commerce-card .commerce-card-sample img.material-sample-lowres {
+  width: min(100%, 22rem);
+  left: 50%;
+  transform: translateX(-50%);
+  object-fit: contain;
+}
+.commerce-card .commerce-card-sample:has(.material-sample-lowres) {
+  background: radial-gradient(ellipse at center, var(--surface-2, #211b16), var(--surface));
+}
+.commerce-card .commerce-card-body { padding-block-start: .75rem; gap: .6rem; }
+.commerce-card .commerce-card-pricing { margin-top: .5rem; }
+.commerce-card-actions .commerce-card-secondary { color: var(--muted); }

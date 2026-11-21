@@ -50,11 +50,34 @@
 .map-preview-placeholder a { color: var(--accent-light); text-decoration: underline; }
 
 .catalog-page-content h1 {
-  max-width: 20ch;
-  font-size: clamp(2.8rem, 6vw, 5.65rem);
-  line-height: 1.02;
+  max-width: 19ch;
+  font-size: clamp(2.45rem, 4.3vw, 4.35rem);
+  line-height: 1.04;
+  text-wrap: balance;
 }
 @media (max-width: 480px) {
-  .catalog-page-content h1 { font-size: clamp(2.35rem, 11vw, 3.35rem); }
+  .catalog-page-content h1 { font-size: clamp(2.25rem, 9.5vw, 3rem); }
   .catalog-page-cta .btn { min-height: 44px; padding: .65rem .85rem; }
+}
+
+
+.catalog-route-tabs { gap: clamp(.85rem, 2vw, 1.7rem); padding-bottom: .2rem; }
+.catalog-route-tabs a { font-size: .91rem; }
+.page-section { padding-block: clamp(6.6rem, 9vw, 8.5rem) clamp(3rem, 6vw, 6rem); }
+.page-intro h1 { font-size: clamp(2.35rem, 5vw, 4.4rem); }
+.page-intro .lead { margin-block: .8rem 1.1rem; }
+.page-section .reviews-sheet { margin-inline: 0; }
+
+.review-source-label { color: var(--review-accent); font-size: .79rem; }
+.reviews-list { gap: 1rem; }
+.review-entry { background: linear-gradient(130deg, rgba(194, 163, 120, .09), rgba(194, 163, 120, .035)); }
+
+.reviews-compact .reviews-head { border-block: 1px solid var(--review-line); padding-block: 1rem; }
+.reviews-compact .reviews-summary { grid-column: 1; grid-row: auto; }
+.reviews-compact .reviews-avito-link { justify-self: end; }
+@media (max-width: 560px) {
+  .reviews-compact .reviews-avito-link { justify-self: start; }
+}
+@media (max-width: 768px) {
+  [data-path="/kontakty/"] .showroom-commerce-manager { order: -1; }
 }

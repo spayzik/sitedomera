@@ -1,3 +1,4 @@
+import { SocialContacts } from './SocialContacts'
 import { CONTACTS } from '../data/products'
 import { LogoIcon } from './Logo'
 import { CookieSettingsLink } from './AnalyticsConsent'
@@ -32,7 +33,7 @@ export function Footer({ base = './' }: { base?: string }) {
               <span>{CONTACTS.hours}</span>
               <a href={base + "dostavka/"}>Доставка и оплата</a>
               <a href={base + "kontakty/"}>Контакты</a>
-              <a href={`tel:${CONTACTS.phoneRaw}`} className="footer-phone">{CONTACTS.phone}</a>
+              <SocialContacts placement="footer" />
             </div>
           </div>
         </div>

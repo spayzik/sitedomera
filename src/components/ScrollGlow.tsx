@@ -1,13 +1,16 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { getDeviceTier } from '../lib/perf'
 
 export function ScrollGlow() {
   const sphereRef = useRef<HTMLDivElement>(null)
-  const { lowEnd, coarsePointer, reducedMotion } = getDeviceTier()
 
   // На телефонах и слабых ПК оставляем только статичные градиенты.
   // Blur-анимации нужны лишь для мощных устройств с точным курсором.
-  const enhanced = !lowEnd && !coarsePointer && !reducedMotion
+  const [enhanced, setEnhanced] = useState(false)
+  useEffect(() => {
+    const { lowEnd, coarsePointer, reducedMotion } = getDeviceTier()
+    setEnhanced(!lowEnd && !coarsePointer && !reducedMotion)
+  }, [])
 
   // Мышь → прямой DOM-трансформ через rAF: ноль ре-рендеров React
   useEffect(() => {

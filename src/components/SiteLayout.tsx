@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
 import { MotionConfig } from 'framer-motion'
+import { ScrollGlow } from './ScrollGlow'
 import { Header } from './Header'
 import { Footer } from './Footer'
 import { FloatingCart } from './FloatingCart'
@@ -30,6 +31,7 @@ export function SiteLayout({ base, path, children }: { base: string; path: strin
       <InventoryProvider snapshotUrl={base + 'generated/inventory.json'}>
         <LeadProvider>
           <CartProvider>
+            <ScrollGlow />
             <Header base={base} path={path} />
             <main id="page-content">{children}</main>
             <Footer base={base} />

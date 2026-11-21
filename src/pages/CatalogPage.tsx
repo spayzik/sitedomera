@@ -1,6 +1,6 @@
 import { storefrontImageSize } from '../data/storefrontImageSizes'
 import { useContext, useEffect, useState } from 'react'
-import { ArrowDown } from 'lucide-react'
+import { ArrowDown, SlidersHorizontal } from 'lucide-react'
 import { categoryPath, productPath, seoPages, type SeoPage } from '../data/seoRoutes'
 import { collections, products } from '../data/products'
 import { useCart } from '../context/CartContext'
@@ -50,7 +50,7 @@ export function CatalogPage({ page, base }: { page: CatalogView; base: string })
         <div className="catalog-page-veil" />
       </div>
       <div className="container catalog-page-content">
-        <p className="hero-eyebrow">Декорай · Коллекция 2026</p>
+        <p className="hero-eyebrow">Коллекция ДЕКОРАЙ</p>
         <h1>{page.heading}</h1>
         <p className="catalog-page-lead">{page.kind === 'category' ? page.intro : page.description}</p>
         <div className="catalog-page-cta">
@@ -70,7 +70,7 @@ export function CatalogPage({ page, base }: { page: CatalogView; base: string })
         {page.kind !== 'selection' && <>
           <button type="button" className="btn btn-outline catalog-mobile-filter" aria-expanded={filtersOpen}
             aria-controls="catalog-filter-panel" onClick={() => setFiltersOpen(open => !open)}>
-            {filtersOpen ? 'Скрыть фильтры' : 'Поиск и фильтры'}
+            <SlidersHorizontal size={16} aria-hidden="true" /> {filtersOpen ? 'Скрыть фильтры' : 'Поиск и фильтры'}
           </button>
           <div id="catalog-filter-panel" className={filtersOpen ? 'catalog-filter-panel is-open' : 'catalog-filter-panel'}>
             <CatalogFilterControls filters={filters} onChange={changeFilters} reset={reset} />

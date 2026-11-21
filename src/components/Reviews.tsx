@@ -40,8 +40,9 @@ function ReviewPhoto({ photo, number, onOpen }: {
   )
 }
 
-export function Reviews({ assetBase }: { assetBase?: string } = {}) {
+export function Reviews({ assetBase, compact = false }: { assetBase?: string; compact?: boolean } = {}) {
   const [snapshot, setSnapshot] = useState<AvitoSnapshot | null>(null)
+  const [loaded, setLoaded] = useState(false)
   const [sort, setSort] = useState('recent')
   const [expanded, setExpanded] = useState(false)
   const [openedPhoto, setOpenedPhoto] = useState<AvitoReviewPhoto | null>(null)
@@ -50,7 +51,7 @@ export function Reviews({ assetBase }: { assetBase?: string } = {}) {
 
   useEffect(() => {
     let active = true
-    loadAvitoSnapshot(assetBase).then(value => { if (active) setSnapshot(value) })
+    loadAvitoSnapshot(assetBase).then(value => { if (active) { setSnapshot(value); setLoaded(true) } })
     return () => { active = false }
   }, [assetBase])
 
@@ -69,11 +70,12 @@ export function Reviews({ assetBase }: { assetBase?: string } = {}) {
   }
 
   return (
-    <section className="section reviews" id="reviews" aria-labelledby="reviews-title">
+    <section className={compact ? "section reviews reviews-compact" : "section reviews"} id="reviews"
+      aria-labelledby={compact ? undefined : "reviews-title"} aria-label={compact ? "Отзывы на Авито" : undefined}>
       <div className="container">
         <div className="reviews-sheet">
           <div className="reviews-head">
-            <h2 id="reviews-title">Отзывы покупателей</h2>
+            {!compact && <h2 id="reviews-title">Отзывы покупателей</h2>}
             {snapshot && <div className="reviews-summary">
               <div className="reviews-score">
                 <Star size={17} aria-hidden="true" fill="currentColor" />
@@ -113,6 +115,7 @@ export function Reviews({ assetBase }: { assetBase?: string } = {}) {
                             {review.displayName && <h3>{review.displayName}</h3>}
                           </div>
                         )}
+                        {!review.displayName && <span className="review-source-label">Отзыв на Авито</span>}
                         <time dateTime={review.createdAt}>{dateFormatter.format(new Date(review.createdAt))}</time>
                       </div>
                       <div className="review-body">
@@ -136,7 +139,7 @@ export function Reviews({ assetBase }: { assetBase?: string } = {}) {
                 </button>}
               </>}
             </div>
-          ) : <p className="reviews-fallback">Отзывы покупателей доступны в профиле ДЕКОРАЙ на Авито.</p>}
+          ) : <p className="reviews-fallback">{loaded ? "Снимок отзывов временно недоступен. Отзывы можно прочитать в профиле ДЕКОРАЙ на Авито." : "Отзывы покупателей доступны в профиле ДЕКОРАЙ на Авито."}</p>}
         </div>
       </div>
 

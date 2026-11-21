@@ -22,11 +22,13 @@ export function CatalogCard({ product, category, base = "./", detailsHref, onDet
   const stock = useStockAvailability(product.id)
   const sku = product.sku && product.sku !== product.name ? product.sku : null
   const dimensions = formatDimensions(product)
+  const imageSize = storefrontImageSize(product.image)
+  const compactSource = product.kind !== 'profile' && imageSize.width !== undefined && imageSize.width < 300
   const canCalculate = sheetArea(product) > 0 && stock.status !== 'out_of_stock'
   const inquiry = stock.status === 'out_of_stock' ? 'Уточнить поставку' : 'Уточнить наличие'
 
   const sample = <>
-    <img src={base + product.image} alt="" loading="lazy" decoding="async" {...storefrontImageSize(product.image)} />
+    <img className={compactSource ? "material-sample-lowres" : undefined} src={base + product.image} alt="" loading="lazy" decoding="async" {...imageSize} />
     {category && <span className="commerce-card-category">{category}</span>}
     <span className="commerce-card-open" aria-hidden="true">Смотреть детали <ArrowUpRight size={15} /></span>
   </>

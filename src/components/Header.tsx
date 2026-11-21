@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Menu, X, ShoppingBag, Send } from 'lucide-react'
+import { Menu, X, ShoppingBag } from 'lucide-react'
 import { useCart } from '../context/CartContext'
-import { contactLinks } from '../lib/contactLinks'
+import { SocialContacts } from './SocialContacts'
 import { LeadAction } from './LeadProvider'
 import { LogoIcon } from './Logo'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -85,13 +85,7 @@ export function Header({ base = './', path = '/' }: { base?: string; path?: stri
           </nav>
 
           <div className="header-actions">
-            <a className="header-phone" href={contactLinks.phone}>
-              {contactLinks.phoneLabel}
-            </a>
-            <a className="header-messenger" href={contactLinks.telegram} target="_blank"
-              rel="noreferrer" aria-label="Написать в Telegram">
-              <Send size={17} aria-hidden="true" />
-            </a>
+            <SocialContacts placement="header" />
             <button
               className="cart-btn"
               onClick={() => setOpen(true)}
@@ -145,16 +139,7 @@ export function Header({ base = './', path = '/' }: { base?: string; path?: stri
                   {l.label}
                 </motion.a>
               ))}
-              <motion.a
-                href={contactLinks.phone}
-                className="mobile-phone"
-                onClick={() => setMobile(false)}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
-              >
-                {contactLinks.phoneLabel}
-              </motion.a>
+              <SocialContacts placement="menu" onFollow={() => setMobile(false)} />
               <LeadAction intent="consultation" className="btn btn-outline interactive">Получить консультацию</LeadAction>
             </nav>
           </motion.div>

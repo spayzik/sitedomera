@@ -58,3 +58,29 @@
 @media (max-width: 40rem) {
   .catalog-filter-search { grid-column: 1 / -1; }
 }
+
+.catalog-filter-controls {
+  grid-template-columns: minmax(15rem, 1.65fr) repeat(3, minmax(8rem, 1fr));
+  gap: .7rem 1rem;
+  padding-block: .6rem;
+}
+.catalog-filter-controls label { color: var(--muted); }
+.catalog-filter-controls :is(input, select) {
+  padding: .65rem .9rem;
+  border: 1px solid var(--line);
+  border-radius: .35rem;
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+}
+.catalog-filter-controls select {
+  appearance: none;
+  padding-right: 2.1rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14' fill='none'%3E%3Cpath d='m3.5 5.5 3.5 3.5 3.5-3.5' stroke='%23c2a378' stroke-width='1.35' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-position: right .7rem center;
+  background-repeat: no-repeat;
+}
+.catalog-filter-controls :is(input, select):hover { border-color: var(--accent); }
+.catalog-filter-controls select option { background: var(--surface); color: var(--ink); }
+@media (max-width: 768px) {
+  .catalog-filter-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .catalog-filter-search { grid-column: 1 / -1; }
+}

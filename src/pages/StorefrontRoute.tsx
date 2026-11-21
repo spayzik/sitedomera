@@ -21,7 +21,6 @@ const actionMap: Record<string, [string, string]> = {
   '/opt/': [buildTelegramDraftUrl(CONTACTS.telegram, 'Здравствуйте! Хочу обсудить поставку материалов ДЕКОРАЙ для объекта.'), 'Обсудить поставку'],
   '/dizayneram/': ['/showroom/', 'Посмотреть образцы в шоуруме'],
   '/obraztsy/': [buildTelegramDraftUrl(CONTACTS.telegram, 'Здравствуйте! Хочу запросить образцы ДЕКОРАЙ. Материалы или артикулы: '), 'Запросить образцы в Telegram'],
-  '/otzyvy/': [CONTACTS.avito, 'Открыть отзывы на Авито'],
 }
 
 const href = (base: string, path: string) => path.startsWith('/') ? base + path.slice(1) : path
@@ -54,7 +53,7 @@ export function StorefrontRoute({ page, base, path }: { page?: SeoPage; base: st
     {calculator && <Calculator standalone />}
     {venue && <Showroom base={base} />}
     {page.path === '/otzyvy/' && <>
-      <Reviews assetBase={base} />
+      <Reviews assetBase={base} compact />
       <section className="page-map-reviews"><h2>Отзывы на Яндекс Картах</h2>
         <MapEmbed title="Отзывы об организации на Яндекс Картах" src={'https://yandex.ru/maps-reviews-widget/' + CONTACTS.mapOrganizationId + '?comments'} height={520} />
         <a href={CONTACTS.mapOrganization}>Открыть карточку организации на Яндекс Картах</a>

@@ -1,0 +1,25 @@
+.social-contacts { display: flex; flex-wrap: wrap; align-items: center; gap: .2rem .45rem; }
+.social-contact { display: inline-flex; align-items: center; gap: .6rem; min-height: 44px; color: var(--ink); }
+.social-contact svg { flex: none; color: var(--accent-light); }
+.social-contact:hover { color: var(--accent-light); }
+.social-contact:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 2px; }
+.social-contacts-header { flex-wrap: nowrap; }
+.social-contacts-header .social-contact, .social-contacts-footer .social-contact {
+  justify-content: center; min-width: 40px; gap: .45rem; font-size: .82rem; white-space: nowrap;
+}
+.social-contacts-header .social-contact-label, .social-contacts-footer .social-contact-label { display: none; }
+.social-contacts-header [data-channel="phone"] .social-contact-label { display: inline; }
+.social-contacts-menu { justify-content: center; gap: .15rem 1.15rem; }
+.nav-mobile .social-contact { font: .92rem var(--font); }
+.social-contacts-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; margin-block: 1rem; }
+.social-contacts-cards .social-contact {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .15rem .6rem;
+  padding: .75rem; border: 1px solid var(--line); border-radius: .35rem;
+  background: color-mix(in srgb, var(--surface) 82%, transparent); font-size: .9rem;
+}
+.social-contacts-cards small { grid-column: 2; color: var(--muted); font-size: .74rem; }
+.social-contacts-floating { display: grid; gap: 0; }
+.social-contacts-floating .social-contact { justify-content: flex-start; }
+@media (max-width: 1200px) { .social-contacts-header [data-channel="phone"] .social-contact-label { display: none; } }
+@media (max-width: 1024px) { .social-contacts-header { display: none; } }
+@media (max-width: 480px) { .social-contacts-cards .social-contact { padding: .55rem; gap: .2rem .45rem; } }

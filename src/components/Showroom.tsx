@@ -1,16 +1,16 @@
 import { useState } from 'react'
+import { SocialContacts } from './SocialContacts'
 import { MapEmbed } from './MapEmbed'
-import { ArrowUpRight, Copy, Phone } from 'lucide-react'
+import { ArrowUpRight, Copy } from 'lucide-react'
 import { CONTACTS } from '../data/products'
 import { avitoProfile } from '../lib/avitoProfile'
-import { contactLinks, inquiryTelegramLink, inquiryWhatsAppLink } from '../lib/contactLinks'
+import { inquiryTelegramLink } from '../lib/contactLinks'
 import { useLeadService } from '../lib/leadState'
 import { LeadAction } from './LeadProvider'
 
 export function Showroom({ base = "./" }: { base?: string } = {}) {
   const consultationAvailable = useLeadService()?.terms?.intents.includes('consultation')
   const [copyStatus, setCopyStatus] = useState('')
-  const whatsapp = inquiryWhatsAppLink('consultation')
 
   async function copyAddress() {
     try {
@@ -58,19 +58,13 @@ export function Showroom({ base = "./" }: { base?: string } = {}) {
                 Написать в Telegram <ArrowUpRight size={16} aria-hidden="true" />
               </a>
             )}
-            <a className="showroom-commerce-phone interactive" href={contactLinks.phone}>
-              <Phone size={17} aria-hidden="true" /> {contactLinks.phoneLabel}
-            </a>
+            <SocialContacts placement="cards" />
             <div className="showroom-commerce-sources">
               <a href={inquiryTelegramLink('samples')} target="_blank" rel="noreferrer">Запросить образцы</a>
               <a href={base + 'kalkulyator/'}>Рассчитать материалы</a>
             </div>
             <div className="showroom-commerce-sources">
               <a href={avitoProfile} target="_blank" rel="noreferrer">Магазин на Авито</a>
-              <a href={contactLinks.telegramChannel} target="_blank" rel="noreferrer">Канал в Telegram</a>
-              {whatsapp && <a href={whatsapp} target="_blank" rel="noreferrer">WhatsApp</a>}
-              {contactLinks.max && <a href={contactLinks.max} target="_blank" rel="noreferrer">MAX</a>}
-              {contactLinks.instagram && <a href={contactLinks.instagram} target="_blank" rel="noreferrer">Instagram</a>}
             </div>
           </div>
         </div>
