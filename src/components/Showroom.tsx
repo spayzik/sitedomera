@@ -58,7 +58,7 @@ export function Showroom({ base = "./" }: { base?: string } = {}) {
                 Написать в Telegram <ArrowUpRight size={16} aria-hidden="true" />
               </a>
             )}
-            <SocialContacts placement="cards" />
+            <SocialContacts base={base} placement="cards" />
             <div className="showroom-commerce-sources">
               <a href={inquiryTelegramLink('samples')} target="_blank" rel="noreferrer">Запросить образцы</a>
               <a href={base + 'kalkulyator/'}>Рассчитать материалы</a>

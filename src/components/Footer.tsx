@@ -33,7 +33,7 @@ export function Footer({ base = './' }: { base?: string }) {
               <span>{CONTACTS.hours}</span>
               <a href={base + "dostavka/"}>Доставка и оплата</a>
               <a href={base + "kontakty/"}>Контакты</a>
-              <SocialContacts placement="footer" />
+              <SocialContacts base={base} placement="footer" />
             </div>
           </div>
         </div>

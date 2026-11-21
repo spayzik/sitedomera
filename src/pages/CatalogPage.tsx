@@ -6,6 +6,7 @@ import { collections, products } from '../data/products'
 import { useCart } from '../context/CartContext'
 import { InventoryContext } from '../context/inventoryState'
 import { availabilityFor } from '../lib/inventory'
+import { CatalogFacts } from '../components/CatalogFacts'
 import { CatalogCard } from '../components/CatalogCard'
 import { CatalogFilterControls } from '../components/CatalogFilterControls'
 import { catalogResults, parseCatalogFilters, writeCatalogFilters, type CatalogFilters } from '../lib/catalogFilters'
@@ -51,13 +52,14 @@ export function CatalogPage({ page, base }: { page: CatalogView; base: string })
       </div>
       <div className="container catalog-page-content">
         <p className="hero-eyebrow">Коллекция ДЕКОРАЙ</p>
-        <h1>{page.heading}</h1>
+        <h1>{page.kind === 'catalog' ? <>Каталог<br />материалов</> : page.heading}</h1>
         <p className="catalog-page-lead">{page.kind === 'category' ? page.intro : page.description}</p>
         <div className="catalog-page-cta">
           <a className="btn btn-white interactive" href="#products">Посмотреть материалы <ArrowDown size={16} aria-hidden="true" /></a>
           <a className="btn btn-outline interactive" href={base + 'kalkulyator/'}>Рассчитать проект</a>
         </div>
       </div>
+      <CatalogFacts />
     </section>
     <section className="catalog-page-body" id="products" aria-label="Материалы и цены">
       <div className="container">

@@ -64,7 +64,8 @@ test('one React storefront emits native content for all direct routes', () => {
     assert.match(html, /class="site-header/)
     assert.match(html, /class="footer"/)
   }
-  assert.match(htmlFor('/').replaceAll('<!-- -->',''), /45 позиций · 9 категорий/)
+  assert.match(htmlFor('/'), /Позиций в каталоге<\/dt><dd>45<\/dd>/)
+  assert.match(htmlFor('/'), /Коллекций и серий<\/dt><dd>9<\/dd>/)
   const catalog = htmlFor('/catalog/')
   assert.equal((catalog.match(/data-catalog-product=/g) ?? []).length, 45)
   assert.match(catalog, /Ясень серый/)

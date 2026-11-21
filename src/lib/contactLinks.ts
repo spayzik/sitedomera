@@ -16,7 +16,8 @@ export const contactLinks = {
   phoneLabel: CONTACTS.phone,
   telegram: CONTACTS.telegram,
   telegramChannel: CONTACTS.telegramChannel,
-  whatsapp: verifiedLink(import.meta.env.VITE_DEKORAY_WHATSAPP_URL, ['wa.me'], /^\/[1-9]\d{6,14}\/?$/),
+  whatsapp: verifiedLink(import.meta.env.VITE_DEKORAY_WHATSAPP_URL, ['wa.me'], /^\/[1-9]\d{6,14}\/?$/)
+    ?? 'https://wa.me/' + CONTACTS.phoneRaw.replace(/^\+/, ''),
   max: verifiedLink(import.meta.env.VITE_DEKORAY_MAX_URL, ['max.ru'], /^\/[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+)?\/?$/),
   instagram: verifiedLink(import.meta.env.VITE_DEKORAY_INSTAGRAM_URL, ['www.instagram.com', 'instagram.com'], /^\/[A-Za-z0-9._]+\/?$/),
 }

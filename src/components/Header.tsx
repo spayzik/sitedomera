@@ -85,7 +85,7 @@ export function Header({ base = './', path = '/' }: { base?: string; path?: stri
           </nav>
 
           <div className="header-actions">
-            <SocialContacts placement="header" />
+            <SocialContacts base={base} placement="header" />
             <button
               className="cart-btn"
               onClick={() => setOpen(true)}
@@ -139,7 +139,7 @@ export function Header({ base = './', path = '/' }: { base?: string; path?: stri
                   {l.label}
                 </motion.a>
               ))}
-              <SocialContacts placement="menu" onFollow={() => setMobile(false)} />
+              <SocialContacts base={base} placement="menu" onFollow={() => setMobile(false)} />
               <LeadAction intent="consultation" className="btn btn-outline interactive">Получить консультацию</LeadAction>
             </nav>
           </motion.div>

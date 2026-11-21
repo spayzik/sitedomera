@@ -1,3 +1,4 @@
+import { inquiryWhatsAppLink } from '../lib/contactLinks'
 import { productPath } from '../data/seoPaths'
 import { LeadAction } from './LeadProvider'
 import { ProductEstimate } from './ProductEstimate'
@@ -46,6 +47,8 @@ export function ProductModal({
     ? buildTelegramDraftUrl(CONTACTS.telegram, formatProductTelegramMessage(selected, collection))
     : null
 
+  const whatsapp = selected ? inquiryWhatsAppLink("consultation", selected.name + (selected.sku && selected.sku !== selected.name ? " · Артикул " + selected.sku : "")) : undefined
+
   return (
     <AnimatePresence>
       {selected && (
@@ -69,7 +72,9 @@ export function ProductModal({
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           >
-            <div className="gocek-gradient" />
+            <img className="gocek-material-backdrop" src={import.meta.env.BASE_URL + selected.image}
+              alt="" aria-hidden="true" decoding="async" />
+            <div className="gocek-gradient" aria-hidden="true" />
             <button className="gocek-close-mobile icon-btn" onClick={onClose} aria-label="Закрыть карточку">
               <X size={20} />
             </button>
@@ -92,9 +97,9 @@ export function ProductModal({
                 </div>
                 <SheetUnitPrice product={selected} />
                 <StockAvailability productId={selected.id} details />
-                <a className="gocek-sample-link" href={import.meta.env.BASE_URL + selected.image}
+                <a className="gocek-original-link" href={import.meta.env.BASE_URL + selected.image}
                   target="_blank" rel="noopener" aria-label={'Открыть образец крупнее: ' + selected.name}>
-                  <img src={import.meta.env.BASE_URL + selected.image} alt={selected.name} className="gocek-sample" decoding="async" />
+                  Открыть исходный образец
                 </a>
                 {sheetArea(selected) > 0 && <ProductEstimate key={selected.id} product={selected} />}
               </motion.div>
@@ -134,6 +139,7 @@ export function ProductModal({
                 </button>
                 <LeadAction intent="samples" context={selected.name + (selected.sku ? ' · Артикул ' + selected.sku : '') + ' · 1 образец'} className="gocek-telegram-link">Запросить образец</LeadAction>
                 <a className="gocek-telegram-link" href={import.meta.env.BASE_URL + productPath(selected).slice(1)}>Страница материала</a>
+                {whatsapp && <a className="gocek-telegram-link" href={whatsapp} target="_blank" rel="noreferrer">Спросить в WhatsApp</a>}
                 {telegramDraftUrl && (
                   <a className="gocek-telegram-link" href={telegramDraftUrl} target="_blank" rel="noreferrer">
                     <span>СПРОСИТЬ В TELEGRAM</span>

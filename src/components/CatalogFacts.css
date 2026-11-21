@@ -1,0 +1,24 @@
+.catalog-facts {
+  position: relative;
+  border-top: 1px solid var(--line);
+  background: rgba(13, 10, 8, .78);
+  backdrop-filter: blur(12px);
+}
+
+.catalog-facts-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: 1.5rem;
+  row-gap: .9rem;
+  margin-block: 0;
+  padding-block: clamp(.85rem, 2.5vw, 1.7rem);
+}
+
+.catalog-facts-grid > div { display: grid; gap: .28rem; }
+.catalog-facts dt { color: var(--muted); font-size: .68rem; text-transform: uppercase; letter-spacing: .1em; }
+.catalog-facts dd { grid-row: 1; margin: 0; color: var(--ink); font: 500 clamp(1.02rem, 2.1vw, 1.45rem)/1.2 var(--font-num); }
+
+@media (max-width: 640px) {
+  .catalog-facts-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .catalog-facts dt { letter-spacing: .055em; }
+}

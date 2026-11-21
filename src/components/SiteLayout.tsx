@@ -19,7 +19,7 @@ function StorefrontWidgets({ base, home }: { base: string; home: boolean }) {
     <FloatingCart />
     <AnalyticsBanner privacyHref={base + 'privacy/'} />
     <Suspense fallback={null}>{open && <CartDrawer assetBase={base} />}</Suspense>
-    <Suspense fallback={null}><TelegramFab />{home && <ChatBot />}</Suspense>
+    <Suspense fallback={null}><TelegramFab base={base} />{home && <ChatBot />}</Suspense>
   </>
 }
 

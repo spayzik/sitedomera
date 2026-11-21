@@ -2,7 +2,7 @@ import { motion, useReducedMotion, useInView } from 'framer-motion'
 import { ArrowRight, ArrowDown } from 'lucide-react'
 import { useRef } from 'react'
 import { EditorialReveal } from './EditorialReveal'
-import { catalogSummary } from '../data/products'
+import { CatalogFacts } from './CatalogFacts'
 import './HomeCommerce.css'
 
 const easeOutQuint = [0.22, 1, 0.36, 1] as const
@@ -78,12 +78,7 @@ export function Hero({ ready = true }: { ready?: boolean }) {
         </motion.div>
       </div>
 
-      <div className="hero-arch-bottom">
-        <div className="container hero-commerce-facts">
-          <span>{catalogSummary.productCount} позиций · {catalogSummary.categoryCount} категорий</span>
-          <a href="#showroom" className="interactive">Шоурум в Москве <ArrowRight size={14} aria-hidden="true" /></a>
-        </div>
-      </div>
+      <CatalogFacts />
     </section>
   )
 }
