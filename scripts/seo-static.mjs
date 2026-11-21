@@ -30,21 +30,6 @@ const picture = (path, alt, prefix, lazy = true, images) =>
   `<img src="${escape(prefix + path)}" alt="${escape(alt)}"${lazy ? ' loading="lazy"' : ''} decoding="async"${imageDimensions(path, images)}>`
 
 const contactLinks = `<a href="tel:${escape(CONTACTS.phoneRaw)}">${escape(CONTACTS.phone)}</a>`
-const mainNav = [
-  ['/catalog/', 'Каталог'], ['/montazh/', 'Монтаж'], ['/kalkulyator/', 'Калькулятор'],
-  ['/showroom/', 'Шоурум'], ['/kontakty/', 'Контакты'],
-]
-
-const header = prefix => `<header class="seo-header"><div class="container">
-  ${anchor('/', CONTACTS.brand, prefix)}
-  <nav aria-label="Основное меню">${mainNav.map(([path, label]) => anchor(path, label, prefix)).join('')}</nav>
-</div></header>`
-const footer = (prefix, interactive) => `<footer class="seo-footer"><div class="container">
-  <strong>${escape(CONTACTS.brand)}</strong><p>${escape(CONTACTS.address)} · ${escape(CONTACTS.hours)}</p>
-  <div class="seo-actions">${contactLinks}${anchor('/dostavka/', 'Доставка и оплата', prefix)}${anchor('/stati/', 'Статьи', prefix)}
-  ${anchor('/privacy/', 'Политика конфиденциальности', prefix)}${interactive ? '<span data-cookie-settings></span>' : ''}</div>
-</div></footer>`
-
 function crumbs(page) {
   if (page.kind === 'category' || page.kind === 'selection') return [['/', CONTACTS.brand], ['/catalog/', 'Каталог'], [page.path, page.heading]]
   if (page.kind === 'product') {
@@ -68,7 +53,11 @@ function categoryLinks(prefix) {
 
 const stockLabel = product => '<p class="seo-stock" data-stock-id="' + escape(product.id) + '">Наличие уточняется</p>'
 
-function listing(items, prefix, images, interactive = false) {
+function listing(items, prefix, images, interactive = false, ui) {
+  if (ui) return `<ul class="grid-arch catalog-page-grid seo-material-grid"${interactive ? ' data-catalog-list' : ''}>${items.map(product =>
+    '<li' + (interactive ? ' data-catalog-product="' + escape(product.id) + '"' : '') + '>' +
+    ui.renderCard({ product, base: prefix, detailsHref: linkPath(productPath(product), prefix),
+      intrinsic: images?.get(product.image), interactive }) + '</li>').join('')}</ul>`
   return `<ul class="seo-cards"${interactive ? ' data-catalog-list' : ''}>${items.map(product => `<li class="seo-product-card"${interactive ? ' data-catalog-product="' + escape(product.id) + '"' : ''}>
     <a href="${escape(linkPath(productPath(product), prefix))}">
       ${picture(product.image, '', prefix, true, images)}
@@ -131,7 +120,7 @@ const commercialActions = {
   '/otzyvy/': [CONTACTS.avito, 'Открыть отзывы на Авито'],
 }
 
-function productBody(product, prefix, images) {
+function productBody(product, prefix, images, ui) {
   const similar = relatedProducts(product, products)
   const complements = suggestedComplements(product, products)
   const calculator = '/kalkulyator/?material=' + encodeURIComponent(product.id)
@@ -174,8 +163,8 @@ function productBody(product, prefix, images) {
       <dl>${productDetails(product).map(([name, value]) =>
         `<div><dt>${escape(name)}</dt><dd>${escape(value)}</dd></div>`).join('')}</dl>
     </div>
-  </div>${similar.length ? `<section><h2>Похожие материалы</h2>${listing(similar, prefix, images)}</section>` : ''}
-  ${complements.length ? `<section><h2>Сопутствующие материалы</h2><p>Сравните доступные варианты. Совместимость с выбранным изделием уточнит менеджер.</p>${listing(complements, prefix, images)}</section>` : ''}`
+  </div>${similar.length ? `<section><h2>Похожие материалы</h2>${listing(similar, prefix, images, false, ui)}</section>` : ''}
+  ${complements.length ? `<section><h2>Сопутствующие материалы</h2><p>Сравните доступные варианты. Совместимость с выбранным изделием уточнит менеджер.</p>${listing(complements, prefix, images, false, ui)}</section>` : ''}`
 }
 
 const catalogControls = (prefix, categoryId = 'all') => `<div data-catalog-filters data-category-id="${escape(categoryId)}" data-asset-base="${escape(prefix)}"></div>`
@@ -207,27 +196,33 @@ function venueContacts(prefix) {
   </section>`
 }
 
-function body(page, prefix, images) {
+function catalogNavigation(page, prefix) {
+  const tabs = [['/catalog/', 'Все материалы'], ...collections.map(item => [categoryPath(item.id), item.name])]
+  return '<nav class="filters-arch catalog-route-tabs" aria-label="Категории материалов">' + tabs.map(([path, name]) =>
+    '<a href="' + escape(linkPath(path, prefix)) + '"' + (path === page.path ? ' aria-current="page"' : '') + '>' + escape(name) + '</a>').join('') + '</nav>'
+}
+
+function body(page, prefix, images, ui) {
   if (page.kind === 'home') return home(page, prefix, images)
   let contents
   switch (page.kind) {
     case 'catalog':
       contents = `<p>${escape(page.description)} ${products.length} позиций и ${collections.length} категорий.</p>
-        ${categoryLinks(prefix)}
+        ${catalogNavigation(page, prefix)}
         <div class="seo-actions">${seoPages.filter(item => item.kind === 'selection').map(item => anchor(item.path, item.heading, prefix)).join('')}</div>
-        <section><h2>Все материалы</h2>${catalogControls(prefix)}${listing(products, prefix, images, true)}</section>`
+        <section><h2>Все материалы</h2>${catalogControls(prefix)}${listing(products, prefix, images, true, ui)}</section>`
       break
     case 'category':
-      contents = `<p>${escape(page.intro)}</p>
-        <section><h2>Материалы и цены</h2>${catalogControls(prefix, page.categoryId)}${listing(products.filter(product => product.categoryId === page.categoryId), prefix, images, true)}</section>
+      contents = `<p>${escape(page.intro)}</p>${catalogNavigation(page, prefix)}
+        <section><h2>Материалы и цены</h2>${catalogControls(prefix, page.categoryId)}${listing(products.filter(product => product.categoryId === page.categoryId), prefix, images, true, ui)}</section>
         <div class="seo-actions">${anchor('/obraztsy/', 'Как запросить образцы', prefix)}${anchor('/kalkulyator/', 'Рассчитать расход', prefix)}</div>`
       break
     case 'selection':
-      contents = `<p>${escape(page.description)}</p><section><h2>Подтверждённые позиции</h2>${listing(page.items, prefix, images)}</section>
+      contents = `<p>${escape(page.description)}</p><section><h2>Подтверждённые позиции</h2>${listing(page.items, prefix, images, false, ui)}</section>
         ${copyBlocks(page.copy.blocks)}<div class="seo-actions">${page.copy.links?.map(({path, label}) => anchor(path, label, prefix)).join('') ?? ''}</div>`
       break
     case 'product':
-      return breadcrumbs(page, prefix) + productBody(page.product, prefix, images)
+      return breadcrumbs(page, prefix) + productBody(page.product, prefix, images, ui)
     case 'articles':
       contents = seoPages.filter(item => item.kind === 'article').map(item =>
         `<section><h2>${anchor(item.path, item.heading, prefix)}</h2><p>${escape(item.description)}</p></section>`).join('')
@@ -236,7 +231,7 @@ function body(page, prefix, images) {
       const action = commercialActions[page.path]
       const map = page.path === '/showroom/' || page.path === '/kontakty/'
       contents = `<div class="seo-copy${action ? ' seo-commercial' : ''}"><header class="seo-copy-intro"><p>${escape(page.description)}</p>
-        ${action ? `<a class="seo-main-action" href="${escape(linkPath(action[0], prefix))}">${escape(action[1])}</a>` : ''}</header>
+        ${action ? `<a class="btn btn-outline seo-main-action" href="${escape(linkPath(action[0], prefix))}">${escape(action[1])}</a>` : ''}</header>
         ${page.copy.image ? `<figure>
           <img src="${escape(prefix + page.copy.image)}" alt="${escape(page.copy.imageCaption ?? page.heading)}" decoding="async"${imageDimensions(page.copy.image, images)}${page.copy.imageSmall
             ? ` srcset="${escape(prefix + page.copy.imageSmall)} 720w, ${escape(prefix + page.copy.image)} 1440w" sizes="(max-width: 768px) 100vw, 48rem"`
@@ -311,16 +306,21 @@ function schema(page) {
   return JSON.stringify({ '@context': 'https://schema.org', '@graph': graph }).replaceAll('<', '\\u003c')
 }
 
-export const rootContent = (page, images) => `<div class="seo-static">${header('./')}<main class="container seo-main">${body(page, './', images)}</main>${footer('./')}</div>`
+function shellContent(path, prefix, content, ui) {
+  return ui ? '<div data-site-shell data-path="' + escape(path) + '" data-asset-base="' + escape(prefix) + '">' +
+    ui.renderShell({ path, base: prefix, content }) + '</div>' : '<main class="container seo-main">' + content + '</main>'
+}
+
+export const rootContent = (page, images, ui) => shellContent('/', './', body(page, './', images, ui), ui)
 export const jsonLd = page => `<script type="application/ld+json">${schema(page)}</script>`
 
-export function renderSeoPage(page, stylesheets, stockEnabled = false, toolsEntry = null, { images, venueEntry, reviewsEntry } = {}) {
+export function renderSeoPage(page, stylesheets, _stockEnabled = false, toolsEntry = null, { images, venueEntry, reviewsEntry, ui } = {}) {
   const prefix = seoAssetPrefix(page.path)
   const image = canonicalUrl('/' + socialImage(page))
-  const hasTools = ['product', 'catalog', 'category'].includes(page.kind) || page.path === '/kalkulyator/'
-  const interactive = hasTools ? toolsEntry : page.path === '/otzyvy/' ? reviewsEntry :
+  const interactive = page.path === '/otzyvy/' ? reviewsEntry :
     ['/kontakty/', '/showroom/'].includes(page.path) ? venueEntry : null
-  const styles = new Set([].concat(stylesheets, interactive?.css ?? []))
+  const entries = [toolsEntry, interactive].filter(Boolean)
+  const styles = new Set([].concat(stylesheets, ...entries.map(entry => entry.css ?? [])))
   return `<!doctype html>
 <html lang="ru"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
@@ -339,10 +339,8 @@ ${[...styles].map(file => '<link rel="stylesheet" href="' + escape(prefix + file
 <meta property="og:url" content="${escape(canonicalUrl(page.path))}"><meta property="og:image" content="${escape(image)}">
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="${escape(image)}">
 ${jsonLd(page)}
-</head><body class="seo-static">${header(prefix)}<main class="container seo-main">${body(page, prefix, images)}</main>${footer(prefix, hasTools && interactive)}
-${stockEnabled && page.kind === 'selection' ? '<script id="stock-catalog" type="application/json" data-url="' + prefix + 'generated/inventory.json">' +
-  JSON.stringify(products.map(({ id, unit }) => ({ id, unit }))) + '</script><script type="module" src="' + prefix + 'seo-stock.js"></script>' : ''}
-${interactive ? '<script type="module" src="' + escape(prefix + interactive.file) + '"></script>' : ''}</body></html>
+</head><body class="seo-static">${shellContent(page.path, prefix, body(page, prefix, images, ui), ui)}
+${entries.map(entry => '<script type="module" src="' + escape(prefix + entry.file) + '"></script>').join('')}</body></html>
 `
 }
 
@@ -370,10 +368,13 @@ export function renderYml(now = new Date()) {
 `
 }
 
-export const notFound = `<!doctype html><html lang="ru"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex, follow">
-<title>Страница не найдена — ${escape(CONTACTS.brand)}</title></head><body><main>
-<h1>Страница не найдена</h1><p>Проверьте адрес или перейдите в каталог материалов.</p>
-<p><a href="/">Главная</a> · <a href="/catalog/">Каталог</a></p>
-</main></body></html>
-`
+export function notFound(stylesheets, toolsEntry, ui) {
+  const base = process.env.DEKORAY_404_BASE || '/'
+  const content = '<h1>Страница не найдена</h1><p>Проверьте адрес или перейдите в каталог материалов.</p>' +
+    '<a class="btn btn-outline" href="' + escape(base) + 'catalog/">Каталог</a>'
+  const styles = new Set([].concat(stylesheets, toolsEntry.css ?? [], 'seo-pages.css', 'fonts/fonts.css'))
+  return '<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">' +
+    '<meta name="robots" content="noindex, follow"><title>Страница не найдена — ДЕКОРАЙ</title>' +
+    [...styles].map(file => '<link rel="stylesheet" href="' + escape(base + file) + '">').join('') + '</head><body class="seo-static">' +
+    shellContent('/404/', base, content, ui) + '<script type="module" src="' + escape(base + toolsEntry.file) + '"></script></body></html>'
+}

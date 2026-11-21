@@ -17,7 +17,8 @@ function useConsent(): ConsentContextValue {
 }
 
 export function PrivacyProvider({ children }: { children: ReactNode }) {
-  const [consent, setConsent] = useState<AnalyticsConsent>(readAnalyticsConsent)
+  const [consent, setConsent] = useState<AnalyticsConsent>('unknown')
+  useEffect(() => setConsent(readAnalyticsConsent()), [])
 
   useEffect(() => {
     if (consent === 'accepted') startAnalytics()

@@ -101,7 +101,7 @@ test('editorial product gallery separates the canonical sample from relevant vis
   assert(!renderSeoPage(profile, stylesheet).includes('seo-room-scenes'))
   for (const route of ['/montazh/','/dostavka/','/showroom/','/kontakty/','/proekty/','/opt/','/dizayneram/']) {
     const page = seoPages.find(item => item.path === route)
-    assert.equal([...renderSeoPage(page, stylesheet).matchAll(/class="seo-main-action"/g)].length, 1, route)
+    assert.equal([...renderSeoPage(page, stylesheet).matchAll(/class="btn btn-outline seo-main-action"/g)].length, 1, route)
   }
 })
 
@@ -128,16 +128,16 @@ test('price feed uses stable ids and verified product facts without inventing st
   assert.match(feed, /<vendorCode>A9001<\/vendorCode>/)
 })
 
-test('thickness landing pages contain only confirmed products, correct links and the full snapshot contract', () => {
+test('thickness landing pages contain only confirmed products, correct links and shared stock hooks', () => {
   for (const thickness of [5, 8]) {
     const page = seoPages.find(page => page.path === '/catalog/' + thickness + '-mm/')
     assert.equal(page.kind, 'selection')
     assert.deepEqual(page.items, products.filter(product => product.kind === 'panel' && product.thicknessMm === thickness))
-    const html = renderSeoPage(page, [], true)
+    const html = renderSeoPage(page, [], false, { file: "assets/storefront-tools-test.js" })
     assert(html.includes('Подтверждённые позиции'))
     assert.equal((html.match(/data-stock-id=/g) ?? []).length, page.items.length)
-    assert(html.includes('seo-stock.js'))
-    assert(html.includes(JSON.stringify(products.map(({id, unit}) => ({id, unit})))))
+    assert(!html.includes('seo-stock.js'))
+    assert(html.includes("assets/storefront-tools-test.js"))
     assert(!html.includes('"availability"'))
   }
 })

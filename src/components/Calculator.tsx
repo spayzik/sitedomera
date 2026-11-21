@@ -12,11 +12,18 @@ import { buildTelegramDraftUrl, formatCalculatorTelegramMessage } from '../lib/t
 import { calculateProjectPanels, calculateWallLayout, calculatorWall, sheetArea, type WallDimensions } from '../lib/calculator'
 import { trackAnalyticsGoal } from '../lib/analytics'
 
-export function Calculator() {
+export function Calculator({ standalone = false }: { standalone?: boolean } = {}) {
+  const initialSearch = !standalone && typeof window !== 'undefined' ? window.location.search : ''
   const { add } = useCart()
-  const [materialId, setMaterialId] = useState(() => new URLSearchParams(window.location.search).get('material') ?? '')
+  const [materialId, setMaterialId] = useState(() => new URLSearchParams(initialSearch).get('material') ?? '')
   const selectedPanel = sheetProducts.find(p => p.id === materialId) ?? null
-  const [walls, setWalls] = useState<Array<WallDimensions & { id: number }>>(() => [{ id: 0, ...calculatorWall(new URLSearchParams(window.location.search)) }])
+  const [walls, setWalls] = useState<Array<WallDimensions & { id: number }>>(() => [{ id: 0, ...calculatorWall(new URLSearchParams(initialSearch)) }])
+  useEffect(() => {
+    if (!standalone) return
+    const params = new URLSearchParams(window.location.search)
+    setMaterialId(params.get('material') ?? '')
+    setWalls([{ id: 0, ...calculatorWall(params) }])
+  }, [standalone])
   const nextWall = useRef(1)
   const [openings, setOpenings] = useState('0')
   const [reserve, setReserve] = useState('10')
@@ -72,7 +79,7 @@ export function Calculator() {
   return (
     <section className="section calculator" id="calculator">
       <div className="container">
-        <div className="catalog-header" style={{ marginBottom: '3rem' }}>
+        {!standalone && <div className="catalog-header" style={{ marginBottom: '3rem' }}>
           <div>
             <p className="eyebrow">Калькулятор</p>
             <h2>Сколько листов<br/>нужно?</h2>
@@ -81,11 +88,11 @@ export function Calculator() {
             Выберите листовой материал и посчитайте ориентировочную
             стоимость под ваши стены. Точный расчёт с профилями сделает менеджер.
           </p>
-        </div>
+        </div>}
 
         <div className="split-grid calc-grid" style={{ gap: '4rem' }}>
           <motion.div
-            initial={{ opacity: 0, x: -30 }}
+            initial={standalone ? false : { opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: '-50px' }}
             transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}

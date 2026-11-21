@@ -9,7 +9,7 @@ export function parseHashRoute(hash: string): { path: string; params: URLSearchP
 }
 
 function currentPath(): string {
-  return parseHashRoute(window.location.hash).path
+  return parseHashRoute(typeof window === 'undefined' ? '' : window.location.hash).path
 }
 
 export function useRoute(): string {

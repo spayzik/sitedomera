@@ -212,8 +212,6 @@ async function verify() {
   assertPublicAvitoSnapshot(avito, { allowFallback: true })
 
   const required = new Set(['404.html', 'yml.xml', 'seo-pages.css', ...seoPages.map(page => seoPageFile(page.path)), ...publicReleaseFiles])
-  const selection = seoPages.find(page => page.kind === 'selection')
-  if (selection && (await readFile(await requireFile(seoPageFile(selection.path)), 'utf8')).includes('seo-stock.js')) required.add('seo-stock.js')
   for (const path of required) await requireFile(path)
   const internalNames = /(?:^|[/_.-])(?:requirements?|roadmap|handoff|evidence|screenshots?|private|internal|codex|debug|fixtures?|test|spec|backup|manifest)(?:[/_.-]|$)/i
   const blockedText = /__SITE_[A-Z_]+__|AVITO_CLIENT_(?:SECRET|ID)|client_secret|access_token|Authorization:\s*Bearer|api\.telegram\.org\/bot|TELEGRAM_BOT_TOKEN|(?:S?FTP|REG(?:RU)?)[_ -]?(?:PASSWORD|TOKEN)|-----BEGIN [^-]*PRIVATE KEY-----|gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|(?:AKIA|ASIA)[A-Z0-9]{16}|sourceMappingURL|\bdomera\.ru\b|\blocalhost\b|\b127\.0\.0\.1\b|(?:[a-z]:[\\/]Users[\\/]|\/home\/[^/\s]+\/|file:\/\/)/i

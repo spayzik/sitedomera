@@ -7,17 +7,20 @@ import { LogoIcon } from './Logo'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useDialog } from '../lib/useDialog'
 
-const catalogUrl = import.meta.env.BASE_URL + 'catalog/'
 const links = [
   { href: '#specs', label: 'Технологии' },
   { href: '#why', label: 'Почему мы' },
-  { href: catalogUrl, label: 'Каталог' },
+  { href: 'catalog/', label: 'Каталог' },
   { href: '#interiors', label: 'Интерьеры' },
-  { href: '#installation', label: 'Монтаж' },
-  { href: '#showroom', label: 'Шоурум' },
+  { href: 'montazh/', label: 'Монтаж' },
+  { href: 'showroom/', label: 'Шоурум' },
 ]
 
-export function Header() {
+export function Header({ base = './', path = '/' }: { base?: string; path?: string }) {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+  const selected = path.startsWith('/catalog/') ? 'catalog/' : path.slice(1)
+  const href = (target: string) => path === '/' && target.startsWith('#') ? target : base + target
   const { count, setOpen } = useCart()
   const [scrolled, setScrolled] = useState(false)
   const [mobile, setMobile] = useState(false)
@@ -38,7 +41,7 @@ export function Header() {
     const update = () => {
       frame = 0
       if (window.location.hash.startsWith('#/catalog')) {
-        setActive(catalogUrl)
+        setActive('catalog/')
         return
       }
       const point = window.innerHeight * 0.45
@@ -63,19 +66,19 @@ export function Header() {
     <>
       <motion.header
         className={`site-header ${scrolled ? 'scrolled' : ''}`}
-        initial={{ x: '-50%', y: -30, opacity: 0 }}
+        initial={false}
         animate={{ x: '-50%', y: 0, opacity: 1 }}
         transition={{ duration: 0.8, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
       >
         <div className="header-inner">
-          <a href="#top" className="logo" aria-label="Декорай" style={{ display: 'flex', alignItems: 'center' }}>
+          <a href={base} className="logo" aria-label="Декорай" style={{ display: 'flex', alignItems: 'center' }}>
             <LogoIcon style={{ marginRight: '0.5rem' }} />
             ДЕКОРАЙ
           </a>
 
           <nav className="nav-desktop">
             {links.map((l) => (
-              <a key={l.href} href={l.href} className={active === l.href ? 'active' : ''}>
+              <a key={l.href} href={href(l.href)} className={(selected || active) === l.href ? 'active' : ''}>
                 {l.label}
               </a>
             ))}
@@ -96,7 +99,7 @@ export function Header() {
             >
               <ShoppingBag size={16} style={{ marginRight: '0.4rem' }} />
               Корзина
-              {count > 0 && <span className="badge">{count}</span>}
+              {mounted && count > 0 && <span className="badge">{count}</span>}
             </button>
             <button
               className="mobile-toggle"
@@ -133,7 +136,7 @@ export function Header() {
               {links.map((l, i) => (
                 <motion.a
                   key={l.href}
-                  href={l.href}
+                  href={href(l.href)}
                   onClick={() => setMobile(false)}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}

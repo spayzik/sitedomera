@@ -1,12 +1,21 @@
-import { stripTypeScriptTypes } from 'node:module'
 import assert from 'node:assert/strict'
 import { copyFile, mkdir, readFile, unlink, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
-import { loadEnv } from 'vite'
+import { build } from 'vite'
+import { pathToFileURL } from 'node:url'
+import { resolve } from 'node:path'
 import sharp from 'sharp'
 import { publicReleaseFiles } from '../src/data/publicReleaseFiles.ts'
 import { seoPageFile, seoPages } from '../src/data/seoRoutes.ts'
 import { jsonLd, notFound, renderSeoPage, renderSitemap, renderYml, rootContent } from './seo-static.mjs'
+
+const ssrDirectory = resolve('node_modules/.cache/dekoray-ssg')
+await build({
+  configFile: false,
+  esbuild: { jsx: 'automatic' },
+  build: { ssr: 'src/ssg.tsx', outDir: ssrDirectory, emptyOutDir: true },
+})
+const ui = await import(pathToFileURL(join(ssrDirectory, 'ssg.js')).href)
 
 const dist = 'dist'
 const rootFile = join(dist, 'index.html')
@@ -33,22 +42,16 @@ const home = seoPages[0]
 assert.equal(home.path, '/')
 
 await copyFile('scripts/seo-pages.css', join(dist, 'seo-pages.css'))
-const stockEnabled = loadEnv('production', process.cwd()).VITE_DEKORAY_INVENTORY === '1'
-if (stockEnabled && seoPages.some(page => page.kind === 'selection')) {
-  const stockContract = stripTypeScriptTypes(await readFile('src/lib/inventory.ts', 'utf8'))
-  const stockClient = await readFile('scripts/seo-stock-client.mjs', 'utf8')
-  await writeFile(join(dist, 'seo-stock.js'), stockContract + '\n' + stockClient + '\nstartStock(parseInventory, availabilityFor, stockLabel)\n')
-}
 for (const page of seoPages.slice(1)) {
   const path = join(dist, seoPageFile(page.path))
   await mkdir(dirname(path), { recursive: true })
-  await writeFile(path, renderSeoPage(page, stylesheets, stockEnabled, toolsEntry, { images, venueEntry, reviewsEntry }))
+  await writeFile(path, renderSeoPage(page, stylesheets, false, toolsEntry, { images, venueEntry, reviewsEntry, ui }))
 }
 await writeFile(rootFile, index
   .replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/, () => jsonLd(home))
   .replace('</head>', '<link rel="stylesheet" href="./seo-pages.css">\n</head>')
-  .replace('<div id="root"></div>', () => '<div id="root">' + rootContent(home, images) + '</div>'))
-await writeFile(join(dist, '404.html'), notFound)
+  .replace('<div id="root"></div>', () => '<div id="root">' + rootContent(home, images, ui) + '</div>'))
+await writeFile(join(dist, '404.html'), notFound(stylesheets, toolsEntry, ui))
 await writeFile(join(dist, 'sitemap.xml'), renderSitemap())
 const robotsPath = join(dist, 'robots.txt')
 const robots = await readFile(robotsPath, 'utf8')

@@ -9,27 +9,28 @@
   display: block;
   width: 100%;
   margin: 0;
-  border: 1px solid var(--line);
+  border: 0;
   background: var(--surface);
 }
 
 .commerce-card .commerce-card-sample img {
-  object-fit: scale-down;
-  padding: clamp(.5rem, 1.5vw, 1.25rem);
+  object-fit: cover;
+  padding: 0;
 }
 
 .commerce-card-open {
   position: absolute;
   right: .65rem;
   bottom: .65rem;
-  display: grid;
-  place-items: center;
-  width: 2rem;
-  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .4rem .65rem;
+  font-size: .78rem;
   color: var(--accent-light);
   border: 1px solid var(--line);
   background: var(--surface);
-  transition: border-color .2s ease, color .2s ease;
+  transition: opacity .2s ease;
 }
 
 .commerce-card-body {
@@ -47,9 +48,12 @@
 }
 
 .commerce-card-category {
-  font-size: .7rem;
-  letter-spacing: .12em;
-  text-transform: uppercase;
+  position: absolute;
+  inset: .65rem auto auto .65rem;
+  padding: .3rem .55rem;
+  background: rgba(12, 9, 6, .88);
+  color: var(--ink);
+  font-size: .72rem;
 }
 
 .commerce-card h3 {
@@ -130,10 +134,8 @@
 }
 
 @media (hover: hover) {
-  .commerce-card .commerce-card-sample:hover,
-  .commerce-card-sample:hover .commerce-card-open {
-    border-color: var(--accent);
-  }
+  .commerce-card-open { opacity: 0; }
+  .commerce-card-sample:is(:hover, :focus-visible) .commerce-card-open { opacity: 1; }
 
   .commerce-card-actions > :hover { text-decoration: underline; text-underline-offset: .23em; }
 }

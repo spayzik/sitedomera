@@ -2,7 +2,6 @@ import { lazy, Suspense, useEffect, useState, useCallback, type ReactNode } from
 import { InventoryProvider } from './context/InventoryContext'
 import { LeadProvider } from './components/LeadProvider'
 import { CartProvider } from './context/CartContext'
-import { Header } from './components/Header'
 import { Hero } from './components/Hero'
 import { Specs } from './components/Specs'
 import { Catalog } from './components/Catalog'
@@ -18,11 +17,10 @@ import { Preloader } from './components/Preloader'
 import { ScrollProgress } from './components/ScrollProgress'
 import { BackToTop } from './components/BackToTop'
 import { GradientLine } from './components/GradientLine'
-import { LogoIcon } from './components/Logo'
+import { SiteFrame } from './components/SiteLayout'
 import { useRoute, isPageRoute } from './router'
-import { CONTACTS } from './data/products'
 import { metadataForRoute } from './data/seo'
-import { AnalyticsBanner, CookieSettingsLink, PrivacyProvider } from './components/AnalyticsConsent'
+import { AnalyticsBanner, PrivacyProvider } from './components/AnalyticsConsent'
 import { MotionConfig } from 'framer-motion'
 
 const Quiz = lazy(() => import('./components/Quiz').then(m => ({ default: m.Quiz })))
@@ -37,60 +35,6 @@ const CartDrawer = lazy(() => import('./components/CartDrawer').then(m => ({ def
 const FloatingCart = lazy(() => import('./components/FloatingCart').then(m => ({ default: m.FloatingCart })))
 const ChatBot = lazy(() => import('./components/ChatBot').then(m => ({ default: m.ChatBot })))
 const TelegramFab = lazy(() => import('./components/TelegramFab').then(m => ({ default: m.TelegramFab })))
-
-function Footer() {
-  return (
-    <footer className="footer">
-      <div className="container">
-        <div className="footer-top">
-          <div className="footer-col">
-            <span className="footer-logo">
-              <LogoIcon size={42} />
-            </span>
-            <p className="footer-desc">
-              Архитектурные стеновые панели из бамбукового композита.
-              <br/>Премиальные фактуры для современных интерьеров.
-            </p>
-          </div>
-          <div className="footer-navs">
-            <div className="footer-nav-col">
-              <strong>Навигация</strong>
-              <a href="./catalog/">Каталог 2026</a>
-              <a href="#specs">Технологии</a>
-              <a href="#interiors">Интерьеры</a>
-              <a href="./montazh/">Монтаж</a>
-              <a href="./kalkulyator/">Калькулятор</a>
-              <a href="./stati/">Статьи</a>
-            </div>
-            <div className="footer-nav-col">
-              <strong><a href="./showroom/">Шоурум</a></strong>
-              <span>{CONTACTS.address}</span>
-              <span>{CONTACTS.hours}</span>
-              <a href="./dostavka/">Доставка и оплата</a>
-              <a href="./kontakty/">Контакты</a>
-              <a href={`tel:${CONTACTS.phoneRaw}`} className="footer-phone">{CONTACTS.phone}</a>
-            </div>
-          </div>
-        </div>
-        
-        {/* Massive Typography Brand Reveal */}
-        <div className="footer-ghost" aria-hidden="true">ДЕКОРАЙ</div>
-        <div className="footer-massive">
-          ДЕКОРАЙ
-        </div>
-
-        <div className="footer-bottom">
-          <p>&copy; {new Date().getFullYear()} {CONTACTS.brand}. Все права защищены.</p>
-          <div className="footer-legal">
-            <a href={import.meta.env.BASE_URL + 'privacy/'}>Политика конфиденциальности</a>
-            <CookieSettingsLink />
-            <a href="#/offer">Условия приобретения</a>
-          </div>
-        </div>
-      </div>
-    </footer>
-  )
-}
 
 const firstLazySectionIds = ['installation', 'interiors', 'calculator', 'reviews']
 const contactSectionIds = ['showroom']
@@ -176,9 +120,7 @@ function Wrapper({ children, onIntroComplete }: { children: ReactNode; onIntroCo
       <ScrollProgress />
       <ScrollGlow />
 
-      <Header />
-      <main>{children}</main>
-      <Footer />
+      <SiteFrame><main>{children}</main></SiteFrame>
       <AnalyticsBanner />
       {widgetsReady && (
         <Suspense fallback={null}>

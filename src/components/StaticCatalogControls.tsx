@@ -57,7 +57,7 @@ export function StaticCatalogControls({ category }: { category?: CollectionId })
     </p>
     {actionTargets.map(target => {
       const product = products.find(item => item.id === target.dataset.catalogActions)
-      return product ? createPortal(<button type="button" className="seo-card-add"
+      return product ? createPortal(<button type="button" className="commerce-card-add interactive"
         onClick={() => add(product)} aria-label={`В подборку: ${product.name}`}>В подборку</button>, target, product.id) : null
     })}
   </>

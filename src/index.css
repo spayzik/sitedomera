@@ -504,7 +504,7 @@ h4 { font-size: 1.25rem; font-weight: 500; }
 .grid-arch { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 3rem 2rem; }
 .card-arch { cursor: pointer; }
 .card-arch-img { position: relative; aspect-ratio: 3/4; overflow: hidden; background: var(--surface); margin-bottom: 1.25rem; }
-.card-arch-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: scale-down; padding: 0.65rem; }
+.card-arch-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .card-arch-tag {
   position: absolute; top: 1rem; left: 1rem; z-index: 2;
   background: rgba(7,7,7,0.6); backdrop-filter: blur(8px);
@@ -1548,7 +1548,7 @@ body:has(.analytics-banner, .hero-in-view) :is(.floating-cart, .messenger-fab, .
 }
 
 /* Preserve the original editorial cards, including touch and keyboard actions. */
-.catalog-page-grid .card-arch.is-profile .card-arch-img img { object-fit: contain; padding: 1rem; }
+.commerce-card.is-profile .card-arch-img img { object-fit: contain; padding: 0; }
 .catalog-page-grid .card-arch button:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
 @media (hover: none), (pointer: coarse) {
   .catalog-page-grid .card-arch-overlay { opacity: 1; background: linear-gradient(to top, rgba(0,0,0,0.65), transparent 45%); align-items: flex-end; justify-content: flex-start; padding: 1rem; }

@@ -29,7 +29,7 @@ export function Catalog() {
                 {products.length} позиций: панели, гибкий камень, рейки и профили.
                 Выберите фактуру для детального изучения.
               </p>
-              <a href="#/catalog" className="btn btn-white interactive">
+              <a href="./catalog/" className="btn btn-white interactive">
                 Открыть полный каталог <ArrowUpRight size={16} />
               </a>
             </div>
@@ -51,15 +51,15 @@ export function Catalog() {
             ))}
           </div>
 
-          <div className="grid-arch">
+          <div className="grid-arch catalog-page-grid">
             {preview.slice(0, 9).map(p => (
               <CatalogCard key={p.id} product={p} onDetails={setSelectedProduct} onAdd={add}
-                category={filter === 'all' ? collections.find(c => c.id === p.categoryId)?.name : undefined} />
+                category={collections.find(c => c.id === p.categoryId)?.name} />
             ))}
           </div>
 
           <div className="catalog-more">
-            <a href="#/catalog" className="btn btn-primary interactive">
+            <a href="./catalog/" className="btn btn-primary interactive">
               Смотреть все {products.length} позиций
             </a>
           </div>

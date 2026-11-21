@@ -1,11 +1,9 @@
 import { lazy, Suspense, useContext, useEffect, useLayoutEffect, useState } from 'react'
-import { createRoot } from 'react-dom/client'
+import { hydrateRoot } from 'react-dom/client'
 import { createPortal } from 'react-dom'
-import { MotionConfig } from 'framer-motion'
-import { AnalyticsBanner, CookieSettingsLink, PrivacyProvider } from './components/AnalyticsConsent'
-import { LeadAction, LeadProvider } from './components/LeadProvider'
-import { CartProvider, useCart } from './context/CartContext'
-import { InventoryProvider } from './context/InventoryContext'
+import { SiteLayout } from './components/SiteLayout'
+import { LeadAction } from './components/LeadProvider'
+import { useCart } from './context/CartContext'
 import { InventoryContext } from './context/inventoryState'
 import { formatDimensions, products, collections, type CollectionId, type Product } from './data/products'
 import { availabilityFor, stockLabel } from './lib/inventory'
@@ -13,7 +11,6 @@ import { sheetArea } from './lib/calculator'
 import { ProductEstimate } from './components/ProductEstimate'
 import { StaticCatalogControls } from './components/StaticCatalogControls'
 
-const Calculator = lazy(() => import('./components/Calculator').then(module => ({ default: module.Calculator })))
 const CartDrawer = lazy(() => import('./components/CartDrawer').then(module => ({ default: module.CartDrawer })))
 
 function StorefrontAvailability({ product }: { product?: Product }) {
@@ -43,7 +40,7 @@ function StorefrontAvailability({ product }: { product?: Product }) {
 }
 
 export function StorefrontTools({ product, assetBase, catalog, category }: { product?: Product; assetBase: string; catalog?: boolean; category?: CollectionId }) {
-  const { add, count, open, setOpen } = useCart()
+  const { add, open } = useCart()
   const [drawerActivated, setDrawerActivated] = useState(false)
   useEffect(() => { if (open) setDrawerActivated(true) }, [open])
   const context = product && [
@@ -52,38 +49,26 @@ export function StorefrontTools({ product, assetBase, catalog, category }: { pro
   ].filter(Boolean).join(' · ')
 
   return <>
-    {(product || catalog) && <StorefrontAvailability product={product} />}
+    <StorefrontAvailability product={product} />
     {product ? <>
       <button type="button" className="btn btn-primary" onClick={() => add(product)}>Добавить в подборку</button>
       <LeadAction className="btn btn-outline" intent="consultation" context={context}>Связаться с менеджером</LeadAction>
       {sheetArea(product) > 0 && <ProductEstimate product={product} calculatorBase={assetBase} />}
-    </> : catalog ? <StaticCatalogControls category={category} /> : <Suspense fallback={null}><Calculator /></Suspense>}
-    {count > 0 && <button type="button" className="btn btn-outline"
-      onClick={() => setOpen(true)}>Моя подборка · {count}</button>}
+    </> : catalog ? <StaticCatalogControls category={category} /> : null}
     {(open || drawerActivated) && <Suspense fallback={null}><CartDrawer assetBase={assetBase} /></Suspense>}
   </>
 }
 
-const root = document.querySelector<HTMLElement>('[data-storefront-tools], [data-catalog-filters]')
-if (root) {
-  const assetBase = new URL(root.dataset.assetBase ?? './', document.baseURI).href
-  const product = products.find(p => p.id === root.dataset.productId)
-  const cookieSettings = document.querySelector('[data-cookie-settings]')
-  const catalog = root.hasAttribute('data-catalog-filters')
-  const category = collections.find(item => item.id === root.dataset.categoryId)?.id
-  if (product || catalog || root.dataset.storefrontTools === 'calculator') {
-    createRoot(root).render(
-      <MotionConfig reducedMotion="user">
-        <PrivacyProvider>
-          <InventoryProvider snapshotUrl={assetBase + 'generated/inventory.json'}>
-            <LeadProvider>
-              <CartProvider><StorefrontTools product={product} assetBase={assetBase} catalog={catalog} category={category} /></CartProvider>
-              <AnalyticsBanner privacyHref={assetBase + 'privacy/'} />
-              {cookieSettings && createPortal(<CookieSettingsLink />, cookieSettings)}
-            </LeadProvider>
-          </InventoryProvider>
-        </PrivacyProvider>
-      </MotionConfig>,
-    )
-  }
+const shell = document.querySelector<HTMLElement>('[data-site-shell]')
+if (shell) {
+  const base = shell.dataset.assetBase ?? './'
+  const path = shell.dataset.path ?? '/'
+  const target = shell.querySelector<HTMLElement>('[data-storefront-tools], [data-catalog-filters]')
+  const product = products.find(p => p.id === target?.dataset.productId)
+  const catalog = target?.hasAttribute('data-catalog-filters')
+  const category = collections.find(item => item.id === target?.dataset.categoryId)?.id
+  const content = shell.querySelector('[data-static-content]')?.innerHTML ?? ''
+  const tools = <StorefrontTools product={product} assetBase={base} catalog={catalog} category={category} />
+  hydrateRoot(shell, <SiteLayout base={base} path={path} content={content}
+    enhancements={target ? createPortal(tools, target) : tools} />)
 }
