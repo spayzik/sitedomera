@@ -17,7 +17,7 @@ export function EditorialReveal({ lines, ready, className = '' }: {
       ref={ref}
       className={`editorial-reveal ${className}`}
       aria-hidden="true"
-      initial={reducedMotion ? false : 'hidden'}
+      initial={ready || reducedMotion ? false : 'hidden'}
       animate={shown ? 'shown' : 'hidden'}
       variants={{ hidden: {}, shown: { transition: { staggerChildren: reducedMotion ? 0 : 0.11 } } }}
     >

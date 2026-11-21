@@ -13,9 +13,10 @@ function currentPath(): string {
 }
 
 export function useRoute(): string {
-  const [route, setRoute] = useState<string>(currentPath)
+  const [route, setRoute] = useState<string>('/')
   useEffect(() => {
     const onHash = () => setRoute(currentPath())
+    onHash()
     window.addEventListener('hashchange', onHash)
     return () => window.removeEventListener('hashchange', onHash)
   }, [])

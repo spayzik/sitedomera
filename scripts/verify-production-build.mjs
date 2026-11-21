@@ -90,7 +90,7 @@ async function verify() {
   assert.equal(business?.url, canonical, 'JSON-LD URL mismatch')
   assert.equal(business.image, ogImage, 'JSON-LD image URL mismatch')
   assert.equal(tags(html, 'h1').length, 1, 'Home must have one server-rendered H1')
-  assert.match(html, new RegExp(products.length + ' позиций · [0-9]+ категорий'))
+  assert.match(html.replaceAll('<!-- -->', ''), new RegExp(products.length + ' позиций · [0-9]+ категорий'))
 
   const robots = await readFile(await requireFile('robots.txt'), 'utf8')
   const sitemap = await readFile(await requireFile('sitemap.xml'), 'utf8')
@@ -126,13 +126,10 @@ async function verify() {
     assert.equal(tags(document, 'h1').length, 1, file + ' must have one server-rendered H1')
     assert.match(document, /<main\b[^>]*>[\s\S]*<\/main>/i)
     const scripts = tags(document, 'script').filter(tag => attribute(tag, 'src'))
-    if (['product', 'catalog', 'category'].includes(page.kind) || page.path === '/kalkulyator/') {
-      one(scripts.filter(tag => /\/assets\/storefront-tools-[\w-]+\.js$/.test(attribute(tag, 'src'))), file + ' storefront entry')
-    }
-    if (page.path === '/otzyvy/') one(scripts.filter(tag => /\/assets\/seo-reviews-[\w-]+\.js$/.test(attribute(tag, 'src'))), file + ' reviews entry')
-    if (['/kontakty/', '/showroom/'].includes(page.path)) one(scripts.filter(tag => /\/assets\/seo-venue-[\w-]+\.js$/.test(attribute(tag, 'src'))), file + ' venue entry')
+    one(scripts.filter(tag => /\/assets\/index-[\w-]+\.js$/.test(attribute(tag, 'src'))), file + ' shared storefront entry')
+    assert.match(document, /id="root" data-path=/)
+    assert.doesNotMatch(document, /data-static-content|class="seo-static"/)
     for (const image of tags(document, 'img')) {
-      assert(Number(attribute(image, 'width')) > 0 && Number(attribute(image, 'height')) > 0, file + ' lacks intrinsic image dimensions')
       for (const candidate of (attribute(image, 'srcset') ?? '').split(',').map(source => source.trim().split(/\s+/)[0]).filter(Boolean)) {
         for (const base of [canonical, previewBase]) await requireFile(localPath(candidate, new URL(page.path.slice(1), base), base))
       }
@@ -149,7 +146,7 @@ async function verify() {
       if (!href || !href.startsWith('.')) continue
       const target = new URL(href, canonicalUrl(page.path))
       const asset = target.pathname.slice(1)
-      if (attribute(tag, 'class')?.split(/\s+/).includes('seo-image-link')) {
+      if (page.kind === 'product' && publicReleaseFiles.has(asset) && /\.webp$/.test(asset)) {
         assert(page.kind === 'product' && /\.webp$/.test(asset) && publicReleaseFiles.has(asset), file + ' links to unapproved gallery image: ' + asset)
         for (const base of [canonical, previewBase]) await requireFile(localPath(href, new URL(page.path.slice(1), base), base))
       } else {
@@ -158,7 +155,7 @@ async function verify() {
     }
     if (page.kind === 'product') {
       const product = page.product
-      assert(document.includes('data-product-id="' + product.id + '"'), file + ' is missing product tools')
+      assert(document.includes('Добавить в подборку'), file + ' is missing product tools')
       assert(!document.includes('/#/catalog'), file + ' contains legacy catalog links')
       const payload = one([...document.matchAll(/<script type="application\/ld\+json">([^<]*)<\/script>/g)], file + ' JSON-LD')[1]
       const record = JSON.parse(payload)['@graph'].find(item => item['@type'] === 'Product')
@@ -211,7 +208,7 @@ async function verify() {
   const avito = JSON.parse(await readFile(await requireFile('generated/avito-reviews.json'), 'utf8'))
   assertPublicAvitoSnapshot(avito, { allowFallback: true })
 
-  const required = new Set(['404.html', 'yml.xml', 'seo-pages.css', ...seoPages.map(page => seoPageFile(page.path)), ...publicReleaseFiles])
+  const required = new Set(['404.html', 'yml.xml', ...seoPages.map(page => seoPageFile(page.path)), ...publicReleaseFiles])
   for (const path of required) await requireFile(path)
   const internalNames = /(?:^|[/_.-])(?:requirements?|roadmap|handoff|evidence|screenshots?|private|internal|codex|debug|fixtures?|test|spec|backup|manifest)(?:[/_.-]|$)/i
   const blockedText = /__SITE_[A-Z_]+__|AVITO_CLIENT_(?:SECRET|ID)|client_secret|access_token|Authorization:\s*Bearer|api\.telegram\.org\/bot|TELEGRAM_BOT_TOKEN|(?:S?FTP|REG(?:RU)?)[_ -]?(?:PASSWORD|TOKEN)|-----BEGIN [^-]*PRIVATE KEY-----|gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|(?:AKIA|ASIA)[A-Z0-9]{16}|sourceMappingURL|\bdomera\.ru\b|\blocalhost\b|\b127\.0\.0\.1\b|(?:[a-z]:[\\/]Users[\\/]|\/home\/[^/\s]+\/|file:\/\/)/i

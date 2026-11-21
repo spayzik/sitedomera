@@ -1,27 +1,28 @@
-import { useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
 import { MotionConfig } from 'framer-motion'
 import { Header } from './Header'
 import { Footer } from './Footer'
-import { Calculator } from './Calculator'
 import { FloatingCart } from './FloatingCart'
 import { AnalyticsBanner, PrivacyProvider } from './AnalyticsConsent'
 import { LeadProvider } from './LeadProvider'
 import { InventoryProvider } from '../context/InventoryContext'
-import { CartProvider } from '../context/CartContext'
+import { CartProvider, useCart } from '../context/CartContext'
 
-export function SiteFrame({ base = './', path = '/', children }: {
-  base?: string; path?: string; children: React.ReactNode
-}) {
-  return <><Header base={base} path={path} />{children}<Footer base={base} /></>
+const CartDrawer = lazy(() => import('./CartDrawer').then(module => ({ default: module.CartDrawer })))
+const TelegramFab = lazy(() => import('./TelegramFab').then(module => ({ default: module.TelegramFab })))
+const ChatBot = lazy(() => import('./ChatBot').then(module => ({ default: module.ChatBot })))
+
+function StorefrontWidgets({ base, home }: { base: string; home: boolean }) {
+  const { open } = useCart()
+  return <>
+    <FloatingCart />
+    <AnalyticsBanner privacyHref={base + 'privacy/'} />
+    <Suspense fallback={null}>{open && <CartDrawer assetBase={base} />}</Suspense>
+    <Suspense fallback={null}><TelegramFab />{home && <ChatBot />}</Suspense>
+  </>
 }
 
-export function SiteLayout({ base, path, content, enhancements }: {
-  base: string
-  path: string
-  content: string
-  enhancements?: React.ReactNode
-}) {
-  const staticMarkup = useMemo(() => ({ __html: content }), [content])
+export function SiteLayout({ base, path, children }: { base: string; path: string; children: ReactNode }) {
   const [ready, setReady] = useState(false)
   useEffect(() => setReady(true), [])
   return <MotionConfig reducedMotion="user">
@@ -29,11 +30,10 @@ export function SiteLayout({ base, path, content, enhancements }: {
       <InventoryProvider snapshotUrl={base + 'generated/inventory.json'}>
         <LeadProvider>
           <CartProvider>
-            <SiteFrame base={base} path={path}><main className="container seo-main">
-              <div data-static-content="" dangerouslySetInnerHTML={staticMarkup} />
-              {path === '/kalkulyator/' && <Calculator standalone />}
-            </main></SiteFrame>
-            {ready && <><FloatingCart /><AnalyticsBanner privacyHref={base + 'privacy/'} />{enhancements}</>}
+            <Header base={base} path={path} />
+            <main id="page-content">{children}</main>
+            <Footer base={base} />
+            {ready && <StorefrontWidgets base={base} home={path === '/'} />}
           </CartProvider>
         </LeadProvider>
       </InventoryProvider>

@@ -1,176 +1,106 @@
-import { categoryPath } from '../data/seoPaths'
-import { LeadAction } from '../components/LeadProvider'
+import { storefrontImageSize } from '../data/storefrontImageSizes'
 import { useContext, useEffect, useState } from 'react'
-import { motion, useReducedMotion } from 'framer-motion'
-import { collections, products, type CollectionId, type Product, catalogSummary } from '../data/products'
+import { ArrowDown } from 'lucide-react'
+import { categoryPath, productPath, seoPages, type SeoPage } from '../data/seoRoutes'
+import { collections, products } from '../data/products'
 import { useCart } from '../context/CartContext'
-import { ProductModal } from '../components/ProductModal'
-import { CatalogCard } from '../components/CatalogCard'
-import { Counter } from '../components/Counter'
-import { ArrowDown, Ruler, Scale } from 'lucide-react'
-import { parseCatalogHash, updateCatalogHash } from '../lib/catalogNavigation'
-import { availabilityFor } from '../lib/inventory'
 import { InventoryContext } from '../context/inventoryState'
+import { availabilityFor } from '../lib/inventory'
+import { CatalogCard } from '../components/CatalogCard'
 import { CatalogFilterControls } from '../components/CatalogFilterControls'
 import { catalogResults, parseCatalogFilters, writeCatalogFilters, type CatalogFilters } from '../lib/catalogFilters'
 
-export function CatalogPage() {
-  const reducedMotion = useReducedMotion()
-  const [hash, setHash] = useState(() => window.location.hash)
-  const { categoryId: filter, product: selectedProduct } = parseCatalogHash(hash)
+// The generic catalog route shares its data shape with the home and article indexes.
+type CatalogView = Extract<SeoPage, { kind: 'category' | 'selection' }> | (SeoPage & { kind: 'home' | 'catalog' | 'articles' })
+
+export function CatalogPage({ page, base }: { page: CatalogView; base: string }) {
+  const category = page.kind === 'category' ? page.categoryId : undefined
   const { add } = useCart()
   const stock = useContext(InventoryContext)
-  const params = new URLSearchParams(hash.split('?')[1])
-  const filters = parseCatalogFilters(params)
-  useEffect(() => {
-    const sync = () => setHash(window.location.hash)
-    window.addEventListener('hashchange', sync)
-    window.addEventListener('popstate', sync)
-    return () => {
-      window.removeEventListener('hashchange', sync)
-      window.removeEventListener('popstate', sync)
-    }
-  }, [])
-  const navigate = (patch: Parameters<typeof updateCatalogHash>[1]) => {
-    const next = updateCatalogHash(window.location.hash, patch)
-    if (next !== window.location.hash) history.pushState(null, '', next)
-    setHash(next)
-  }
-  const openProduct = (p: Product | null) => navigate({ sku: p?.id ?? null })
-  const changeFilters = (patch: Partial<CatalogFilters>) => {
-    const params = new URLSearchParams(window.location.hash.split('?')[1])
-    const filters = parseCatalogFilters(params)
-    const query = writeCatalogFilters(params, { ...filters, ...patch }).toString()
-    const next = '#/catalog' + (query ? '?' + query : '')
-    if (next !== window.location.hash) {
-      if (patch.query !== undefined && Object.keys(patch).length === 1) history.replaceState(null, '', next)
-      else history.pushState(null, '', next)
-    }
-    setHash(next)
-  }
-  const setFilter = (category: CollectionId | 'all') => changeFilters({ category, thickness: '' })
-  const reset = () => changeFilters(parseCatalogFilters(new URLSearchParams()))
+  const [filters, setFilters] = useState(() => parseCatalogFilters(new URLSearchParams(), category))
+  const [filtersOpen, setFiltersOpen] = useState(false)
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })
-  }, [])
+    const sync = () => setFilters(parseCatalogFilters(new URLSearchParams(location.search), category))
+    sync()
+    window.addEventListener('popstate', sync)
+    return () => window.removeEventListener('popstate', sync)
+  }, [category])
+
+  function changeFilters(patch: Partial<CatalogFilters>) {
+    const url = new URL(location.href)
+    url.search = writeCatalogFilters(url.searchParams, { ...filters, ...patch }, category).toString()
+    if (url.href !== location.href) {
+      if (patch.query !== undefined && Object.keys(patch).length === 1) history.replaceState(null, '', url)
+      else history.pushState(null, '', url)
+    }
+    setFilters(parseCatalogFilters(url.searchParams, category))
+  }
 
   const now = Date.now()
-  const list = catalogResults(filters, id => availabilityFor(stock.inventory, id, now, stock.unavailable).status)
+  const list = page.kind === 'selection' ? page.items :
+    catalogResults(filters, id => availabilityFor(stock.inventory, id, now, stock.unavailable).status)
+  const reset = () => changeFilters(parseCatalogFilters(new URLSearchParams(), category))
+  const total = category ? products.filter(product => product.categoryId === category).length : products.length
 
-  const collectionMeta = filter === 'all'
-    ? { name: 'Все коллекции', nameEn: 'Full Catalog', desc: 'Панели, гибкий камень, декоративные рейки и алюминиевые профили. Характеристики и цены — в карточках материалов.' }
-    : { ...collections.find(c => c.id === filter)!, desc: collections.find(c => c.id === filter)!.description }
-
-  return (
-    <>
-      <section className="catalog-page-hero" id="catalog">
-        <div className="catalog-page-hero-bg">
-          <motion.img
-            src="catalog/hero/hero-catalog.webp"
-            alt="Интерьер с панелями ДЕКОРАЙ"
-            fetchPriority="high"
-            initial={{ opacity: 0, scale: 1.05 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1.2, ease: 'easeOut' }}
-          />
-          <div className="catalog-page-veil" />
+  return <>
+    <section className="catalog-page-hero" id="catalog">
+      <div className="catalog-page-hero-bg">
+        <img src={base + 'catalog/hero/hero-catalog.webp'} {...storefrontImageSize('catalog/hero/hero-catalog.webp')} alt="" fetchPriority="high" />
+        <div className="catalog-page-veil" />
+      </div>
+      <div className="container catalog-page-content">
+        <p className="hero-eyebrow">Декорай · Коллекция 2026</p>
+        <h1>{page.heading}</h1>
+        <p className="catalog-page-lead">{page.kind === 'category' ? page.intro : page.description}</p>
+        <div className="catalog-page-cta">
+          <a className="btn btn-white interactive" href="#products">Посмотреть материалы <ArrowDown size={16} aria-hidden="true" /></a>
+          <a className="btn btn-outline interactive" href={base + 'kalkulyator/'}>Рассчитать проект</a>
         </div>
-
-        <div className="container catalog-page-content">
-          <motion.p className="hero-eyebrow" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }}>
-            Декорай · {collectionMeta.nameEn}
-          </motion.p>
-          <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.2 }}>
-            Каталог<br />материалов
-          </motion.h1>
-          <motion.p className="catalog-page-lead" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.3 }}>
-            {collectionMeta.desc}
-          </motion.p>
-          <motion.div className="catalog-page-cta" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.4 }}>
-            <a href="#/catalog" className="btn btn-white interactive" onClick={(event) => {
-              event.preventDefault()
-              document.getElementById('products')?.scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth' })
-            }}>
-              Посмотреть материалы <ArrowDown size={16} />
-            </a>
-            <a href={import.meta.env.BASE_URL + 'kalkulyator/'} className="btn btn-outline interactive" style={{ borderColor: 'rgba(255,255,255,0.25)', color: '#fff' }}>
-              Рассчитать проект
-            </a>
-            <a className="btn btn-outline interactive" href={import.meta.env.BASE_URL + (filter === 'all' ? 'catalog/' : categoryPath(filter).slice(1))}>Страница каталога</a>
-            <LeadAction intent="consultation" className="btn btn-outline interactive">Оставить заявку</LeadAction>
-          </motion.div>
+      </div>
+    </section>
+    <section className="catalog-page-body" id="products" aria-label="Материалы и цены">
+      <div className="container">
+        <nav className="filters-arch catalog-route-tabs" aria-label="Категории материалов">
+          {[{ path: '/catalog/', label: 'Все материалы' }, ...collections.map(item => ({
+            path: categoryPath(item.id), label: item.name,
+          }))].map(tab => <a key={tab.path} href={base + tab.path.slice(1)}
+            aria-current={tab.path === page.path ? 'page' : undefined}>{tab.label}</a>)}
+        </nav>
+        {page.kind !== 'selection' && <>
+          <button type="button" className="btn btn-outline catalog-mobile-filter" aria-expanded={filtersOpen}
+            aria-controls="catalog-filter-panel" onClick={() => setFiltersOpen(open => !open)}>
+            {filtersOpen ? 'Скрыть фильтры' : 'Поиск и фильтры'}
+          </button>
+          <div id="catalog-filter-panel" className={filtersOpen ? 'catalog-filter-panel is-open' : 'catalog-filter-panel'}>
+            <CatalogFilterControls filters={filters} onChange={changeFilters} reset={reset} />
+          </div>
+          <p className="catalog-count" role="status">Показано <strong>{list.length}</strong> из {total} позиций</p>
+        </>}
+        <div className="grid-arch catalog-page-grid" data-catalog-list="">
+          {list.map(product => <div key={product.id} data-catalog-product={product.id}>
+            <CatalogCard product={product} base={base} detailsHref={base + productPath(product).slice(1)} onAdd={add}
+              category={collections.find(item => item.id === product.categoryId)?.name} />
+          </div>)}
         </div>
-
-        <div className="catalog-page-metrics">
-          <div className="container metrics-row">
-            <div className="metric"><span className="metric-num"><Counter to={products.length} /></span><span className="metric-label">позиций в каталоге</span></div>
-            <div className="metric"><span className="metric-num"><Counter to={collections.length} /></span><span className="metric-label">коллекций и серий</span></div>
-            <div className="metric"><span className="metric-num"><Counter to={catalogSummary.sheetWidth.max} suffix=" мм" /></span><span className="metric-label">ширина листа <Ruler size={12} /></span></div>
-            <div className="metric"><span className="metric-num"><span>{catalogSummary.panelWeight.min}–</span><Counter to={catalogSummary.panelWeight.max} suffix=" кг" /></span><span className="metric-label">вес панелей <Scale size={12} /></span></div>
-          </div>
+        {list.length === 0 && <div className="catalog-empty">
+          <p>По вашему запросу ничего не найдено.</p>
+          <button className="btn btn-white interactive" onClick={reset}>Сбросить фильтры</button>
+        </div>}
+        {page.kind === 'catalog' && <nav className="page-links" aria-label="Подборки по толщине">
+          {seoPages.filter(item => item.kind === 'selection').map(item =>
+            <a key={item.path} href={base + item.path.slice(1)}>{item.heading}</a>)}
+        </nav>}
+        {page.kind === 'selection' && <div className="page-copy">{page.copy.blocks.map(block =>
+          <section key={block.heading}><h2>{block.heading}</h2><p>{block.text}</p></section>)}
+          <div className="page-links">{page.copy.links?.map(link =>
+            <a key={link.path} href={base + link.path.slice(1)}>{link.label}</a>)}</div>
+        </div>}
+        <div className="catalog-page-cta-strip">
+          <h2>Подберём материалы под ваш интерьер</h2>
+          <a href={base + 'showroom/'} className="btn btn-primary interactive">Контакты шоурума</a>
         </div>
-      </section>
-
-      <section className="catalog-page-body" id="products">
-        <div className="container">
-          <h2 className="visually-hidden">Товары каталога</h2>
-          {/* Toolbar */}
-          <div className="catalog-toolbar">
-            <div className="filters-arch">
-              <button className={filter === 'all' ? 'active' : ''} aria-pressed={filter === 'all'} onClick={() => setFilter('all')}>
-                Все ({products.length})
-              </button>
-              {collections.map((c) => (
-                <button
-                  key={c.id}
-                  className={filter === c.id ? 'active' : ''}
-                  aria-pressed={filter === c.id}
-                  onClick={() => setFilter(c.id)}
-                >
-                  {c.name} ({c.count})
-                </button>
-              ))}
-            </div>
-
-
-          </div>
-
-          <CatalogFilterControls filters={filters} onChange={changeFilters} reset={reset} />
-          <p className="catalog-count" role="status">
-            Показано <strong>{list.length}</strong> из {products.length} позиций
-          </p>
-
-          <div className="grid-arch catalog-page-grid">
-            {list.map(p => (
-              <CatalogCard key={p.id} product={p} onDetails={openProduct} onAdd={add}
-                category={filter === 'all' ? collections.find(c => c.id === p.categoryId)?.name : undefined} />
-            ))}
-          </div>
-
-          {list.length === 0 && (
-            <div className="catalog-empty">
-              <p>По вашему запросу ничего не найдено.</p>
-              <button className="btn btn-white interactive" onClick={reset}>
-                Сбросить фильтры
-              </button>
-            </div>
-          )}
-
-          {/* CTA strip */}
-          <div className="catalog-page-cta-strip">
-            <div>
-              <p className="eyebrow">Нужна помощь с выбором?</p>
-              <h2>Подберём материалы<br />под ваш интерьер</h2>
-            </div>
-            <a href={import.meta.env.BASE_URL + 'showroom/'} className="btn btn-primary interactive">
-              Контакты шоурума
-            </a>
-          </div>
-        </div>
-      </section>
-
-      <ProductModal selected={selectedProduct} onSelect={openProduct} onClose={() => openProduct(null)} />
-    </>
-  )
+      </div>
+    </section>
+  </>
 }

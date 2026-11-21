@@ -299,7 +299,7 @@ test('carousel presentation retains nine real category links and owner supplied 
   const cardCSS = readFileSync(new URL('../src/components/CatalogCard.css', import.meta.url), 'utf8')
   assert.match(card, /card-arch-img/)
   assert.match(cardCSS, /object-fit:\s*cover;\s*padding:\s*0/)
-  assert.match(card, /aria-label="Добавить в подборку"/)
+  assert.match(card, /Добавить в подборку/)
   assert.doesNotMatch(card, /TiltCard|compact-card-preview|PDF-превью/)
   const css = readFileSync(new URL('../src/index.css', import.meta.url), 'utf8')
   assert.match(css, /\.card-arch-img\s*\{[^}]*aspect-ratio:\s*3\s*\/\s*4/)

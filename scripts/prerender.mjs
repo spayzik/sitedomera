@@ -1,13 +1,10 @@
 import assert from 'node:assert/strict'
-import { copyFile, mkdir, readFile, unlink, writeFile } from 'node:fs/promises'
-import { dirname, join } from 'node:path'
-import { build } from 'vite'
+import { mkdir, readFile, unlink, writeFile } from 'node:fs/promises'
+import { dirname, join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { resolve } from 'node:path'
-import sharp from 'sharp'
-import { publicReleaseFiles } from '../src/data/publicReleaseFiles.ts'
-import { seoPageFile, seoPages } from '../src/data/seoRoutes.ts'
-import { jsonLd, notFound, renderSeoPage, renderSitemap, renderYml, rootContent } from './seo-static.mjs'
+import { build } from 'vite'
+import { seoAssetPrefix, seoPageFile, seoPages } from '../src/data/seoRoutes.ts'
+import { jsonLd, renderRoot, renderSeoPage, renderSitemap, renderYml } from './seo-static.mjs'
 
 const ssrDirectory = resolve('node_modules/.cache/dekoray-ssg')
 await build({
@@ -16,46 +13,32 @@ await build({
   build: { ssr: 'src/ssg.tsx', outDir: ssrDirectory, emptyOutDir: true },
 })
 const ui = await import(pathToFileURL(join(ssrDirectory, 'ssg.js')).href)
-
 const dist = 'dist'
 const rootFile = join(dist, 'index.html')
 const index = await readFile(rootFile, 'utf8')
 const manifestPath = join(dist, '.asset-manifest.json')
 const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
-const toolsEntry = manifest['src/storefront-tools.tsx']
-assert(toolsEntry?.isEntry && toolsEntry.file, 'Storefront tools entry not found')
-const venueEntry = manifest['src/seo-venue.ts']
-const reviewsEntry = manifest['src/seo-reviews.tsx']
-assert(venueEntry?.isEntry && reviewsEntry?.isEntry, 'SEO enhancements missing')
+const entry = manifest['index.html']
+assert(entry?.isEntry && entry.file, 'Storefront entry not found')
+const css = [...index.matchAll(/<link rel="stylesheet"[^>]+href="\.\/(assets\/[^"]+\.css)"/g)].map(match => match[1])
+assert(css.length && index.includes('<div id="root"></div>'), 'Missing storefront styles or mount')
 await unlink(manifestPath)
-const images = new Map(await Promise.all([...publicReleaseFiles].filter(file => /\.(?:jpg|webp)$/i.test(file)).map(async file => {
-  const { width, height } = await sharp(join(dist, file)).metadata()
-  assert(width > 0 && height > 0, 'Missing image dimensions: ' + file)
-  return [file, { width, height }]
-})))
-const stylesheets = [...index.matchAll(/<link rel="stylesheet"[^>]+href="\.\/(assets\/[^"]+\.css)"/g)].map(match => match[1])
-assert(stylesheets.length > 0, 'Vite stylesheet not found')
-assert(index.includes('<div id="root"></div>'), 'Expected a clean Vite application root')
 assert.equal(new Set(seoPages.map(page => page.path)).size, seoPages.length, 'Duplicate canonical paths')
-assert(seoPages.every(page => /^\/(?:[a-z0-9-]+\/)*$/.test(page.path)), 'Unstable canonical path')
-const home = seoPages[0]
-assert.equal(home.path, '/')
 
-await copyFile('scripts/seo-pages.css', join(dist, 'seo-pages.css'))
+const assets = { file: entry.file, css }
 for (const page of seoPages.slice(1)) {
   const path = join(dist, seoPageFile(page.path))
   await mkdir(dirname(path), { recursive: true })
-  await writeFile(path, renderSeoPage(page, stylesheets, false, toolsEntry, { images, venueEntry, reviewsEntry, ui }))
+  await writeFile(path, renderSeoPage(page, seoAssetPrefix(page.path), assets, ui))
 }
 await writeFile(rootFile, index
-  .replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/, () => jsonLd(home))
-  .replace('</head>', '<link rel="stylesheet" href="./seo-pages.css">\n</head>')
-  .replace('<div id="root"></div>', () => '<div id="root">' + rootContent(home, images, ui) + '</div>'))
-await writeFile(join(dist, '404.html'), notFound(stylesheets, toolsEntry, ui))
+  .replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/, () => jsonLd(seoPages[0]))
+  .replace('<div id="root"></div>', () => renderRoot('/', './', ui)))
+await writeFile(join(dist, '404.html'), renderSeoPage(null, process.env.DEKORAY_404_BASE || '/', assets, ui))
 await writeFile(join(dist, 'sitemap.xml'), renderSitemap())
 const robotsPath = join(dist, 'robots.txt')
 const robots = await readFile(robotsPath, 'utf8')
 await writeFile(robotsPath, robots.trimEnd() +
   '\n\nUser-agent: Yandex\nAllow: /\nClean-param: utm_source&utm_medium&utm_campaign&utm_content&utm_term&yclid /\n')
 await writeFile(join(dist, 'yml.xml'), renderYml())
-console.log('Prerendered ' + seoPages.length + ' public HTML documents, sitemap, 404 and price feed.')
+console.log('Prerendered ' + seoPages.length + ' React routes, sitemap, 404 and price feed.')

@@ -109,12 +109,12 @@ type ActionProps = {
 export function LeadAction({ intent, context, children, ...attributes }: ActionProps) {
   const service = useLeadService()
   const content = children ?? leadIntents[intent].title
-  if (!service) {
-    return <a {...attributes} href={inquiryTelegramLink(intent, context)} target="_blank" rel="noopener noreferrer">
-      {content}
-    </a>
-  }
-  return <button {...attributes} type="button" aria-haspopup="dialog" onClick={() => service.open(intent, context)}>
+  return <a {...attributes} href={inquiryTelegramLink(intent, context)} target="_blank" rel="noopener noreferrer"
+    aria-haspopup={service ? 'dialog' : undefined} onClick={event => {
+      if (!service || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+      event.preventDefault()
+      service.open(intent, context)
+    }}>
     {content}
-  </button>
+  </a>
 }

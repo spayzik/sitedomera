@@ -30,7 +30,7 @@ export function Hero({ ready = true }: { ready?: boolean }) {
     <section ref={ref} className={`hero-arch hero-commerce ${visible ? 'hero-in-view' : ''}`} id="top">
       <div className="hero-arch-bg">
         <img
-          src="catalog/hero/hero.webp"
+          src="./catalog/hero/hero.webp"
           alt="Визуализация гостиной с бамбуковыми панелями тёплого оттенка ореха"
           fetchPriority="high"
           decoding="async"
@@ -44,7 +44,7 @@ export function Hero({ ready = true }: { ready?: boolean }) {
         <motion.div
           className="hero-arch-text"
           variants={stagger}
-          initial={reducedMotion ? false : "hidden"}
+          initial={false}
           animate={ready || reducedMotion ? "show" : "hidden"}
         >
           <div style={{ overflow: 'hidden', paddingBottom: '0.2em' }}>

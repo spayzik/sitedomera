@@ -86,7 +86,6 @@ ul, ol { list-style: none; }
 
 /* === CUSTOM CURSOR === */
 @media (pointer: fine) {
-  body, a, button, input, textarea { cursor: none !important; }
   .custom-cursor-dot {
     position: fixed; top: -3px; left: -3px; width: 6px; height: 6px;
     background: var(--accent); border-radius: 50%; pointer-events: none; z-index: 99999;
@@ -837,7 +836,7 @@ h4 { font-size: 1.25rem; font-weight: 500; }
 }
 
 /* === CATALOG PAGE === */
-.catalog-page-hero { position: relative; min-height: 100svh; display: flex; flex-direction: column; justify-content: center; color: #fff; overflow: hidden; padding-bottom: 120px; }
+.catalog-page-hero { position: relative; min-height: clamp(26rem, 52vw, 36rem); display: flex; flex-direction: column; justify-content: flex-end; color: #fff; overflow: hidden; padding-bottom: clamp(2.5rem, 6vw, 5rem); }
 .catalog-page-hero-bg { position: absolute; inset: 0; }
 .catalog-page-hero-bg img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
 .catalog-page-veil {
@@ -846,7 +845,7 @@ h4 { font-size: 1.25rem; font-weight: 500; }
               linear-gradient(to top, rgba(0,0,0,0.62) 0%, transparent 42%);
 }
 .catalog-page-content { position: relative; z-index: 2; padding-top: 6rem; }
-@media (max-width: 768px) { .catalog-page-hero { padding-bottom: 270px; } }
+
 .catalog-page-content h1 { text-shadow: 0 4px 40px rgba(0,0,0,0.5); }
 .catalog-page-lead { color: rgba(255,255,255,0.8); margin-top: 2rem; max-width: 48ch; font-size: 1.15rem; line-height: 1.7; }
 .catalog-page-cta { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 2.5rem; }
@@ -860,7 +859,7 @@ h4 { font-size: 1.25rem; font-weight: 500; }
 .metric-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.15em; color: rgba(255,255,255,0.55); display: inline-flex; align-items: center; gap: 0.4rem; }
 @media (max-width: 768px) { .metric { flex-direction: row; justify-content: space-between; width: 100%; align-items: baseline; } }
 
-.catalog-page-body { padding-top: 5rem; }
+.catalog-page-body { padding-top: clamp(1.5rem, 4vw, 3rem); padding-bottom: 3rem; scroll-margin-top: 6rem; }
 #products, #calculator { scroll-margin-top: 9rem; }
 .catalog-toolbar {
   display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
@@ -1452,7 +1451,7 @@ h4 { font-size: 1.25rem; font-weight: 500; }
   .grid-arch { gap: 2.5rem 1.25rem; }
   .split-form { padding: 2rem; }
   .catalog-header { margin-bottom: 2.5rem; padding-bottom: 2rem; }
-  .catalog-page-hero { min-height: 100svh; padding-bottom: 17rem; }
+  .catalog-page-hero { min-height: 29rem; }
   .catalog-page-hero-bg img { object-position: 62% center; }
   .catalog-page-veil {
     background: linear-gradient(100deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.38) 72%, transparent 100%),

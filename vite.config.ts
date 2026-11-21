@@ -92,9 +92,6 @@ export default defineConfig({
     rollupOptions: {
       input: {
         index: 'index.html',
-        'storefront-tools': 'src/storefront-tools.tsx',
-        'seo-reviews': 'src/seo-reviews.tsx',
-        'seo-venue': 'src/seo-venue.ts',
       },
       output: {
         manualChunks(id: string) {

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { MapEmbed } from './MapEmbed'
 import { ArrowUpRight, Copy, Phone } from 'lucide-react'
 import { CONTACTS } from '../data/products'
 import { avitoProfile } from '../lib/avitoProfile'
@@ -6,7 +7,7 @@ import { contactLinks, inquiryTelegramLink, inquiryWhatsAppLink } from '../lib/c
 import { useLeadService } from '../lib/leadState'
 import { LeadAction } from './LeadProvider'
 
-export function Showroom() {
+export function Showroom({ base = "./" }: { base?: string } = {}) {
   const consultationAvailable = useLeadService()?.terms?.intents.includes('consultation')
   const [copyStatus, setCopyStatus] = useState('')
   const whatsapp = inquiryWhatsAppLink('consultation')
@@ -62,7 +63,7 @@ export function Showroom() {
             </a>
             <div className="showroom-commerce-sources">
               <a href={inquiryTelegramLink('samples')} target="_blank" rel="noreferrer">Запросить образцы</a>
-              <a href={import.meta.env.BASE_URL + 'kalkulyator/'}>Рассчитать материалы</a>
+              <a href={base + 'kalkulyator/'}>Рассчитать материалы</a>
             </div>
             <div className="showroom-commerce-sources">
               <a href={avitoProfile} target="_blank" rel="noreferrer">Магазин на Авито</a>
@@ -75,13 +76,7 @@ export function Showroom() {
         </div>
 
         <div className="showroom-commerce-map">
-          <iframe
-            src={CONTACTS.mapWidget}
-            title="Склад и шоурум ДЕКОРАЙ на карте"
-            loading="lazy"
-            referrerPolicy="strict-origin-when-cross-origin"
-            allowFullScreen
-          />
+          <MapEmbed src={CONTACTS.mapWidget} title="Склад и шоурум ДЕКОРАЙ на карте" />
         </div>
       </div>
     </section>

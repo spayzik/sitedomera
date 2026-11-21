@@ -13,17 +13,16 @@ import { calculateProjectPanels, calculateWallLayout, calculatorWall, sheetArea,
 import { trackAnalyticsGoal } from '../lib/analytics'
 
 export function Calculator({ standalone = false }: { standalone?: boolean } = {}) {
-  const initialSearch = !standalone && typeof window !== 'undefined' ? window.location.search : ''
+  const initialSearch = ""
   const { add } = useCart()
   const [materialId, setMaterialId] = useState(() => new URLSearchParams(initialSearch).get('material') ?? '')
   const selectedPanel = sheetProducts.find(p => p.id === materialId) ?? null
   const [walls, setWalls] = useState<Array<WallDimensions & { id: number }>>(() => [{ id: 0, ...calculatorWall(new URLSearchParams(initialSearch)) }])
   useEffect(() => {
-    if (!standalone) return
     const params = new URLSearchParams(window.location.search)
     setMaterialId(params.get('material') ?? '')
     setWalls([{ id: 0, ...calculatorWall(params) }])
-  }, [standalone])
+  }, [])
   const nextWall = useRef(1)
   const [openings, setOpenings] = useState('0')
   const [reserve, setReserve] = useState('10')
