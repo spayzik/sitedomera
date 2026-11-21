@@ -59,14 +59,16 @@ export function StorefrontRoute({ page, base, path }: { page?: SeoPage; base: st
         <a href={CONTACTS.mapOrganization}>Открыть карточку организации на Яндекс Картах</a>
       </section>
     </>}
-    {copy?.image && <figure className="page-editorial-image">
-      <img src={base + copy.image} {...storefrontImageSize(copy.image)} alt={copy.imageCaption ?? page.heading} decoding="async" loading="lazy"
-        srcSet={copy.imageSmall ? base + copy.imageSmall + ' 720w, ' + base + copy.image + ' 1440w' : undefined}
-        sizes="(max-width: 768px) 100vw, 48rem" />
-      {copy.imageCaption && <figcaption>{copy.imageCaption}</figcaption>}
-    </figure>}
-    {copy && <div className="page-copy">{copy.blocks.map(({ heading, text }) =>
-      <section key={heading}><h2>{heading}</h2><p>{text}</p></section>)}</div>}
+    {copy && <div className={page.path === '/montazh/' ? 'installation-editorial' : undefined}>
+      {copy.image && <figure className="page-editorial-image">
+        <img src={base + copy.image} {...storefrontImageSize(copy.image)} alt={copy.imageCaption ?? page.heading} decoding="async" loading="lazy"
+          srcSet={copy.imageSmall ? base + copy.imageSmall + ' 720w, ' + base + copy.image + ' 1440w' : undefined}
+          sizes={page.path === '/montazh/' ? '(max-width: 768px) 100vw, 24rem' : '(max-width: 768px) 100vw, 48rem'} />
+        {copy.imageCaption && <figcaption>{copy.imageCaption}</figcaption>}
+      </figure>}
+      <div className="page-copy">{copy.blocks.map(({ heading, text }) =>
+        <section key={heading}><h2>{heading}</h2><p>{text}</p></section>)}</div>
+    </div>}
     {articles.length > 0 && <div className="page-copy">{articles.map(article =>
       <section key={article.path}><h2><a href={href(base, article.path)}>{article.heading}</a></h2><p>{article.description}</p></section>)}</div>}
     <div className="page-links">

@@ -46,17 +46,12 @@ export function Showroom({ base = "./" }: { base?: string } = {}) {
           </div>
 
           <div className="showroom-commerce-manager">
-            <h3>Подберём материалы</h3>
+            <h3>Связаться с менеджером</h3>
             <p>Расскажите о проекте. Поможем выбрать фактуру, уточнить наличие и рассчитать материалы.</p>
-            {consultationAvailable ? (
+            {consultationAvailable && (
               <LeadAction intent="consultation" className="btn btn-primary interactive">
-                Связаться с менеджером
+                Оставить заявку
               </LeadAction>
-            ) : (
-              <a className="btn btn-primary interactive" href={inquiryTelegramLink('consultation')}
-                target="_blank" rel="noreferrer">
-                Написать в Telegram <ArrowUpRight size={16} aria-hidden="true" />
-              </a>
             )}
             <SocialContacts base={base} placement="cards" />
             <div className="showroom-commerce-sources">
@@ -64,6 +59,7 @@ export function Showroom({ base = "./" }: { base?: string } = {}) {
               <a href={base + 'kalkulyator/'}>Рассчитать материалы</a>
             </div>
             <div className="showroom-commerce-sources">
+              <a href={CONTACTS.telegramChannel} target="_blank" rel="noreferrer">Канал в Telegram</a>
               <a href={avitoProfile} target="_blank" rel="noreferrer">Магазин на Авито</a>
             </div>
           </div>

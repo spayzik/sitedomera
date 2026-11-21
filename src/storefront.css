@@ -85,15 +85,33 @@
 
 /* Entrance motion uses the existing editorial text masks. Markup stays visible with reduced motion. */
 @media (prefers-reduced-motion: no-preference) {
-  .hero-commerce .hero-title-reveal .editorial-line {
+  .hero-enter-title .editorial-line {
     animation: storefront-title-in .82s cubic-bezier(.16, 1, .3, 1) both;
   }
-  .hero-commerce .hero-title-reveal .editorial-mask + .editorial-mask .editorial-line { animation-delay: .11s; }
-  .hero-commerce .hero-eyebrow, .hero-commerce .hero-lead, .hero-commerce-actions, .hero-commerce-contact,
-  .catalog-page-content > *, .page-intro > *, .material-purchase > h1, .material-gallery,
+  .hero-enter-title .editorial-mask + .editorial-mask .editorial-line { animation-delay: .11s; }
+  .hero-enter-eyebrow, .hero-enter-lead, .hero-enter-actions,
+  .page-intro > *, .material-purchase > h1, .material-gallery,
   .page-section > h1 { animation: storefront-content-in .65s cubic-bezier(.22, 1, .36, 1) both; }
-  .hero-commerce .hero-lead, .catalog-page-content h1, .page-intro .lead { animation-delay: .08s; }
-  .hero-commerce-actions, .hero-commerce-contact, .catalog-page-cta, .page-intro > .btn { animation-delay: .16s; }
+  .hero-enter-lead, .page-intro .lead { animation-delay: .08s; }
+  .hero-enter-actions, .page-intro > .btn { animation-delay: .16s; }
   @keyframes storefront-title-in { from { translate: 0 106%; } to { translate: 0 0; } }
   @keyframes storefront-content-in { from { opacity: 0; translate: 0 14px; } to { opacity: 1; translate: 0 0; } }
+}
+
+.page-section > .showroom-commerce { background: transparent; }
+.page-section > .showroom-commerce .showroom-commerce-manager {
+  background: color-mix(in srgb, var(--accent-light) 5%, transparent);
+}
+.installation-editorial {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 24rem);
+  align-items: start;
+  gap: clamp(1.5rem, 5vw, 5rem);
+}
+.installation-editorial .page-editorial-image { grid-column: 2; grid-row: 1; margin-bottom: 0; }
+.installation-editorial .page-copy { grid-column: 1; grid-row: 1; }
+.installation-editorial img { max-height: 28rem; object-fit: contain; object-position: left center; }
+@media (max-width: 768px) {
+  .installation-editorial { display: flex; flex-direction: column; gap: 0; }
+  .installation-editorial img { max-height: 18rem; }
 }

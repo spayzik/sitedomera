@@ -1,5 +1,5 @@
 import { Phone } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { contactLinks } from '../lib/contactLinks'
 import { socialIcons } from './socialIcons'
 import './SocialContacts.css'
@@ -25,20 +25,31 @@ function ChannelIcon({ id }: { id: Channel }) {
 
 function MaxByPhone() {
   const [copied, setCopied] = useState(false)
-  return <div className="social-max-by-phone" id="max-contact">
-    <span><ChannelIcon id="max" /> MAX</span>
-    <p>Найдите нас по номеру <strong>{contactLinks.phoneLabel}</strong>.</p>
-    <button type="button" className="btn btn-outline" onClick={async () => {
-      try { await navigator.clipboard.writeText(contactLinks.phone.replace('tel:', '')); setCopied(true) }
-      catch { setCopied(false) }
-    }}>Скопировать номер</button>
-    <a href="https://web.max.ru/" target="_blank" rel="noreferrer">Открыть MAX</a>
-    <span className="visually-hidden" role="status">{copied ? 'Номер скопирован' : ''}</span>
-  </div>
+  const panel = useRef<HTMLDetailsElement>(null)
+  useEffect(() => {
+    const openFromLink = () => {
+      if (location.hash === '#max-contact' && panel.current) panel.current.open = true
+    }
+    openFromLink()
+    window.addEventListener('hashchange', openFromLink)
+    return () => window.removeEventListener('hashchange', openFromLink)
+  }, [])
+  return <details className="social-max-by-phone" id="max-contact" ref={panel}>
+    <summary className="social-contact" aria-label="MAX" title="MAX"><ChannelIcon id="max" /></summary>
+    <div className="social-max-panel">
+      <p>Найдите нас по номеру <strong>{contactLinks.phoneLabel}</strong>.</p>
+      <button type="button" className="btn btn-outline" onClick={async () => {
+        try { await navigator.clipboard.writeText(contactLinks.phone.replace('tel:', '')); setCopied(true) }
+        catch { setCopied(false) }
+      }}>Скопировать номер</button>
+      <a href="https://web.max.ru/" target="_blank" rel="noreferrer">Открыть MAX</a>
+      <span className="visually-hidden" role="status">{copied ? 'Номер скопирован' : ''}</span>
+    </div>
+  </details>
 }
 
 export function SocialContacts({ placement, base = './', onFollow }: { placement: Placement; base?: string; onFollow?: () => void }) {
-  const showChannel = placement === 'cards' || placement === 'floating'
+  const showChannel = placement === 'floating'
   return <div className={'social-contacts social-contacts-' + placement} role="group" aria-label="Способы связи">
     {(showChannel ? [...channels, telegramChannel] : channels).map(({ id, label, detail, href }) => {
       if (id === 'max' && !href && placement === 'cards') return <MaxByPhone key={label} />
@@ -47,10 +58,9 @@ export function SocialContacts({ placement, base = './', onFollow }: { placement
       if (!destination) return null
       return (<a key={label} href={destination} className="social-contact" data-channel={id} onClick={onFollow}
         target={id === 'phone' || maxByPhone ? undefined : '_blank'} rel={id === 'phone' || maxByPhone ? undefined : 'noreferrer'}
-        aria-label={id === 'phone' ? 'Позвонить ' + detail : label}>
+        aria-label={id === 'phone' ? 'Позвонить ' + detail : label} title={placement === 'cards' ? label : undefined}>
         <ChannelIcon id={id} />
         <span className="social-contact-label">{id === 'phone' && placement !== 'cards' ? detail : label}</span>
-        {placement === 'cards' && <small>{detail}</small>}
       </a>)})}
   </div>
 }

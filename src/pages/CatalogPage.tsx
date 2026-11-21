@@ -6,6 +6,7 @@ import { collections, products } from '../data/products'
 import { useCart } from '../context/CartContext'
 import { InventoryContext } from '../context/inventoryState'
 import { availabilityFor } from '../lib/inventory'
+import { HeroTitle } from '../components/HeroTitle'
 import { CatalogFacts } from '../components/CatalogFacts'
 import { CatalogCard } from '../components/CatalogCard'
 import { CatalogFilterControls } from '../components/CatalogFilterControls'
@@ -51,10 +52,10 @@ export function CatalogPage({ page, base }: { page: CatalogView; base: string })
         <div className="catalog-page-veil" />
       </div>
       <div className="container catalog-page-content">
-        <p className="hero-eyebrow">Коллекция ДЕКОРАЙ</p>
-        <h1>{page.kind === 'catalog' ? <>Каталог<br />материалов</> : page.heading}</h1>
-        <p className="catalog-page-lead">{page.kind === 'category' ? page.intro : page.description}</p>
-        <div className="catalog-page-cta">
+        <p className="hero-eyebrow hero-enter-eyebrow">Коллекция ДЕКОРАЙ</p>
+        <HeroTitle lines={page.kind === 'catalog' ? ['Каталог', 'материалов'] : [page.heading]} />
+        <p className="catalog-page-lead hero-enter-lead">{page.kind === 'category' ? page.intro : page.description}</p>
+        <div className="catalog-page-cta hero-enter-actions">
           <a className="btn btn-white interactive" href="#products">Посмотреть материалы <ArrowDown size={16} aria-hidden="true" /></a>
           <a className="btn btn-outline interactive" href={base + 'kalkulyator/'}>Рассчитать проект</a>
         </div>

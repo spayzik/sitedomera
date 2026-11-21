@@ -11,32 +11,39 @@
 .social-contacts-header [data-channel="phone"] .social-contact-label { display: inline; }
 .social-contacts-menu { justify-content: center; gap: .15rem 1.15rem; }
 .nav-mobile .social-contact { font: .92rem var(--font); }
-.social-contacts-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; margin-block: 1rem; }
+.social-contacts-cards { position: relative; gap: .65rem; margin-block: .85rem 1rem; }
 .social-contacts-cards .social-contact {
-  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .15rem .6rem;
-  padding: .75rem; border: 1px solid var(--line); border-radius: .35rem;
-  background: color-mix(in srgb, var(--surface) 82%, transparent); font-size: .9rem;
+  display: inline-flex;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: rgba(194, 163, 120, .055);
+  cursor: pointer;
 }
-.social-contacts-cards small { grid-column: 2; color: var(--muted); font-size: .74rem; }
+.social-contacts-cards .social-contact:hover { border-color: var(--accent-light); }
+.social-contacts-cards .social-contact-label { display: none; }
 .social-contacts-floating { display: grid; gap: 0; }
 .social-contacts-floating .social-contact { justify-content: flex-start; }
 @media (max-width: 1200px) { .social-contacts-header [data-channel="phone"] .social-contact-label { display: none; } }
 @media (max-width: 1024px) { .social-contacts-header { display: none; } }
-@media (max-width: 480px) { .social-contacts-cards .social-contact { padding: .55rem; gap: .2rem .45rem; } }
 
-.social-max-by-phone {
-  grid-column: 1 / -1;
-  scroll-margin-top: 7rem;
+
+.social-max-by-phone { scroll-margin-top: 7rem; }
+.social-max-by-phone summary { list-style: none; }
+.social-max-by-phone summary::-webkit-details-marker { display: none; }
+.social-max-panel {
+  position: absolute;
+  z-index: 1;
+  inset: calc(100% + .45rem) auto auto 0;
+  width: min(100%, 24rem);
   padding: .85rem;
   border: 1px solid var(--line);
-  border-radius: .35rem;
+  border-radius: .5rem;
+  background: #1b1510;
 }
-.social-max-by-phone > span:first-child { display: flex; gap: .55rem; align-items: center; }
-.social-max-by-phone > p { margin-block: .5rem .75rem; font-size: .85rem; }
-.social-max-by-phone .btn {
-  min-height: 44px;
-  padding: .5rem .7rem;
-  font-size: .7rem;
-  margin-right: .65rem;
-}
-.social-max-by-phone > a { display: inline-flex; align-items: center; min-height: 44px; color: var(--accent-light); }
+.social-max-panel > p { margin: 0 0 .5rem; font-size: .85rem; }
+.social-max-panel .btn { min-height: 44px; padding: .5rem .7rem; font-size: .7rem; margin-right: .65rem; }
+.social-max-panel > a { display: inline-flex; align-items: center; min-height: 44px; color: var(--accent-light); }

@@ -22,3 +22,14 @@
   .catalog-facts-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .catalog-facts dt { letter-spacing: .055em; }
 }
+
+.home-overview-inner, .home-overview-inner dl { display: grid; gap: .85rem 1.5rem; }
+.home-overview-inner { grid-template-columns: 3fr minmax(max-content, 1fr); align-items: center; padding-block: clamp(.8rem, 2.2vw, 1.55rem); }
+.home-overview-inner dl { grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0; }
+.home-overview dd { margin-top: .35rem; font: 500 clamp(.82rem, 1.3vw, 1rem)/1.35 var(--font); }
+.home-overview a { display: inline-flex; min-height: 44px; gap: .65rem; align-items: center; justify-self: end; color: var(--accent-light); font-size: .84rem; }
+@media (max-width: 640px) {
+  .home-overview-inner, .home-overview-inner dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .home-overview-inner dl { display: contents; }
+  .home-overview a { grid-column: 2; grid-row: 2; justify-self: start; }
+}

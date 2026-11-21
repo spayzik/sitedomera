@@ -90,8 +90,8 @@ async function verify() {
   assert.equal(business?.url, canonical, 'JSON-LD URL mismatch')
   assert.equal(business.image, ogImage, 'JSON-LD image URL mismatch')
   assert.equal(tags(html, 'h1').length, 1, 'Home must have one server-rendered H1')
-  assert.match(html, /Позиций в каталоге<\/dt><dd>45<\/dd>/)
-  assert.match(html, /Коллекций и серий<\/dt><dd>9<\/dd>/)
+  assert.match(html, /Каталог<\/dt><dd>45 позиций · 9 категорий<\/dd>/)
+  assert.match(await readFile(await requireFile('catalog/index.html'), 'utf8'), /Коллекций и серий<\/dt><dd>9<\/dd>/)
 
   const robots = await readFile(await requireFile('robots.txt'), 'utf8')
   const sitemap = await readFile(await requireFile('sitemap.xml'), 'utf8')

@@ -299,12 +299,12 @@ h4 { font-size: 1.25rem; font-weight: 500; }
 /* === HEADER === */
 .site-header {
   position: fixed; top: 1.5rem; left: 50%; transform: translateX(-50%);
-  width: min(1440px, calc(100% - 2rem)); z-index: 100; transition: all 0.4s var(--ease-out);
+  width: min(1400px, calc(100% - 2rem)); z-index: 100; transition: all 0.4s var(--ease-out);
 }
 .header-inner {
   display: flex; align-items: center; justify-content: space-between;
   background: rgba(10, 10, 10, 0.4); backdrop-filter: blur(20px);
-  padding: 0.75rem 1.5rem; border-radius: 100px; border: 1px solid rgba(255,255,255,0.1);
+  padding: 0.4rem 1.5rem; border-radius: 100px; border: 1px solid rgba(255,255,255,0.1);
   box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: all 0.4s;
 }
 .site-header.scrolled .header-inner {
@@ -1542,7 +1542,7 @@ body:has(.analytics-banner, .hero-in-view) :is(.floating-cart, .messenger-fab, .
 /* Editorial line masks: transform only; wrapping and final text geometry stay native. */
 .editorial-reveal, .editorial-mask, .editorial-line { display: block; }
 .editorial-mask { overflow: hidden; padding-bottom: 0.16em; margin-bottom: -0.16em; }
-.hero-title-reveal .editorial-mask + .editorial-mask { margin-top: -0.1em; }
+.hero-arch-text .hero-enter-title .editorial-mask + .editorial-mask { margin-top: -0.1em; }
 @media (prefers-reduced-motion: reduce) {
   .editorial-line { transform: none !important; opacity: 1 !important; }
 }

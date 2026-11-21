@@ -13,13 +13,13 @@ const CartDrawer = lazy(() => import('./CartDrawer').then(module => ({ default: 
 const TelegramFab = lazy(() => import('./TelegramFab').then(module => ({ default: module.TelegramFab })))
 const ChatBot = lazy(() => import('./ChatBot').then(module => ({ default: module.ChatBot })))
 
-function StorefrontWidgets({ base, home }: { base: string; home: boolean }) {
+function StorefrontWidgets({ base }: { base: string }) {
   const { open } = useCart()
   return <>
     <FloatingCart />
     <AnalyticsBanner privacyHref={base + 'privacy/'} />
     <Suspense fallback={null}>{open && <CartDrawer assetBase={base} />}</Suspense>
-    <Suspense fallback={null}><TelegramFab base={base} />{home && <ChatBot />}</Suspense>
+    <Suspense fallback={null}><TelegramFab base={base} /><ChatBot /></Suspense>
   </>
 }
 
@@ -35,7 +35,7 @@ export function SiteLayout({ base, path, children }: { base: string; path: strin
             <Header base={base} path={path} />
             <main id="page-content">{children}</main>
             <Footer base={base} />
-            {ready && <StorefrontWidgets base={base} home={path === '/'} />}
+            {ready && <StorefrontWidgets base={base} />}
           </CartProvider>
         </LeadProvider>
       </InventoryProvider>
