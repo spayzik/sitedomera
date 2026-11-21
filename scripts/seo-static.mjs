@@ -22,8 +22,12 @@ const ogCover = 'catalog/og-cover.jpg'
 const categoryImage = id => 'catalog/categories/carousel-2026-' + id + '.webp'
 const linkPath = (path, prefix) => /^(?:https:\/\/|tel:)/.test(path) ? path : path === '/' ? prefix : prefix + path.slice(1)
 const anchor = (path, label, prefix) => `<a href="${escape(linkPath(path, prefix))}">${escape(label)}</a>`
-const picture = (path, alt, prefix, lazy = true) =>
-  `<img src="${escape(prefix + path)}" alt="${escape(alt)}"${lazy ? ' loading="lazy"' : ''} decoding="async">`
+const imageDimensions = (path, images) => {
+  const image = images?.get(path)
+  return image ? ' width="' + image.width + '" height="' + image.height + '"' : ''
+}
+const picture = (path, alt, prefix, lazy = true, images) =>
+  `<img src="${escape(prefix + path)}" alt="${escape(alt)}"${lazy ? ' loading="lazy"' : ''} decoding="async"${imageDimensions(path, images)}>`
 
 const contactLinks = `<a href="tel:${escape(CONTACTS.phoneRaw)}">${escape(CONTACTS.phone)}</a>`
 const mainNav = [
@@ -42,7 +46,7 @@ const footer = (prefix, interactive) => `<footer class="seo-footer"><div class="
 </div></footer>`
 
 function crumbs(page) {
-  if (page.kind === 'category') return [['/', CONTACTS.brand], ['/catalog/', 'Каталог'], [page.path, page.heading]]
+  if (page.kind === 'category' || page.kind === 'selection') return [['/', CONTACTS.brand], ['/catalog/', 'Каталог'], [page.path, page.heading]]
   if (page.kind === 'product') {
     const category = categoryPath(page.product.categoryId)
     return [['/', CONTACTS.brand], ['/catalog/', 'Каталог'], [category, pageFor(category).heading], [page.path, page.heading]]
@@ -64,14 +68,15 @@ function categoryLinks(prefix) {
 
 const stockLabel = product => '<p class="seo-stock" data-stock-id="' + escape(product.id) + '">Наличие уточняется</p>'
 
-function listing(items, prefix) {
-  return `<ul class="seo-cards">${items.map(product => `<li class="seo-product-card">
+function listing(items, prefix, images, interactive = false) {
+  return `<ul class="seo-cards"${interactive ? ' data-catalog-list' : ''}>${items.map(product => `<li class="seo-product-card"${interactive ? ' data-catalog-product="' + escape(product.id) + '"' : ''}>
     <a href="${escape(linkPath(productPath(product), prefix))}">
-      ${picture(product.image, '', prefix)}
+      ${picture(product.image, '', prefix, true, images)}
       <strong>${escape(product.name)}</strong>
     </a>
     <p class="seo-card-meta">${product.sku && product.name !== product.sku ? escape(product.sku) + ' · ' : ''}${escape(formatDimensions(product))}</p>
     <p class="seo-price">${htmlPrice(product)} ${assessment(product)}</p>${stockLabel(product)}
+    ${interactive ? '<div data-catalog-actions="' + escape(product.id) + '"></div>' : ''}
   </li>`).join('')}</ul>`
 }
 
@@ -84,9 +89,9 @@ function curatedFaq() {
   ])
 }
 
-function home(page, prefix) {
+function home(page, prefix, images) {
   return `<div class="seo-home-hero">
-    ${picture('catalog/hero/hero.webp', '', prefix, false)}
+    ${picture('catalog/hero/hero.webp', '', prefix, false, images)}
     <div><h1>${escape(page.heading)}</h1><p>${escape(page.description)}</p>
     <p>${products.length} позиций · ${collections.length} категорий</p>
     <div class="seo-actions">${anchor('/catalog/', 'Открыть каталог', prefix)}${anchor('/kalkulyator/', 'Рассчитать расход', prefix)}</div></div>
@@ -94,7 +99,7 @@ function home(page, prefix) {
   <section><h2>Фактуры и материалы</h2>${categoryLinks(prefix)}</section>
   <section><h2>Перед покупкой</h2><div class="seo-actions">
     ${anchor('/montazh/', 'Подготовка к монтажу', prefix)}${anchor('/dostavka/', 'Доставка и оплата', prefix)}
-    ${anchor('/showroom/', 'Посмотреть материалы вживую', prefix)}${anchor('/stati/', 'Практические статьи', prefix)}
+    ${anchor('/showroom/', 'Посмотреть материалы вживую', prefix)}${anchor('/obraztsy/', 'Запросить образцы', prefix)}${anchor('/stati/', 'Практические статьи', prefix)}
   </div></section>
   <section><h2>Ответы на вопросы</h2>${curatedFaq().map(({ q, a }) =>
     `<details><summary>${escape(q)}</summary><p>${escape(a)}</p></details>`).join('')}</section>`
@@ -114,34 +119,41 @@ const sceneCaptions = {
   fabric: 'Тканевая фактура в гостиной',
 }
 
-const mapOrganization = 'https://yandex.ru/maps/org/55177309503/'
 const commercialActions = {
   '/montazh/': ['/kalkulyator/', 'Рассчитать количество листов'],
   '/dostavka/': [buildTelegramDraftUrl(CONTACTS.telegram, 'Здравствуйте! Хочу уточнить условия доставки материалов ДЕКОРАЙ.'), 'Уточнить доставку'],
-  '/showroom/': [mapOrganization, 'Открыть в Яндекс Картах'],
+  '/showroom/': [CONTACTS.mapOrganization, 'Открыть в Яндекс Картах'],
   '/kontakty/': ['tel:' + CONTACTS.phoneRaw, 'Позвонить ' + CONTACTS.phone],
   '/proekty/': ['/catalog/derevo/', 'Смотреть древесные фактуры'],
   '/opt/': [buildTelegramDraftUrl(CONTACTS.telegram, 'Здравствуйте! Хочу обсудить поставку материалов ДЕКОРАЙ для объекта.'), 'Обсудить поставку'],
   '/dizayneram/': ['/showroom/', 'Посмотреть образцы в шоуруме'],
+  '/obraztsy/': [buildTelegramDraftUrl(CONTACTS.telegram, 'Здравствуйте! Хочу запросить образцы ДЕКОРАЙ. Материалы или артикулы: '), 'Запросить образцы в Telegram'],
+  '/otzyvy/': [CONTACTS.avito, 'Открыть отзывы на Авито'],
 }
 
-function productBody(product, prefix) {
+function productBody(product, prefix, images) {
   const similar = relatedProducts(product, products)
   const complements = suggestedComplements(product, products)
   const calculator = '/kalkulyator/?material=' + encodeURIComponent(product.id)
   const category = collections.find(item => item.id === product.categoryId)
   const telegram = buildTelegramDraftUrl(CONTACTS.telegram, formatProductTelegramMessage(product, category.name))
+  const samples = buildTelegramDraftUrl(CONTACTS.telegram, [
+    'Здравствуйте! Хочу запросить образец.',
+    `Материал: ${product.name}`,
+    ...(product.sku ? [`Артикул: ${product.sku}`] : []),
+    `Коллекция: ${category.name}`,
+  ].join('\n'))
   const scenes = productScenes[product.categoryId] ?? []
   return `<div class="seo-product-detail${scenes.length ? ' has-scenes' : ''}">
-    <figure class="seo-material"><div class="seo-sample"><img src="${escape(prefix + product.image)}" alt="${escape(product.name)}"
-      decoding="async" fetchpriority="high"></div><figcaption>Образец материала</figcaption></figure>
+    <figure class="seo-material"><a class="seo-sample seo-image-link" href="${escape(prefix + product.image)}" aria-label="${escape('Открыть образец: ' + product.name)}"><img src="${escape(prefix + product.image)}" alt="${escape(product.name + ' — образец фактуры')}"
+      decoding="async" fetchpriority="high"${imageDimensions(product.image, images)}></a><figcaption>Образец материала</figcaption></figure>
     ${scenes.length ? `<aside class="seo-room-scenes" aria-label="Идеи для коллекции">
       ${scenes.map(scene => {
         const original = prefix + 'catalog/rooms/interior-' + scene + '.webp'
         const compact = prefix + 'catalog/rooms/interior-' + scene + '-480.webp'
-        return `<figure><img src="${original}" srcset="${compact} 480w, ${original} ${scene === 'metal' ? 1448 : 1122}w"
+        return `<figure><a class="seo-image-link" href="${original}" aria-label="Открыть визуализацию: ${sceneCaptions[scene]}"><img src="${original}" srcset="${compact} 480w, ${original} ${scene === 'metal' ? 1448 : 1122}w"
           sizes="(max-width: 44rem) 90vw, 350px" width="${scene === 'metal' ? 1448 : 1122}" height="${scene === 'metal' ? 1086 : 1402}"
-          loading="lazy" decoding="async" alt="${sceneCaptions[scene]}"><figcaption>${sceneCaptions[scene]}</figcaption></figure>`
+          loading="lazy" decoding="async" alt="${sceneCaptions[scene]}"></a><figcaption>${sceneCaptions[scene]}</figcaption></figure>`
       }).join('')}
       <p>Интерьерные визуализации коллекции. Образец артикула показан отдельно.</p>
     </aside>` : ''}
@@ -157,29 +169,65 @@ function productBody(product, prefix) {
         <noscript><p>Для сохранения подборки в браузере включите JavaScript.</p></noscript>
       </div>
       ${sheetPricePerSquareMeter(product) === null ? '' : `<div class="seo-actions">${anchor(calculator, 'Рассчитать для моей стены', prefix)}</div>`}
+      <div class="seo-actions">${anchor(samples, 'Запросить образец', prefix)}</div>
       </div>
       <dl>${productDetails(product).map(([name, value]) =>
         `<div><dt>${escape(name)}</dt><dd>${escape(value)}</dd></div>`).join('')}</dl>
     </div>
-  </div>${similar.length ? `<section><h2>Похожие материалы</h2>${listing(similar, prefix)}</section>` : ''}
-  ${complements.length ? `<section><h2>Сопутствующие материалы</h2><p>Сравните доступные варианты. Совместимость с выбранным изделием уточнит менеджер.</p>${listing(complements, prefix)}</section>` : ''}`
+  </div>${similar.length ? `<section><h2>Похожие материалы</h2>${listing(similar, prefix, images)}</section>` : ''}
+  ${complements.length ? `<section><h2>Сопутствующие материалы</h2><p>Сравните доступные варианты. Совместимость с выбранным изделием уточнит менеджер.</p>${listing(complements, prefix, images)}</section>` : ''}`
 }
 
-function body(page, prefix) {
-  if (page.kind === 'home') return home(page, prefix)
+const catalogControls = (prefix, categoryId = 'all') => `<div data-catalog-filters data-category-id="${escape(categoryId)}" data-asset-base="${escape(prefix)}"></div>`
+
+function copyBlocks(blocks) {
+  return blocks.map(({ heading, text }) => `<section><h2>${escape(heading)}</h2><p>${escape(text)}</p></section>`).join('')
+}
+
+function venueContacts(prefix) {
+  const consultation = buildTelegramDraftUrl(CONTACTS.telegram, 'Здравствуйте! Нужна консультация по материалам ДЕКОРАЙ.')
+  const sample = buildTelegramDraftUrl(CONTACTS.telegram, 'Здравствуйте! Хочу запросить образцы. Материалы или артикулы: ')
+  return `<section class="seo-contact-section">
+    <h2>Шоурум и связь с менеджером</h2>
+    <div class="seo-contact-grid">
+      <div><h3>Посетить шоурум</h3><address>${escape(CONTACTS.address)}</address><p>${escape(CONTACTS.hours)}</p>
+        <div class="seo-actions">${anchor(CONTACTS.mapOrganization, 'Построить маршрут в Яндекс Картах', prefix)}
+        <button type="button" hidden data-copy-address="${escape(CONTACTS.address)}">Скопировать адрес</button></div>
+        <span data-copy-address-status role="status"></span>
+      </div>
+      <div><h3>Связаться с ДЕКОРАЙ</h3><div class="seo-actions">${contactLinks}
+        ${anchor(consultation, 'Написать менеджеру в Telegram', prefix)}
+        ${anchor(CONTACTS.telegramChannel, 'Канал в Telegram', prefix)}
+        ${anchor(CONTACTS.avito, 'Магазин на Авито', prefix)}</div>
+      </div>
+      <div><h3>Подготовиться к покупке</h3><div class="seo-actions">
+        ${anchor(sample, 'Запросить образец', prefix)}${anchor('/kalkulyator/', 'Получить расчёт', prefix)}</div>
+      </div>
+    </div>
+  </section>`
+}
+
+function body(page, prefix, images) {
+  if (page.kind === 'home') return home(page, prefix, images)
   let contents
   switch (page.kind) {
     case 'catalog':
       contents = `<p>${escape(page.description)} ${products.length} позиций и ${collections.length} категорий.</p>
-        <div class="seo-actions">${anchor('/#/catalog', 'Поиск, фильтры и подборка', prefix)}</div>
-        ${categoryLinks(prefix)}<section><h2>Все материалы</h2>${listing(products, prefix)}</section>`
+        ${categoryLinks(prefix)}
+        <div class="seo-actions">${seoPages.filter(item => item.kind === 'selection').map(item => anchor(item.path, item.heading, prefix)).join('')}</div>
+        <section><h2>Все материалы</h2>${catalogControls(prefix)}${listing(products, prefix, images, true)}</section>`
       break
     case 'category':
-      contents = `<p>${escape(page.intro)}</p><div class="seo-actions">${anchor('/#/catalog?category=' + page.categoryId, 'Открыть коллекцию в интерактивном каталоге', prefix)}</div>
-        <section><h2>Материалы и цены</h2>${listing(products.filter(product => product.categoryId === page.categoryId), prefix)}</section>`
+      contents = `<p>${escape(page.intro)}</p>
+        <section><h2>Материалы и цены</h2>${catalogControls(prefix, page.categoryId)}${listing(products.filter(product => product.categoryId === page.categoryId), prefix, images, true)}</section>
+        <div class="seo-actions">${anchor('/obraztsy/', 'Как запросить образцы', prefix)}${anchor('/kalkulyator/', 'Рассчитать расход', prefix)}</div>`
+      break
+    case 'selection':
+      contents = `<p>${escape(page.description)}</p><section><h2>Подтверждённые позиции</h2>${listing(page.items, prefix, images)}</section>
+        ${copyBlocks(page.copy.blocks)}<div class="seo-actions">${page.copy.links?.map(({path, label}) => anchor(path, label, prefix)).join('') ?? ''}</div>`
       break
     case 'product':
-      return breadcrumbs(page, prefix) + productBody(page.product, prefix)
+      return breadcrumbs(page, prefix) + productBody(page.product, prefix, images)
     case 'articles':
       contents = seoPages.filter(item => item.kind === 'article').map(item =>
         `<section><h2>${anchor(item.path, item.heading, prefix)}</h2><p>${escape(item.description)}</p></section>`).join('')
@@ -190,24 +238,25 @@ function body(page, prefix) {
       contents = `<div class="seo-copy${action ? ' seo-commercial' : ''}"><header class="seo-copy-intro"><p>${escape(page.description)}</p>
         ${action ? `<a class="seo-main-action" href="${escape(linkPath(action[0], prefix))}">${escape(action[1])}</a>` : ''}</header>
         ${page.copy.image ? `<figure>
-          <img src="${escape(prefix + page.copy.image)}" alt="${escape(page.heading)}" decoding="async"${page.copy.imageSmall
+          <img src="${escape(prefix + page.copy.image)}" alt="${escape(page.copy.imageCaption ?? page.heading)}" decoding="async"${imageDimensions(page.copy.image, images)}${page.copy.imageSmall
             ? ` srcset="${escape(prefix + page.copy.imageSmall)} 720w, ${escape(prefix + page.copy.image)} 1440w" sizes="(max-width: 768px) 100vw, 48rem"`
             : ''}>
           ${page.copy.imageCaption ? `<figcaption>${escape(page.copy.imageCaption)}</figcaption>` : ''}
         </figure>` : ''}
-        ${map ? '<iframe class="seo-venue-map" title="Шоурум ДЕКОРАЙ на Яндекс Картах" src="https://yandex.ru/map-widget/v1/?ol=biz&amp;oid=55177309503" width="880" height="420" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>' : ''}
-        <div class="seo-copy-blocks">${page.copy.blocks.map(({ heading, text }) => `<section><h2>${escape(heading)}</h2><p>${escape(text)}</p></section>`).join('')}</div>
+        ${map ? venueContacts(prefix) : ''}
+        ${map ? '<iframe class="seo-venue-map" title="Шоурум ДЕКОРАЙ на Яндекс Картах" src="' + escape(CONTACTS.mapWidget) + '" width="880" height="420" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>' : ''}
+        <div class="seo-copy-blocks">${copyBlocks(page.copy.blocks)}</div>
+        ${page.kind === 'article' && page.path !== '/stati/kak-sravnit-stoimost-otdelki/' ? `<div class="seo-actions">${anchor('/stati/kak-sravnit-stoimost-otdelki/', 'Сравнить стоимость материалов', prefix)}</div>` : ''}
         <div class="seo-actions">${(page.copy.links ?? []).filter(({ path }) => path !== action?.[0] &&
           !(action && path === '/#lead') && !(map && path === '/#showroom')).map(({ path, label }) => anchor(path, label, prefix)).join('')}
-        ${map && page.path === '/kontakty/' ? anchor(mapOrganization, 'Открыть в Яндекс Картах', prefix) : ''}
         ${page.kind === 'info' && page.path !== '/kontakty/' ? contactLinks : ''}</div></div>`
     }
   }
   if (page.path === '/otzyvy/') {
-    contents += `<section class="seo-map-reviews"><h2>Отзывы на Яндекс Картах</h2>
-      <iframe title="Отзывы об организации на Яндекс Картах" src="https://yandex.ru/maps-reviews-widget/55177309503?comments"
+    contents += `<div data-seo-reviews data-asset-base="${escape(prefix)}"></div><section class="seo-map-reviews"><h2>Отзывы на Яндекс Картах</h2>
+      <iframe title="Отзывы об организации на Яндекс Картах" src="https://yandex.ru/maps-reviews-widget/${escape(CONTACTS.mapOrganizationId)}?comments"
         width="560" height="520" loading="lazy"></iframe>
-      <p><a href="https://yandex.ru/maps/-/CXWSyOoT">Открыть карточку организации на Яндекс Картах</a></p></section>`
+      <p><a href="${escape(CONTACTS.mapOrganization)}">Открыть карточку организации на Яндекс Картах</a></p></section>`
   }
   if (page.path === '/kalkulyator/') {
     contents = `<div data-storefront-tools="calculator" data-asset-base="${prefix}"><noscript>
@@ -222,11 +271,13 @@ const schemaAddress = { '@type': 'PostalAddress', addressCountry: 'RU', addressL
 const localBusiness = {
   '@type': 'LocalBusiness', '@id': graphId('#showroom'), name: CONTACTS.brand, url: canonicalUrl('/'),
   telephone: CONTACTS.phone, address: schemaAddress, openingHours: CONTACTS.openingHours,
-  image: canonicalUrl('/' + ogCover), parentOrganization: { '@id': graphId('#organization') },
+  image: canonicalUrl('/' + ogCover), hasMap: CONTACTS.mapOrganization, parentOrganization: { '@id': graphId('#organization') },
 }
 
 const socialImage = page => page.kind === 'product' ? page.product.image
-  : page.kind === 'category' ? categoryImage(page.categoryId) : ogCover
+  : page.kind === 'selection' ? page.items[0].image
+  : page.kind === 'category' ? categoryImage(page.categoryId)
+  : (page.kind === 'article' || page.kind === 'info') && page.copy.image ? page.copy.image : ogCover
 
 function schema(page) {
   const url = canonicalUrl(page.path)
@@ -254,18 +305,21 @@ function schema(page) {
     })
   } else if (page.kind === 'article') {
     graph.push({ '@type': 'Article', url, headline: page.heading, description: page.description,
+      image: canonicalUrl('/' + socialImage(page)), dateModified: page.lastmod,
       publisher: { '@id': graphId('#organization') } })
   }
   return JSON.stringify({ '@context': 'https://schema.org', '@graph': graph }).replaceAll('<', '\\u003c')
 }
 
-export const rootContent = page => `<div class="seo-static">${header('./')}<main class="container seo-main">${body(page, './')}</main>${footer('./')}</div>`
+export const rootContent = (page, images) => `<div class="seo-static">${header('./')}<main class="container seo-main">${body(page, './', images)}</main>${footer('./')}</div>`
 export const jsonLd = page => `<script type="application/ld+json">${schema(page)}</script>`
 
-export function renderSeoPage(page, stylesheets, stockEnabled = false, toolsEntry = null) {
+export function renderSeoPage(page, stylesheets, stockEnabled = false, toolsEntry = null, { images, venueEntry, reviewsEntry } = {}) {
   const prefix = seoAssetPrefix(page.path)
   const image = canonicalUrl('/' + socialImage(page))
-  const interactive = page.kind === 'product' || page.path === '/kalkulyator/' ? toolsEntry : null
+  const hasTools = ['product', 'catalog', 'category'].includes(page.kind) || page.path === '/kalkulyator/'
+  const interactive = hasTools ? toolsEntry : page.path === '/otzyvy/' ? reviewsEntry :
+    ['/kontakty/', '/showroom/'].includes(page.path) ? venueEntry : null
   const styles = new Set([].concat(stylesheets, interactive?.css ?? []))
   return `<!doctype html>
 <html lang="ru"><head>
@@ -285,8 +339,8 @@ ${[...styles].map(file => '<link rel="stylesheet" href="' + escape(prefix + file
 <meta property="og:url" content="${escape(canonicalUrl(page.path))}"><meta property="og:image" content="${escape(image)}">
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="${escape(image)}">
 ${jsonLd(page)}
-</head><body class="seo-static">${header(prefix)}<main class="container seo-main">${body(page, prefix)}</main>${footer(prefix, interactive)}
-${stockEnabled && ['catalog', 'category'].includes(page.kind) ? '<script id="stock-catalog" type="application/json" data-url="' + prefix + 'generated/inventory.json">' +
+</head><body class="seo-static">${header(prefix)}<main class="container seo-main">${body(page, prefix, images)}</main>${footer(prefix, hasTools && interactive)}
+${stockEnabled && page.kind === 'selection' ? '<script id="stock-catalog" type="application/json" data-url="' + prefix + 'generated/inventory.json">' +
   JSON.stringify(products.map(({ id, unit }) => ({ id, unit }))) + '</script><script type="module" src="' + prefix + 'seo-stock.js"></script>' : ''}
 ${interactive ? '<script type="module" src="' + escape(prefix + interactive.file) + '"></script>' : ''}</body></html>
 `

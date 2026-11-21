@@ -40,7 +40,7 @@ function ReviewPhoto({ photo, number, onOpen }: {
   )
 }
 
-export function Reviews() {
+export function Reviews({ assetBase }: { assetBase?: string } = {}) {
   const [snapshot, setSnapshot] = useState<AvitoSnapshot | null>(null)
   const [sort, setSort] = useState('recent')
   const [expanded, setExpanded] = useState(false)
@@ -50,9 +50,9 @@ export function Reviews() {
 
   useEffect(() => {
     let active = true
-    loadAvitoSnapshot().then(value => { if (active) setSnapshot(value) })
+    loadAvitoSnapshot(assetBase).then(value => { if (active) setSnapshot(value) })
     return () => { active = false }
-  }, [])
+  }, [assetBase])
 
   useEffect(() => {
     const dialog = dialogRef.current

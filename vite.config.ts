@@ -90,7 +90,12 @@ export default defineConfig({
     target: 'es2018',
     manifest: '.asset-manifest.json',
     rollupOptions: {
-      input: { index: 'index.html', 'storefront-tools': 'src/storefront-tools.tsx' },
+      input: {
+        index: 'index.html',
+        'storefront-tools': 'src/storefront-tools.tsx',
+        'seo-reviews': 'src/seo-reviews.tsx',
+        'seo-venue': 'src/seo-venue.ts',
+      },
       output: {
         manualChunks(id: string) {
           if (id.includes('node_modules')) {

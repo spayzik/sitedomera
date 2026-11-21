@@ -41,6 +41,7 @@ type Page = { path: string; title: string; description: string; heading: string 
 export type SeoPage = Page & (
   { kind: 'home' | 'catalog' | 'articles' } |
   { kind: 'category'; categoryId: CollectionId; intro: string } |
+  { kind: 'selection'; items: readonly Product[]; copy: Copy } |
   { kind: 'product'; product: Product } |
   { kind: 'info' | 'article'; copy: Copy }
 )
@@ -58,6 +59,14 @@ const sampleRequest = {
 }
 
 const commercial = [
+  copyPage('info', '/obraztsy/', 'Образцы стеновых материалов', 'Как сравнить фактуры ДЕКОРАЙ в шоуруме в Москве и уточнить условия получения образцов выбранных артикулов.', {
+    blocks: [
+      { heading: 'Выберите материалы для сравнения', text: 'Сохраните в подборку несколько фактур и запишите названия или артикулы. Для сравнения отделки всей стены добавьте к выбору вариант с другим масштабом рисунка.' },
+      { heading: 'Согласуйте доступность', text: 'Напишите менеджеру, какие образцы нужны и когда вы планируете приехать. Уточните, какие можно посмотреть в шоуруме и на каких условиях их можно получить.' },
+      { heading: 'Посмотрите образцы при разном свете', text: 'Возьмите с собой отделку пола, ткань или фасад мебели. Сравните материалы рядом и отметьте, какие сочетания стоит ещё раз проверить в помещении.' },
+    ],
+    links: [{ path: '/catalog/', label: 'Выбрать материалы' }, { path: '/showroom/', label: 'Адрес и часы шоурума' }],
+  }),
   copyPage('info', '/montazh/', 'Монтаж стеновых панелей', 'Подготовка стены, раскладка панелей и выбор профилей для монтажа. Обсудите смету с ДЕКОРАЙ в Москве.', {
     image: 'catalog/rooms/montage.webp',
     blocks: [
@@ -84,7 +93,7 @@ const commercial = [
       { heading: 'Что взять на встречу', text: 'Возьмите размеры стен, фотографии помещения и артикулы из подборки. По ним проще обсудить раскладку и уточнить наличие.' },
       { heading: 'Как запросить образцы', text: 'До визита напишите менеджеру, какие артикулы или фактуры хотите сравнить. Уточните, какие образцы есть в шоуруме, можно ли взять их с собой и на каких условиях.' },
     ],
-    links: [{ path: '/#showroom', label: 'Открыть карту проезда' }, { path: '/catalog/', label: 'Выбрать фактуры заранее' }, sampleRequest],
+    links: [{ path: '/#showroom', label: 'Открыть карту проезда' }, { path: '/catalog/', label: 'Выбрать фактуры заранее' }, { path: '/obraztsy/', label: 'Как запросить образцы' }],
   }),
   copyPage('info', '/kontakty/', 'Контакты ДЕКОРАЙ', `Телефон ${CONTACTS.phone}, шоурум и склад в Москве на Алтуфьевском шоссе. Часы работы ДЕКОРАЙ и как уточнить наличие материала.`, {
     blocks: [
@@ -150,6 +159,14 @@ const commercial = [
 ]
 
 const articles = [
+  copyPage('article', '/stati/kak-sravnit-stoimost-otdelki/', 'Как сравнить стоимость стеновых материалов за м²', 'Как сопоставить цену за лист и цену за квадратный метр, учесть раскрой, запас и комплектующие перед выбором отделки для стены.', {
+    blocks: [
+      { heading: 'Сравните цены в одной единице', text: 'Если лист стоит 7 000 ₽ при ширине 1,22 м и длине 3 м, его площадь 3,66 м², а справочная цена составляет около 1 913 ₽/м². Для каждого материала подставьте его фактическую цену и размеры из карточки. Цену рейки или профиля рассматривайте отдельно.' },
+      { heading: 'Пересчитайте стоимость для своей стены', text: 'Три листа шириной 1,22 м дают 3,66 м в одном вертикальном ряду. Если стена шире, проверьте, понадобится ли четвёртый лист. Сначала наметьте стыки и вырезы, затем умножьте количество целых листов на цену за лист. Стоимость квадратного метра не заменяет этот расчёт.' },
+      { heading: 'Запросите сопоставимые сметы', text: 'Для сравнения разных способов отделки укажите одинаковые стены, проёмы и границы работ. Попросите отдельно указать материал, запас, комплектующие, подготовку основания, работу и доставку. Тогда видно, какие позиции входят в цену каждого предложения.' },
+    ],
+    links: [{ path: '/catalog/derevo/', label: 'Панели под дерево с ценой за м²' }, { path: '/catalog/gibkiy-kamen/', label: 'Размеры и цены гибкого камня' }, { path: '/kalkulyator/', label: 'Рассчитать расход по своим замерам' }, { path: '/dostavka/', label: 'Что уточнить по комплектации и доставке' }],
+  }),
   copyPage('article', '/stati/kak-rasschitat-paneli/', 'Как рассчитать количество панелей на стену', 'Пример расчёта листов по площади стены, полезным размерам материала и раскладке. Как учитывать проёмы, стыки и подрезку.', {
     blocks: [
       { heading: 'Сначала измерьте полезную площадь', text: 'Умножьте ширину стены на высоту. Вычитайте из общей площади только те участки, которые действительно не нужно закрывать. Для стены 4 × 2,7 м без проёмов получится 10,8 м².' },
@@ -229,7 +246,38 @@ const productPages: SeoPage[] = products.map(product => {
   }
 })
 
+const selections = ([
+  {
+    kind: 'selection', path: '/catalog/5-mm/', heading: 'Бамбуковые стеновые панели 5 мм',
+    title: withBrand('Бамбуковые стеновые панели 5 мм'),
+    description: 'Стеновые панели толщиной 5 мм с древесной, тканевой фактурой и фактурой штукатурки. Сравните размеры листов, цены и рисунок в каталоге ДЕКОРАЙ.',
+    items: products.filter(product => product.kind === 'panel' && product.thicknessMm === 5),
+    copy: {
+      blocks: [
+        { heading: 'Как сравнить фактуры одного формата', text: 'Для спокойной стены сравните масштаб тканевого рисунка и венецианской штукатурки. Для направленного рисунка посмотрите древесные образцы в той ориентации, в которой будут стоять листы.' },
+        { heading: 'Что проверить у проёма', text: 'Укажите фактическую толщину панели и покажите менеджеру срез у двери или ниши. Так проще выбрать оформление края и уточнить посадку профиля.' },
+      ],
+      links: [{ path: '/catalog/derevo/', label: 'Под дерево' }, { path: '/catalog/tkan/', label: 'Под ткань' }, { path: '/catalog/shtukaturka/', label: 'Под штукатурку' }],
+    },
+  },
+  {
+    kind: 'selection', path: '/catalog/8-mm/', heading: 'Бамбуковые стеновые панели 8 мм',
+    title: withBrand('Бамбуковые стеновые панели 8 мм'),
+    description: 'Стеновые панели толщиной 8 мм с металлической и каменной фактурой. Посмотрите размеры, цены и образцы ДЕКОРАЙ для акцентных зон.',
+    items: products.filter(product => product.kind === 'panel' && product.thicknessMm === 8),
+    copy: {
+      blocks: [
+        { heading: 'Как выбрать образец для акцентной стены', text: 'На металлической поверхности оцените эффект бокового света. На каменном рисунке отметьте, какие участки листов попадут в центр стены и где будут стыки.' },
+        { heading: 'Что проверить перед раскроем', text: 'Если рядом есть мебель или соседнее покрытие, измерьте глубину примыкания и обозначьте видимые края. При выборе комплектующих передайте толщину панели и схему узла.' },
+      ],
+      links: [{ path: '/catalog/metall/', label: 'Под металл' }, { path: '/catalog/bambuk-pod-kamen/', label: 'Под камень' }, { path: '/montazh/', label: 'Подготовка к монтажу' }],
+    },
+  },
+] satisfies (SeoPage & { kind: 'selection' })[]).filter(page => page.items.length >= 3)
+
 const revisionDate = '2026-11-20'
+const w4ContentRevision = '2026-11-21'
+const revisedPages = new Set(['/catalog/', '/kontakty/', '/showroom/', '/otzyvy/', '/obraztsy/', '/stati/', '/stati/kak-sravnit-stoimost-otdelki/', '/catalog/5-mm/', '/catalog/8-mm/'])
 const pages: readonly (SeoPage & { lastmod?: string })[] = [
   { kind: 'home', path: '/', heading: 'Бамбуковые стеновые панели в Москве', ...SEO.home },
   { kind: 'catalog', path: '/catalog/', heading: 'Каталог материалов для стен', ...SEO.catalog },
@@ -238,6 +286,7 @@ const pages: readonly (SeoPage & { lastmod?: string })[] = [
     title: withBrand(categoryContent[id].heading),
     description: categoryMeta[id],
   })),
+  ...selections,
   ...productPages,
   ...commercial,
   { kind: 'info', path: '/privacy/', heading: 'Политика конфиденциальности', ...SEO.privacy, copy: privacyCopy },
@@ -245,7 +294,10 @@ const pages: readonly (SeoPage & { lastmod?: string })[] = [
   ...articles,
 ]
 
-export const seoPages = pages.map(page => ({ ...page, lastmod: page.lastmod ?? revisionDate }))
+export const seoPages = pages.map(page => ({
+  ...page,
+  lastmod: page.lastmod ?? (revisedPages.has(page.path) || ['home', 'category', 'product', 'article'].includes(page.kind) ? w4ContentRevision : revisionDate),
+}))
 
 export const seoPageFile = (path: string) => path.slice(1) + 'index.html'
 export const seoAssetPrefix = (path: string) => '../'.repeat(path.split('/').filter(Boolean).length) || './'

@@ -36,13 +36,42 @@ export interface WallDimensions {
   height: string
 }
 
+const decimal = (value: string) => Number(value.trim().replace(',', '.'))
+const validMeasure = (value: string) => /^[0-9]+(?:[.,][0-9]+)?$/.test(value.trim()) && decimal(value) <= 10000
+
+export function calculatorQuery(materialId: string, wall: WallDimensions) {
+  const params = new URLSearchParams({ material: materialId })
+  if (validMeasure(wall.length) && validMeasure(wall.height)) {
+    params.set('width', wall.length.trim())
+    params.set('height', wall.height.trim())
+  }
+  return params
+}
+
+export function calculatorWall(params: URLSearchParams): WallDimensions {
+  const length = params.get('width') ?? ''
+  const height = params.get('height') ?? ''
+  return validMeasure(length) && validMeasure(height) ? { length, height } : { length: '10', height: '2.5' }
+}
+
+export function calculateWallLayout(walls: readonly WallDimensions[], reserve: string, product: Product | null) {
+  if (!product || !sheetArea(product) || !walls.length || walls.length > 20 ||
+      !validMeasure(reserve) || decimal(reserve) > 100 ||
+      walls.some(wall => !validMeasure(wall.length) || !validMeasure(wall.height))) return null
+
+  const width = product.dimensions.widthMm! / 1000
+  const height = product.dimensions.lengthMm / 1000
+  const pieces = walls.reduce((sum, wall) =>
+    sum + roundUpSheets(decimal(wall.length), width) * roundUpSheets(decimal(wall.height), height), 0)
+  return roundUpSheets(pieces * (100 + decimal(reserve)), 100)
+}
+
 export function calculateProjectPanels(walls: readonly WallDimensions[], openings: string, reserve: string, product: Product | null) {
   const inputs = [...walls.flatMap(wall => [wall.length, wall.height]), openings, reserve]
-  const parse = (value: string) => Number(value.trim().replace(',', '.'))
   const valid = walls.length > 0 && walls.length <= 20 && sheetArea(product) > 0 &&
-    inputs.every(value => /^[0-9]+(?:[.,][0-9]+)?$/.test(value.trim()) && parse(value) <= 10000) &&
-    parse(reserve) <= 100
-  const area = valid ? Math.max(0, walls.reduce((sum, wall) => sum + parse(wall.length) * parse(wall.height), 0) - parse(openings)) : 0
-  const estimatedArea = valid ? area * (1 + parse(reserve) / 100) : 0
+    inputs.every(validMeasure) &&
+    decimal(reserve) <= 100
+  const area = valid ? Math.max(0, walls.reduce((sum, wall) => sum + decimal(wall.length) * decimal(wall.height), 0) - decimal(openings)) : 0
+  const estimatedArea = valid ? area * (1 + decimal(reserve) / 100) : 0
   return { valid, area, estimatedArea, sheets: valid ? roundUpSheets(estimatedArea, sheetArea(product)) : 0 }
 }

@@ -1,6 +1,6 @@
 import { useId, useState } from 'react'
 import type { Product } from '../data/products'
-import { calculateProjectPanels } from '../lib/calculator'
+import { calculatorQuery, calculateProjectPanels } from '../lib/calculator'
 
 export function ProductEstimate({ product, calculatorBase = import.meta.env.BASE_URL }: { product: Product; calculatorBase?: string }) {
   const id = useId()
@@ -23,7 +23,7 @@ export function ProductEstimate({ product, calculatorBase = import.meta.env.BASE
           ? result.sheets.toLocaleString('ru-RU') + ' лист. с запасом 10% · ' + (result.sheets * product.priceRub).toLocaleString('ru-RU') + ' ₽'
           : 'Введите ширину и высоту стены'}
       </output>
-      <a href={calculatorBase + 'kalkulyator/?material=' + encodeURIComponent(product.id)}>Учесть проёмы и другие стены</a>
+      <a href={calculatorBase + 'kalkulyator/?' + calculatorQuery(product.id, { length, height })}>Учесть проёмы и другие стены</a>
     </details>
   )
 }

@@ -92,7 +92,10 @@ export function ProductModal({
                 </div>
                 <SheetUnitPrice product={selected} />
                 <StockAvailability productId={selected.id} details />
-                <img src={selected.image} alt={selected.name} className="gocek-sample" decoding="async" />
+                <a className="gocek-sample-link" href={import.meta.env.BASE_URL + selected.image}
+                  target="_blank" rel="noopener" aria-label={'Открыть образец крупнее: ' + selected.name}>
+                  <img src={import.meta.env.BASE_URL + selected.image} alt={selected.name} className="gocek-sample" decoding="async" />
+                </a>
                 {sheetArea(selected) > 0 && <ProductEstimate key={selected.id} product={selected} />}
               </motion.div>
 
@@ -129,7 +132,7 @@ export function ProductModal({
                   <span>ДОБАВИТЬ В ПОДБОРКУ</span>
                   <span style={{ fontSize: '1.25rem', lineHeight: 1 }}>+</span>
                 </button>
-                <LeadAction intent="samples" context={selected.name + (selected.sku ? ' · ' + selected.sku : '')} className="gocek-telegram-link">Запросить образец</LeadAction>
+                <LeadAction intent="samples" context={selected.name + (selected.sku ? ' · Артикул ' + selected.sku : '') + ' · 1 образец'} className="gocek-telegram-link">Запросить образец</LeadAction>
                 <a className="gocek-telegram-link" href={import.meta.env.BASE_URL + productPath(selected).slice(1)}>Страница материала</a>
                 {telegramDraftUrl && (
                   <a className="gocek-telegram-link" href={telegramDraftUrl} target="_blank" rel="noreferrer">

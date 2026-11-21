@@ -141,3 +141,31 @@
   .showroom-commerce-visit .btn,
   .showroom-commerce-manager .btn { padding-inline: 1rem; }
 }
+
+.showroom-commerce-directions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .25rem 1rem;
+}
+
+.showroom-commerce-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  min-height: 44px;
+  padding: 0 .25rem;
+  border: 0;
+  background: transparent;
+  color: var(--accent-light);
+  cursor: pointer;
+  font: inherit;
+  font-size: .875rem;
+  text-align: left;
+}
+
+.showroom-commerce-copy-status {
+  margin: .25rem 0 0;
+  color: var(--muted);
+  font-size: .875rem;
+}

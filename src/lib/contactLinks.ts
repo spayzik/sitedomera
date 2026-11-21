@@ -21,7 +21,17 @@ export const contactLinks = {
   instagram: verifiedLink(import.meta.env.VITE_DEKORAY_INSTAGRAM_URL, ['www.instagram.com', 'instagram.com'], /^\/[A-Za-z0-9._]+\/?$/),
 }
 
+function inquiryMessage(intent: LeadIntent, context: string) {
+  return [leadIntents[intent].message, context.trim().slice(0, leadContextLimit)].filter(Boolean).join('\n\n')
+}
+
 export function inquiryTelegramLink(intent: LeadIntent, context = '') {
-  const message = [leadIntents[intent].message, context.trim().slice(0, leadContextLimit)].filter(Boolean).join('\n\n')
-  return buildTelegramDraftUrl(contactLinks.telegram, message)
+  return buildTelegramDraftUrl(contactLinks.telegram, inquiryMessage(intent, context))
+}
+
+export function inquiryWhatsAppLink(intent: LeadIntent, context = '') {
+  if (!contactLinks.whatsapp) return undefined
+  const url = new URL(contactLinks.whatsapp)
+  url.searchParams.set('text', inquiryMessage(intent, context))
+  return url.href
 }

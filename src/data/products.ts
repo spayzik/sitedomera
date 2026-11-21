@@ -89,6 +89,7 @@ export const legacyCartIds: Readonly<Record<string, string>> = {
 const hostname = 'xn--80ahdrdyo.xn--p1ai'
 const city = 'Москва'
 const streetAddress = 'Алтуфьевское ш., 37с1'
+const mapOrganizationId = '55177309503'
 
 export const CONTACTS = {
   brand: 'ДЕКОРАЙ',
@@ -98,13 +99,16 @@ export const CONTACTS = {
   hostname,
   origin: `https://${hostname}`,
   telegram: 'https://t.me/domeraru',
+  avito: 'https://www.avito.ru/brands/i344978249/all/predlozheniya_uslug?sellerId=fd45c737d9b0e899f5df5a2f4e1a721a',
   telegramChannel: 'https://t.me/domerarf',
   city,
   streetAddress,
+  mapOrganizationId,
+  mapOrganization: `https://yandex.ru/maps/org/${mapOrganizationId}/`,
+  mapWidget: `https://yandex.ru/map-widget/v1/?ol=biz&oid=${mapOrganizationId}`,
   address: `${city}, ${streetAddress}`,
   hours: 'Ежедневно 11:00–20:00 (без записи)',
   openingHours: 'Mo-Su 11:00-20:00',
-  delivery: 'Самовывоз или отправка в день заказа',
 }
 
 

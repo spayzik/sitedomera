@@ -49,3 +49,26 @@ test('floating-point noise at the exact sheet boundary does not add a whole shee
   assert.equal(calculateProjectPanels([{ length: '10.80001', height: '3.5' }], '1.2', '10', material).sheets, 12)
   assert.equal(calculateProjectPanels([{ length: '0.00001', height: '0.00001' }], '0', '10', material).sheets, 1)
 })
+
+test('single-wall estimate hands the selected product and measured wall to the full calculator', async () => {
+  const { calculatorQuery, calculatorWall } = await import('../src/lib/calculator.ts')
+  const query = calculatorQuery(material.id, { length: '4,25', height: '2.5' })
+  assert.equal(query.get('material'), material.id)
+  const wall = calculatorWall(query)
+  assert.deepEqual(wall, { length: '4,25', height: '2.5' })
+  assert.deepEqual(calculatorWall(new URLSearchParams('width=6&height=NaN')), { length: '10', height: '2.5' })
+  assert.deepEqual(calculatorWall(new URLSearchParams()), { length: '10', height: '2.5' })
+  assert.equal(calculatorQuery(material.id, { length: '0x10', height: '2' }).has('width'), false)
+  assert.equal(calculateProjectPanels([wall], '0', '10', material).sheets, 4)
+})
+
+test('straight vertical panel layout counts each wall and does not assume cutout or offcut reuse', async () => {
+  const { calculateWallLayout } = await import('../src/lib/calculator.ts')
+  const walls = [{ length: '2.5', height: '2.6' }, { length: '1,22', height: '3' }]
+  assert.equal(calculateWallLayout(walls, '10', material), 5)
+  assert.equal(calculateWallLayout([{ length: '1.22', height: '3' }], '0', material), 1)
+  assert.equal(calculateWallLayout([{ length: '1.22', height: '3.01' }], '0', material), 2)
+  assert.equal(calculateWallLayout(walls, '101', material), null)
+  assert.equal(calculateWallLayout([{ length: '', height: '3' }], '10', material), null)
+  assert.equal(calculateWallLayout(walls, '10', products.find(p => p.kind === 'slat')), null)
+})

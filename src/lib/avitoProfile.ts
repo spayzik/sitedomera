@@ -1,3 +1,5 @@
+import { CONTACTS } from '../data/products'
+
 function configuredAvitoProfile(value?: string): string | null {
   if (!value) return null
   try {
@@ -8,7 +10,5 @@ function configuredAvitoProfile(value?: string): string | null {
   return null
 }
 
-const dekorayAvitoProfile = 'https://www.avito.ru/brands/i344978249/all/predlozheniya_uslug?sellerId=fd45c737d9b0e899f5df5a2f4e1a721a'
-
 export const avitoProfile = configuredAvitoProfile(import.meta.env.VITE_AVITO_PROFILE_URL)
-  ?? dekorayAvitoProfile
+  ?? CONTACTS.avito

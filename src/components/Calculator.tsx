@@ -9,23 +9,26 @@ import { useCart } from '../context/CartContext'
 import { Counter } from './Counter'
 import { ArrowRight, ArrowUpRight } from 'lucide-react'
 import { buildTelegramDraftUrl, formatCalculatorTelegramMessage } from '../lib/telegramLink'
-import { calculateProjectPanels, sheetArea, type WallDimensions } from '../lib/calculator'
+import { calculateProjectPanels, calculateWallLayout, calculatorWall, sheetArea, type WallDimensions } from '../lib/calculator'
 import { trackAnalyticsGoal } from '../lib/analytics'
 
 export function Calculator() {
   const { add } = useCart()
   const [materialId, setMaterialId] = useState(() => new URLSearchParams(window.location.search).get('material') ?? '')
   const selectedPanel = sheetProducts.find(p => p.id === materialId) ?? null
-  const [walls, setWalls] = useState<Array<WallDimensions & { id: number }>>([{ id: 0, length: '10', height: '2.5' }])
+  const [walls, setWalls] = useState<Array<WallDimensions & { id: number }>>(() => [{ id: 0, ...calculatorWall(new URLSearchParams(window.location.search)) }])
   const nextWall = useRef(1)
   const [openings, setOpenings] = useState('0')
   const [reserve, setReserve] = useState('10')
+  const [vertical, setVertical] = useState(false)
   const setDimension = (id: number, field: keyof WallDimensions, value: string) =>
     setWalls(previous => previous.map(wall => wall.id === id ? { ...wall, [field]: value } : wall))
 
-  const res = useMemo(() => ({
-    ...calculateProjectPanels(walls, openings, reserve, selectedPanel), panel: selectedPanel,
-  }), [walls, openings, reserve, selectedPanel])
+  const res = useMemo(() => {
+    const estimate = calculateProjectPanels(walls, vertical ? '0' : openings, reserve, selectedPanel)
+    const sheets = vertical && estimate.valid ? calculateWallLayout(walls, reserve, selectedPanel) ?? 0 : estimate.sheets
+    return { ...estimate, sheets, panel: selectedPanel }
+  }, [walls, openings, reserve, selectedPanel, vertical])
 
   const price = res.panel ? res.sheets * res.panel.priceRub : 0
   const completed = Boolean(res.panel && res.valid && res.sheets > 0)
@@ -35,8 +38,9 @@ export function Calculator() {
     reportedCompletion.current = true
     trackAnalyticsGoal('calculator_complete')
   }, [completed])
+  const method = vertical ? 'Вертикальная раскладка без вычета проёмов и повторного использования обрезков' : 'Оценка по площади с вычетом проёмов'
   const draft = res.panel && res.valid && res.sheets > 0
-    ? formatCalculatorTelegramMessage({ area: res.area, sheets: res.sheets, panel: res.panel, total: price })
+    ? formatCalculatorTelegramMessage({ area: res.area, sheets: res.sheets, panel: res.panel, total: price }) + '\n\n' + method + '. Запас: ' + reserve + '%.'
     : null
   const telegramDraftUrl = draft ? buildTelegramDraftUrl(CONTACTS.telegram, draft) : null
   const whatsappDraftUrl = draft && contactLinks.whatsapp
@@ -107,8 +111,17 @@ export function Calculator() {
                 const id = nextWall.current++
                 setWalls(previous => [...previous, { id, length: '', height: '' }])
               }}>Добавить стену</button>
-              {input(openings, setOpenings, 'Общая площадь проёмов', 'м²')}
+              {!vertical && input(openings, setOpenings, 'Общая площадь проёмов', 'м²')}
               {input(reserve, setReserve, 'Запас на подрезку', '%')}
+              <div className="form-group">
+                <label htmlFor="calculator-method">Способ оценки</label>
+                <select id="calculator-method" className="catalog-select" value={vertical ? 'vertical' : 'area'}
+                  onChange={event => setVertical(event.target.value === 'vertical')}>
+                  <option value="area">По площади с вычетом проёмов</option>
+                  <option value="vertical">По вертикальной раскладке</option>
+                </select>
+                {vertical && <p>Считаем ряды по ширине и высоте каждой стены. В этой оценке проёмы не вычитаются, обрезки не используются повторно. Раскладку и швы уточнит менеджер.</p>}
+              </div>
             </div>
             {res.panel && !res.valid && <p role="status">Введите размеры и площадь проёмов до 10 000, а запас — от 0 до 100%. Дробную часть можно отделять точкой или запятой.</p>}
 
@@ -134,8 +147,8 @@ export function Calculator() {
               <span>листов</span>
             </div>}
             {res.panel ? <div className="calc-rows">
-              <div className="calc-row"><span>Площадь стен</span><strong>{res.area.toLocaleString('ru-RU', { maximumFractionDigits: 2 })} м²</strong></div>
-              <div className="calc-row"><span>Площадь с запасом</span><strong>{res.estimatedArea.toLocaleString('ru-RU', { maximumFractionDigits: 2 })} м²</strong></div>
+              <div className="calc-row"><span>{vertical ? 'Площадь стен без вычета проёмов' : 'Площадь стен за вычетом проёмов'}</span><strong>{res.area.toLocaleString('ru-RU', { maximumFractionDigits: 2 })} м²</strong></div>
+              {!vertical && <div className="calc-row"><span>Площадь с запасом</span><strong>{res.estimatedArea.toLocaleString('ru-RU', { maximumFractionDigits: 2 })} м²</strong></div>}
               <div className="calc-row"><span>Цена материала</span><strong>{res.panel.priceRub.toLocaleString('ru-RU')} ₽/{res.panel.unit}<SheetUnitPrice product={res.panel} /></strong></div>
               <div className="calc-row total"><span>Стоимость</span><strong>{price.toLocaleString('ru-RU')} ₽</strong></div>
             </div> : <p role="status">Выберите листовой материал для расчёта.</p>}
@@ -158,7 +171,7 @@ export function Calculator() {
                 {res.panel && res.valid && res.sheets > 0 && res.sheets <= 9999 && (
                   <LeadAction intent="calculation" className="btn btn-outline btn-full interactive"
                     context={[res.panel.name, res.panel.sku && res.panel.sku !== res.panel.name ? 'Артикул: ' + res.panel.sku : '',
-                      res.sheets + ' лист.', price.toLocaleString('ru-RU') + ' ₽'].filter(Boolean).join(' · ')}>
+                      res.sheets + ' лист.', price.toLocaleString('ru-RU') + ' ₽', method, 'Запас: ' + reserve + '%'].filter(Boolean).join(' · ')}>
                     Отправить расчёт в заявку
                   </LeadAction>
                 )}

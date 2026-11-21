@@ -77,3 +77,18 @@
 .seo-stock { color: var(--muted); font-size: .82rem; margin-block: .45rem; }
 .seo-stock[data-stock="in_stock"] { color: var(--ink); }
 .seo-map-reviews iframe { display: block; width: min(100%, 560px); border: 1px solid var(--line); border-radius: 8px; }
+
+.seo-image-link { display: block; }
+.seo-image-link:hover { outline: 1px solid var(--accent); outline-offset: 2px; }
+.seo-image-link img { cursor: zoom-in !important; }
+.seo-contact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); gap: 1rem; }
+.seo-contact-grid > div { min-width: 0; padding: 1.25rem; border: 1px solid var(--line); background: var(--surface); }
+.seo-contact-grid h3 { color: var(--ink); font: 500 1.45rem/1.2 var(--font-display); margin: 0 0 .75rem; }
+.seo-contact-grid address { font-style: normal; }
+.seo-contact-grid p { margin: .35rem 0; color: var(--muted); }
+.seo-contact-grid .seo-actions { gap: .25rem 1rem; }
+.seo-contact-grid button { font: inherit; min-height: 44px; padding: .5rem .75rem; color: var(--accent-light); border: 1px solid var(--line); background: transparent; }
+.seo-contact-grid button:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.seo-contact-grid [role="status"] { color: var(--muted); }
+.seo-contact-section + .seo-venue-map { margin-block-start: 1.5rem; }
+.seo-static [data-seo-reviews] .container { width: 100%; }

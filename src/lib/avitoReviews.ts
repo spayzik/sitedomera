@@ -75,9 +75,9 @@ export function isPublicAvitoSnapshot(value: unknown, allowEmpty = false): boole
   })
 }
 
-export async function loadAvitoSnapshot(): Promise<AvitoSnapshot | null> {
+export async function loadAvitoSnapshot(assetBase = './'): Promise<AvitoSnapshot | null> {
   try {
-    const url = new URL('generated/avito-reviews.json', document.baseURI)
+    const url = new URL('generated/avito-reviews.json', new URL(assetBase, document.baseURI))
     const response = await fetch(url)
     if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) return null
     return parseAvitoSnapshot(await response.json())

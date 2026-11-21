@@ -1,21 +1,27 @@
 import { categoryPath } from '../data/seoPaths'
 import { LeadAction } from '../components/LeadProvider'
-import { useEffect, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
-import { collections, products, type CollectionId, type Product, filterProducts, catalogSummary } from '../data/products'
+import { collections, products, type CollectionId, type Product, catalogSummary } from '../data/products'
 import { useCart } from '../context/CartContext'
 import { ProductModal } from '../components/ProductModal'
 import { CatalogCard } from '../components/CatalogCard'
 import { Counter } from '../components/Counter'
 import { ArrowDown, Ruler, Scale } from 'lucide-react'
 import { parseCatalogHash, updateCatalogHash } from '../lib/catalogNavigation'
+import { availabilityFor } from '../lib/inventory'
+import { InventoryContext } from '../context/inventoryState'
+import { CatalogFilterControls } from '../components/CatalogFilterControls'
+import { catalogResults, parseCatalogFilters, writeCatalogFilters, type CatalogFilters } from '../lib/catalogFilters'
 
 export function CatalogPage() {
   const reducedMotion = useReducedMotion()
   const [hash, setHash] = useState(() => window.location.hash)
   const { categoryId: filter, product: selectedProduct } = parseCatalogHash(hash)
   const { add } = useCart()
-  const [search, setSearch] = useState('')
+  const stock = useContext(InventoryContext)
+  const params = new URLSearchParams(hash.split('?')[1])
+  const filters = parseCatalogFilters(params)
   useEffect(() => {
     const sync = () => setHash(window.location.hash)
     window.addEventListener('hashchange', sync)
@@ -31,13 +37,26 @@ export function CatalogPage() {
     setHash(next)
   }
   const openProduct = (p: Product | null) => navigate({ sku: p?.id ?? null })
-  const setFilter = (category: CollectionId | 'all') => navigate({ category })
+  const changeFilters = (patch: Partial<CatalogFilters>) => {
+    const params = new URLSearchParams(window.location.hash.split('?')[1])
+    const filters = parseCatalogFilters(params)
+    const query = writeCatalogFilters(params, { ...filters, ...patch }).toString()
+    const next = '#/catalog' + (query ? '?' + query : '')
+    if (next !== window.location.hash) {
+      if (patch.query !== undefined && Object.keys(patch).length === 1) history.replaceState(null, '', next)
+      else history.pushState(null, '', next)
+    }
+    setHash(next)
+  }
+  const setFilter = (category: CollectionId | 'all') => changeFilters({ category, thickness: '' })
+  const reset = () => changeFilters(parseCatalogFilters(new URLSearchParams()))
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })
   }, [])
 
-  const list = filterProducts(filter, search)
+  const now = Date.now()
+  const list = catalogResults(filters, id => availabilityFor(stock.inventory, id, now, stock.unavailable).status)
 
   const collectionMeta = filter === 'all'
     ? { name: 'Все коллекции', nameEn: 'Full Catalog', desc: 'Панели, гибкий камень, декоративные рейки и алюминиевые профили. Характеристики и цены — в карточках материалов.' }
@@ -114,18 +133,11 @@ export function CatalogPage() {
               ))}
             </div>
 
-            <div className="search-input">
-              <input
-                type="text"
-                aria-label="Поиск товаров по названию или артикулу"
-                placeholder="Поиск: название или артикул"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
+
           </div>
 
-          <p className="catalog-count">
+          <CatalogFilterControls filters={filters} onChange={changeFilters} reset={reset} />
+          <p className="catalog-count" role="status">
             Показано <strong>{list.length}</strong> из {products.length} позиций
           </p>
 
@@ -139,7 +151,7 @@ export function CatalogPage() {
           {list.length === 0 && (
             <div className="catalog-empty">
               <p>По вашему запросу ничего не найдено.</p>
-              <button className="btn btn-white interactive" onClick={() => { setFilter('all'); setSearch('') }}>
+              <button className="btn btn-white interactive" onClick={reset}>
                 Сбросить фильтры
               </button>
             </div>
@@ -151,7 +163,7 @@ export function CatalogPage() {
               <p className="eyebrow">Нужна помощь с выбором?</p>
               <h2>Подберём материалы<br />под ваш интерьер</h2>
             </div>
-            <a href="#showroom" className="btn btn-primary interactive">
+            <a href={import.meta.env.BASE_URL + 'showroom/'} className="btn btn-primary interactive">
               Контакты шоурума
             </a>
           </div>

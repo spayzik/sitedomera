@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
-import { contactLinks, inquiryTelegramLink } from '../lib/contactLinks'
+import { contactLinks, inquiryTelegramLink, inquiryWhatsAppLink } from '../lib/contactLinks'
 import { fetchLeadTerms, leadEndpoint, type LeadAttempt, type LeadTerms } from '../lib/leadClient'
 import { leadContextLimit, leadIntents, type LeadIntent } from '../lib/leadIntents'
 import { LeadContext, useLeadService } from '../lib/leadState'
@@ -65,6 +65,7 @@ export function LeadProvider({ children }: { children: ReactNode }) {
   }
 
   const formAvailable = request && leadEndpoint && terms?.intents.includes(request.intent)
+  const whatsapp = request && inquiryWhatsAppLink(request.intent, request.context)
 
   return <LeadContext.Provider value={{ terms, open }}>
     {children}
@@ -87,6 +88,8 @@ export function LeadProvider({ children }: { children: ReactNode }) {
           <div className="lead-dialog-links">
             <a className="contact-inline-phone" href={inquiryTelegramLink(request.intent, request.context)}
               target="_blank" rel="noopener noreferrer">Написать в Telegram</a>
+            {whatsapp && <a className="contact-inline-phone" href={whatsapp}
+              target="_blank" rel="noopener noreferrer">Написать в WhatsApp</a>}
             <a className="contact-inline-phone" href={contactLinks.phone}>Позвонить {contactLinks.phoneLabel}</a>
           </div>
         </div>

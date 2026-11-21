@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Menu, X, ShoppingBag } from 'lucide-react'
+import { Menu, X, ShoppingBag, Send } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { contactLinks } from '../lib/contactLinks'
 import { LeadAction } from './LeadProvider'
@@ -7,10 +7,11 @@ import { LogoIcon } from './Logo'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useDialog } from '../lib/useDialog'
 
+const catalogUrl = import.meta.env.BASE_URL + 'catalog/'
 const links = [
   { href: '#specs', label: 'Технологии' },
   { href: '#why', label: 'Почему мы' },
-  { href: '#/catalog', label: 'Каталог' },
+  { href: catalogUrl, label: 'Каталог' },
   { href: '#interiors', label: 'Интерьеры' },
   { href: '#installation', label: 'Монтаж' },
   { href: '#showroom', label: 'Шоурум' },
@@ -37,7 +38,7 @@ export function Header() {
     const update = () => {
       frame = 0
       if (window.location.hash.startsWith('#/catalog')) {
-        setActive('#/catalog')
+        setActive(catalogUrl)
         return
       }
       const point = window.innerHeight * 0.45
@@ -83,6 +84,10 @@ export function Header() {
           <div className="header-actions">
             <a className="header-phone" href={contactLinks.phone}>
               {contactLinks.phoneLabel}
+            </a>
+            <a className="header-messenger" href={contactLinks.telegram} target="_blank"
+              rel="noreferrer" aria-label="Написать в Telegram">
+              <Send size={17} aria-hidden="true" />
             </a>
             <button
               className="cart-btn"
