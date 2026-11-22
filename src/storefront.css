@@ -102,16 +102,78 @@
 .page-section > .showroom-commerce .showroom-commerce-manager {
   background: color-mix(in srgb, var(--accent-light) 5%, transparent);
 }
-.installation-editorial {
+.installation-service-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 24rem);
-  align-items: start;
-  gap: clamp(1.5rem, 5vw, 5rem);
+  grid-template-columns: minmax(0, 1fr) minmax(0, min(36%, 30rem));
+  align-items: center;
+  gap: clamp(1.5rem, 6vw, 6rem);
 }
-.installation-editorial .page-editorial-image { grid-column: 2; grid-row: 1; margin-bottom: 0; }
-.installation-editorial .page-copy { grid-column: 1; grid-row: 1; }
-.installation-editorial img { max-height: 28rem; object-fit: contain; object-position: left center; }
-@media (max-width: 768px) {
-  .installation-editorial { display: flex; flex-direction: column; gap: 0; }
-  .installation-editorial img { max-height: 18rem; }
+.installation-service-hero .page-intro { max-width: 48rem; }
+.installation-service-hero .lead { max-width: 44ch; }
+.installation-service-hero .page-links { margin-top: 1.5rem; }
+.installation-service-photo { margin: 0; }
+.installation-service-photo img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: clamp(18rem, 36vw, 27rem);
+  object-fit: cover;
+  object-position: center 42%;
+}
+.installation-service-photo figcaption { color: var(--muted); margin-top: .45rem; font-size: .8rem; }
+.installation-service-process { margin-top: clamp(2rem, 4.5vw, 4rem); }
+.installation-service-process h2, .journal-list > h2 {
+  font: 500 clamp(1.9rem, 3vw, 3rem)/1.1 var(--font-display);
+}
+.installation-service-steps {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 clamp(1.5rem, 4vw, 4rem);
+  margin-top: 1.15rem;
+}
+.installation-service-steps > section { border-top: 1px solid var(--line); padding: 1.1rem 0; }
+.installation-service-steps h3 { font: 500 clamp(1.25rem, 2vw, 1.65rem)/1.15 var(--font-display); }
+.installation-service-steps p { margin-top: .55rem; color: var(--muted); line-height: 1.6; max-width: 54ch; }
+.installation-service-links { margin-top: 1.25rem; }
+.installation-service-links a { display: inline-flex; min-height: 44px; gap: .4rem; align-items: center; }
+
+.journal .page-intro { margin-bottom: clamp(1.2rem, 2.4vw, 2.2rem); }
+.journal-card { min-width: 0; }
+.journal-card > a {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  background: rgba(194, 163, 120, .04);
+  transition: border-color .2s ease;
+}
+.journal-card > a:is(:hover, :focus-visible) { border-color: var(--accent-light); }
+.journal-card > a:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 3px; }
+.journal-cover { position: relative; flex: none; overflow: clip; aspect-ratio: 16 / 9; background: var(--surface); }
+.journal-cover img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; object-position: center 47%; }
+.journal-card-body { display: flex; flex: 1; flex-direction: column; align-items: start; gap: .8rem; padding: clamp(1rem, 2vw, 1.7rem); }
+.journal-card .journal-topic { margin: 0; font-size: .75rem; color: var(--accent-light); letter-spacing: .1em; }
+.journal-card h2, .journal-card h3 { font: 500 clamp(1.35rem, 2.3vw, 2rem)/1.13 var(--font-display); }
+.journal-summary { color: var(--muted); line-height: 1.6; }
+.journal-read { display: inline-flex; align-items: center; gap: .4rem; margin-top: auto; padding-top: .35rem; color: var(--accent-light); }
+.journal-featured > a { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); }
+.journal-featured .journal-cover { aspect-ratio: 2 / 1; }
+.journal-featured .journal-card-body { justify-content: center; padding: clamp(1.2rem, 4vw, 3.2rem); }
+.journal-featured .journal-read { margin-top: .35rem; }
+.journal-featured h2 { font-size: clamp(1.8rem, 3vw, 3.1rem); }
+.journal-list { margin-top: clamp(2rem, 5vw, 4rem); }
+.journal-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(.9rem, 2.5vw, 2rem); margin-top: 1.1rem; }
+@media (max-width: 1024px) {
+  .journal-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .installation-service-hero, .journal-featured > a { grid-template-columns: minmax(0, 1fr); }
+  .installation-service-photo img { max-height: 18rem; }
+  .journal-featured .journal-cover { aspect-ratio: 16 / 9; }
+}
+@media (max-width: 600px) {
+  .installation-service-steps, .journal-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .journal-card > a { transition: none; }
 }

@@ -1,7 +1,7 @@
 import { storefrontImageSize } from '../data/storefrontImageSizes'
 import { useRoute } from '../router'
 import { CONTACTS } from '../data/products'
-import { seoPages, type SeoPage } from '../data/seoRoutes'
+import type { SeoPage } from '../data/seoRoutes'
 import { MapEmbed } from '../components/MapEmbed'
 import { Calculator } from '../components/Calculator'
 import { Reviews } from '../components/Reviews'
@@ -11,9 +11,10 @@ import { HomePage } from './HomePage'
 import { CatalogPage } from './CatalogPage'
 import { ProductPage } from './ProductPage'
 import { OfferPage } from './OfferPage'
+import { JournalPage } from './JournalPage'
+import { InstallationPage } from './InstallationPage'
 
 const actionMap: Record<string, [string, string]> = {
-  '/montazh/': ['/kalkulyator/', 'Рассчитать количество листов'],
   '/dostavka/': [buildTelegramDraftUrl(CONTACTS.telegram, 'Здравствуйте! Хочу уточнить условия доставки материалов ДЕКОРАЙ.'), 'Уточнить доставку'],
   '/showroom/': [CONTACTS.mapOrganization, 'Открыть в Яндекс Картах'],
   '/kontakty/': ['tel:' + CONTACTS.phoneRaw, 'Позвонить ' + CONTACTS.phone],
@@ -36,10 +37,12 @@ export function StorefrontRoute({ page, base, path }: { page?: SeoPage; base: st
   if (page.kind === 'catalog' || page.kind === 'category' || page.kind === 'selection') return <CatalogPage page={page} base={base} />
   if (page.kind === 'product') return <ProductPage product={page.product} base={base} />
 
+  if (page.kind === 'articles') return <JournalPage page={page} base={base} />
+  if (page.path === '/montazh/' && 'copy' in page) return <InstallationPage page={page} base={base} />
+
   const action = actionMap[page.path]
   const venue = page.path === '/kontakty/' || page.path === '/showroom/'
   const copy = 'copy' in page ? page.copy : undefined
-  const articles = page.kind === 'articles' ? seoPages.filter(item => item.kind === 'article') : []
   const calculator = page.path === '/kalkulyator/'
 
   return <div className="container page-section">
@@ -59,21 +62,20 @@ export function StorefrontRoute({ page, base, path }: { page?: SeoPage; base: st
         <a href={CONTACTS.mapOrganization}>Открыть карточку организации на Яндекс Картах</a>
       </section>
     </>}
-    {copy && <div className={page.path === '/montazh/' ? 'installation-editorial' : undefined}>
+    {copy && <>
       {copy.image && <figure className="page-editorial-image">
         <img src={base + copy.image} {...storefrontImageSize(copy.image)} alt={copy.imageCaption ?? page.heading} decoding="async" loading="lazy"
           srcSet={copy.imageSmall ? base + copy.imageSmall + ' 720w, ' + base + copy.image + ' 1440w' : undefined}
-          sizes={page.path === '/montazh/' ? '(max-width: 768px) 100vw, 24rem' : '(max-width: 768px) 100vw, 48rem'} />
+          sizes="(max-width: 768px) 100vw, 48rem" />
         {copy.imageCaption && <figcaption>{copy.imageCaption}</figcaption>}
       </figure>}
       <div className="page-copy">{copy.blocks.map(({ heading, text }) =>
         <section key={heading}><h2>{heading}</h2><p>{text}</p></section>)}</div>
-    </div>}
-    {articles.length > 0 && <div className="page-copy">{articles.map(article =>
-      <section key={article.path}><h2><a href={href(base, article.path)}>{article.heading}</a></h2><p>{article.description}</p></section>)}</div>}
+    </>}
     <div className="page-links">
       {copy?.links?.filter(({ path }) => path !== action?.[0] && !(action && path === '/#lead') && !(venue && path === '/#showroom'))
         .map(link => <a key={link.path} href={href(base, link.path)}>{link.label}</a>)}
+      {page.kind === 'article' && <a href={base + 'stati/'}>Все статьи</a>}
       {page.kind === 'article' && page.path !== '/stati/kak-sravnit-stoimost-otdelki/' &&
         <a href={base + 'stati/kak-sravnit-stoimost-otdelki/'}>Сравнить стоимость материалов</a>}
     </div>

@@ -1,5 +1,10 @@
 // Intrinsic dimensions of the original storefront assets.
 const imageSizes: Record<string, readonly [number, number]> = {
+  "catalog/rooms/interior-bedroom.webp": [1122, 1402],
+  "catalog/rooms/interior-fabric.webp": [1122, 1402],
+  "catalog/rooms/interior-living.webp": [1122, 1402],
+  "catalog/rooms/interior-dining.webp": [1122, 1402],
+  "catalog/rooms/interior-metal.webp": [1448, 1086],
   "catalog/2026/previews/p06-r1c1.webp": [254, 294],
   "catalog/2026/previews/p06-r1c3.webp": [254, 294],
   "catalog/2026/previews/p06-r2c1.webp": [254, 287],

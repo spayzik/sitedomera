@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { CheckCircle2 } from 'lucide-react'
 
 const features = [
+  'Выезд команды ДЕКОРАЙ на замер',
   'Проверка основания перед установкой',
   'Подбор способа крепления под материал',
   'Согласование раскладки, углов и стыков',
@@ -24,7 +25,7 @@ export function Installation() {
             <p className="eyebrow">Наши услуги</p>
             <h2>Профессиональный<br/>монтаж «под ключ»</h2>
             <p className="lead" style={{ marginBottom: '2.5rem' }}>
-              Обсудите монтаж с командой ДЕКОРАЙ. Объём работ, стоимость и сроки уточним с учётом материала, размеров стен и состояния основания.
+              Сами выезжаем на замер, согласовываем раскладку и аккуратно устанавливаем панели. Стоимость и состав работ обсуждаем заранее.
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '3rem' }}>
@@ -44,8 +45,8 @@ export function Installation() {
               ))}
             </div>
 
-            <a href="#showroom" className="btn btn-primary interactive">
-              Рассчитать стоимость монтажа
+            <a href="./montazh/" className="btn btn-primary interactive">
+              Подробнее о монтаже
             </a>
           </motion.div>
 
