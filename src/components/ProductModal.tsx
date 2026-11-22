@@ -100,11 +100,7 @@ export function ProductModal({
                 </div>
                 <SheetUnitPrice product={selected} />
                 <StockAvailability productId={selected.id} details />
-                <a className="secondary-action gocek-original-link" href={base + selected.image}
-                  target="_blank" rel="noopener" aria-label={'Открыть образец крупнее: ' + selected.name}>
-                  Посмотреть фактуру
-                </a>
-                {sheetArea(selected) > 0 && <ProductEstimate key={selected.id} product={selected} />}
+                {sheetArea(selected) > 0 && <ProductEstimate key={selected.id} product={selected} calculatorBase={base} />}
               </motion.div>
 
               {/* Top Right: Glassmorphism Specs */}

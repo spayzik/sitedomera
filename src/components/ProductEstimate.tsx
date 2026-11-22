@@ -19,12 +19,16 @@ export function ProductEstimate({ product, calculatorBase = import.meta.env.BASE
           <input id={id + '-height'} inputMode="decimal" value={height} onChange={event => setHeight(event.target.value)} maxLength={16} />
         </label>
       </div>
-      <output aria-live="polite">
-        {result.valid && result.sheets > 0
-          ? result.sheets.toLocaleString('ru-RU') + ' лист. с запасом 10% · ' + (result.sheets * product.priceRub).toLocaleString('ru-RU') + ' ₽'
-          : 'Введите ширину и высоту стены'}
-      </output>
-      <a className="secondary-action" href={calculatorBase + 'kalkulyator/?' + calculatorQuery(product.id, { length, height })}>Проёмы и другие стены <ArrowUpRight size={14} aria-hidden="true" /></a>
+      <div className="product-estimate-result">
+        <output aria-live="polite">
+          {result.valid && result.sheets > 0
+            ? result.sheets.toLocaleString('ru-RU') + ' лист. с запасом 10% · ' + (result.sheets * product.priceRub).toLocaleString('ru-RU') + ' ₽'
+            : 'Введите ширину и высоту стены'}
+        </output>
+        <a className="secondary-action" href={calculatorBase + 'kalkulyator/?' + calculatorQuery(product.id, { length, height })}>
+          Проёмы и другие стены <ArrowUpRight size={14} aria-hidden="true" />
+        </a>
+      </div>
     </details>
   )
 }

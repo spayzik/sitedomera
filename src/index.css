@@ -539,21 +539,26 @@ h4 { font-size: 1.25rem; font-weight: 500; }
 
 /* === GOCEK MARINA LOFT MODAL === */
 .gocek-modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; background: rgba(7, 7, 7, 0.4); backdrop-filter: blur(8px); padding: 2rem; }
-.gocek-box { position: relative; width: 100%; max-width: 1300px; height: min(85vh, 800px); min-height: 560px; max-height: 850px; background: #111; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,0.4); }
+.gocek-box { position: relative; width: 100%; max-width: 1300px; height: min(90dvh, 800px); background: #111; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,0.4); }
 .gocek-material-backdrop { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: blur(4px); transform: scale(1.03); pointer-events: none; }
-.gocek-original-link { display: inline-flex; align-items: center; min-height: 44px; color: var(--accent-light); font-size: .85rem; text-decoration: underline; text-underline-offset: .2em; }
 .gocek-top-left .gocek-sku { color: var(--muted); font-size: .83rem; margin-block: .35rem .7rem; }
 .gocek-gradient {
   position: absolute; inset: 0;
   background: linear-gradient(135deg, rgba(12,8,5,.83) 0%, rgba(12,8,5,.46) 55%, rgba(12,8,5,.24) 100%), linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 40%); pointer-events: none;
 }
-.gocek-content { position: relative; z-index: 10; width: 100%; height: 100%; }
+.gocek-content {
+  position: relative; z-index: 10; width: 100%; height: 100%;
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 400px); grid-template-rows: 1fr auto;
+  align-items: start; gap: clamp(1rem, 3vh, 2rem) clamp(1.5rem, 4vw, 3rem);
+  padding: clamp(1.75rem, 5vh, 3rem) 5% clamp(1.25rem, 4vh, 2.5rem);
+  overflow-y: auto; overflow-x: hidden;
+}
 
-.gocek-top-left { position: absolute; top: 15%; left: 5%; width: calc(90% - 440px); max-width: 500px; color: #fff; overflow-wrap: anywhere; }
+.gocek-top-left { padding-top: clamp(1.5rem, 7vh, 4.25rem); min-width: 0; max-width: 500px; color: #fff; overflow-wrap: anywhere; }
 .gocek-top-left h2 { font-family: var(--font-display); font-size: clamp(3rem, 6vw, 5rem); margin-bottom: 1.5rem; line-height: 1; }
 .gocek-top-left p { font-size: 1.05rem; line-height: 1.7; color: rgba(255,255,255,0.7); margin-bottom: 2rem; }
 
-.gocek-top-right { position: absolute; top: 6%; right: 5%; width: 400px; }
+.gocek-top-right { min-width: 0; }
 .gocek-glass {
   background: rgba(10,10,10,0.6); backdrop-filter: blur(40px);
   border: 1px solid rgba(255,255,255,0.1); padding: 1.5rem; color: #fff;
@@ -588,7 +593,7 @@ h4 { font-size: 1.25rem; font-weight: 500; }
 .gocek-telegram-link:hover { color: var(--accent); }
 .gocek-contact { margin-top: 1rem; font-size: .85rem; }
 
-.gocek-dock { position: absolute; bottom: 5%; left: 5%; right: 5%; width: max-content; max-width: 90%; margin-inline: auto; display: flex; gap: 0.5rem; background: rgba(0,0,0,0.4); padding: 0.5rem; backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); overflow-x: auto; scrollbar-width: none; }
+.gocek-dock { grid-column: 1 / -1; justify-self: center; width: max-content; max-width: 100%; display: flex; gap: 0.5rem; background: rgba(0,0,0,0.4); padding: 0.5rem; backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); overflow-x: auto; scrollbar-width: none; }
 .gocek-dock::-webkit-scrollbar { display: none; }
 .gocek-dock-item { position: relative; height: 56px; width: 56px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border: 1px solid transparent; background: transparent; overflow: visible; }
 .gocek-dock-item img { width: 56px; height: 56px; object-fit: cover; }
@@ -605,8 +610,9 @@ h4 { font-size: 1.25rem; font-weight: 500; }
   .gocek-top-left, .gocek-top-right { flex-shrink: 0; }
   .gocek-modal { padding: 0; }
   .gocek-box { height: 100dvh; min-height: 0; max-height: none; }
-  .gocek-content { overflow-y: auto; overflow-x: hidden; padding: 6rem 1.5rem 2rem; display: flex; flex-direction: column; }
-  .gocek-top-left, .gocek-top-right, .gocek-dock { position: relative; top: 0; left: 0; right: 0; bottom: 0; width: 100%; max-width: 100%; margin-bottom: 3rem; transform: none; }
+  .gocek-content { overflow-y: auto; overflow-x: hidden; padding: 6rem 1.5rem 2rem; display: flex; flex-direction: column; align-items: stretch; gap: 1.5rem; }
+  .gocek-top-left, .gocek-top-right, .gocek-dock { width: 100%; max-width: 100%; }
+  .gocek-top-left { padding-top: 0; }
   .gocek-dock { overflow-x: auto; padding-bottom: 0.75rem; scroll-snap-type: x mandatory; flex-shrink: 0; align-items: center; }
   .gocek-dock-item { flex-shrink: 0; height: 52px; width: auto; scroll-snap-align: center; }
   .gocek-dock-item img { width: 52px; height: 52px; }
@@ -1636,7 +1642,6 @@ body:has(.analytics-banner, .hero-in-view) :is(.floating-cart, .messenger-fab, .
 .product-estimate summary { cursor: pointer; color: var(--accent-light); }
 .product-estimate-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; margin-block: .55rem; }
 .product-estimate input { width: 100%; min-width: 0; display: block; padding: .4rem; border: 1px solid var(--line); color: var(--ink); background: #211c17; }
-.product-estimate a { display: inline-block; color: var(--accent-light); margin-left: .5rem; text-decoration: underline; }
 
 .interior-concept { margin: clamp(2rem, 5vw, 4rem) 0 0; padding-top: 1.4rem; border-top: 1px solid var(--line); }
 .interior-concept-heading { display: flex; align-items: center; gap: .8rem; margin-bottom: 1.3rem; }
