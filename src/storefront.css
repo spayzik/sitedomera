@@ -1,11 +1,21 @@
 /* Route composition uses storefront typography, surfaces and controls. */
-.page-section { padding-block: clamp(7rem, 11vw, 10rem) clamp(4rem, 8vw, 8rem); }
+:root {
+  --page-top: clamp(6.8rem, 9vw, 8.5rem);
+  --page-bottom: clamp(2.75rem, 5.5vw, 5.5rem);
+  --section-gap: clamp(1.75rem, 4.5vw, 4rem);
+  --heading-page: clamp(2.45rem, 5vw, 4.45rem);
+  --heading-section: clamp(1.75rem, 3vw, 2.65rem);
+  --control-radius: .4rem;
+  --control-height: 44px;
+  --anchor-offset: 7rem;
+}
+.page-section { padding-block: var(--page-top) var(--page-bottom); }
 .page-crumbs, .page-links { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem 1.25rem; }
-.page-crumbs { color: var(--muted); margin-bottom: 1.5rem; font-size: .88rem; }
+.page-crumbs { color: var(--muted); margin-bottom: clamp(.85rem, 2vw, 1.5rem); font-size: .88rem; }
 .page-crumbs > * + *::before { content: '/'; margin-right: .8rem; opacity: .65; }
 .page-intro { max-width: 52rem; }
 .page-intro h1, .material-purchase h1, .page-section > h1 {
-  font: 500 clamp(2.5rem, 6vw, 5rem)/1.04 var(--font-display);
+  font: 500 var(--heading-page)/1.06 var(--font-display);
   overflow-wrap: anywhere;
 }
 .page-intro .lead { margin-block: 1rem 1.5rem; }
@@ -33,7 +43,7 @@
 .material-purchase .page-copy { gap: .6rem; margin-block: 1.35rem; }
 .material-purchase dl > div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .4rem 1rem; padding: .62rem 0; border-bottom: 1px solid var(--line); }
 .material-purchase dd { margin: 0; }
-.page-related { margin-top: clamp(2rem, 5vw, 5rem); }
+.page-related { margin-top: var(--section-gap); }
 .page-related .grid-arch { margin-top: 1.5rem; }
 .catalog-route-tabs { flex-wrap: nowrap; overflow-x: auto; margin-bottom: 1.25rem; scrollbar-width: thin; }
 .catalog-route-tabs a { flex: 0 0 auto; padding: .6rem .12rem; color: var(--muted); border-bottom: 1px solid transparent; }
@@ -66,8 +76,6 @@
 
 .catalog-route-tabs { gap: clamp(.85rem, 2vw, 1.7rem); padding-bottom: .2rem; }
 .catalog-route-tabs a { font-size: .91rem; }
-.page-section { padding-block: clamp(6.6rem, 9vw, 8.5rem) clamp(3rem, 6vw, 6rem); }
-.page-intro h1 { font-size: clamp(2.35rem, 5vw, 4.4rem); }
 .page-intro .lead { margin-block: .8rem 1.1rem; }
 .page-section .reviews-sheet { margin-inline: 0; }
 
@@ -146,7 +154,7 @@
 .installation-service-photo figcaption { color: var(--muted); margin-top: .45rem; font-size: .8rem; }
 .installation-service-process { margin-top: clamp(2rem, 4.5vw, 4rem); }
 .installation-service-process h2, .journal-list > h2 {
-  font: 500 clamp(1.9rem, 3vw, 3rem)/1.1 var(--font-display);
+  font: 500 var(--heading-section)/1.12 var(--font-display);
 }
 .installation-service-steps {
   display: grid;
@@ -208,10 +216,10 @@
   align-items: center;
   justify-content: center;
   gap: .55rem;
-  min-height: 44px;
+  min-height: var(--control-height);
   padding: .55rem .85rem;
   border: 1px solid rgba(206, 176, 137, .26);
-  border-radius: .3rem;
+  border-radius: var(--control-radius);
   background: rgba(206, 176, 137, .055);
   color: var(--ink);
   font: 500 .86rem/1.3 var(--font);
@@ -241,7 +249,7 @@
   grid-template-columns: minmax(13rem, .65fr) minmax(0, 1.65fr);
   align-items: start;
   gap: clamp(1.5rem, 5vw, 5rem);
-  margin-top: clamp(1.75rem, 5vw, 4rem);
+  margin-top: var(--section-gap);
 }
 .reading-toc { padding: 1.2rem 1.35rem; border: 1px solid var(--line); border-radius: .5rem; background: rgba(206, 176, 137, .06); }
 .reading-toc h2 { font: 500 1.5rem/1.1 var(--font-display); }
@@ -249,8 +257,8 @@
 .reading-toc li { padding: .4rem .15rem; color: var(--accent-light); }
 .reading-toc a:hover { text-decoration: underline; }
 .reading-body { max-width: 74ch; }
-.reading-body > section { scroll-margin-top: 7rem; padding: 0 0 1.55rem; margin-bottom: 1.55rem; border-bottom: 1px solid var(--line); }
-.reading-body h2, .material-specs h2, .material-editorial h2 { font: 500 clamp(1.55rem, 3vw, 2.25rem)/1.12 var(--font-display); }
+.reading-body > section { scroll-margin-top: var(--anchor-offset); padding: 0 0 1.55rem; margin-bottom: 1.55rem; border-bottom: 1px solid var(--line); }
+.reading-body h2, .material-specs h2, .material-editorial h2 { font: 500 var(--heading-section)/1.12 var(--font-display); }
 .reading-body p { margin-top: .65rem; color: var(--muted); line-height: 1.75; }
 .reading-actions { display: flex; flex-wrap: wrap; gap: .65rem; margin-bottom: 1rem; }
 
@@ -372,11 +380,11 @@
 .showroom-route .showroom-page { padding: 0; border: 0; background: transparent; }
 .showroom-page > .container { padding: 0; }
 .showroom-page .showroom-commerce-grid { grid-template-columns: minmax(0,1.2fr) minmax(0,.8fr); gap: clamp(1.4rem, 5vw, 4rem); align-items: center; }
-.showroom-page h1 { font-size: clamp(2.45rem, 5vw, 5rem); }
+.showroom-page h1 { font: 500 var(--heading-page)/1.06 var(--font-display); }
 .showroom-page .lead { margin-top: 1rem; }
 .showroom-page .showroom-commerce-manager { border-radius: .55rem; background: rgba(206,176,137,.06); }
 .showroom-visit-guide { margin-top: 2.5rem; padding: clamp(1rem, 3vw, 2rem); border: 1px solid var(--line); border-radius: .55rem; }
-.showroom-visit-guide h2, .installation-examples h2 { font: 500 clamp(1.8rem, 3vw, 2.7rem)/1.15 var(--font-display); }
+.showroom-visit-guide h2, .installation-examples h2 { font: 500 var(--heading-section)/1.12 var(--font-display); }
 .showroom-visit-guide p { margin: .55rem 0 1rem; color: var(--muted); max-width: 64ch; }
 @media (max-width:768px) { .showroom-page .showroom-commerce-grid { grid-template-columns: 1fr; } }
 .installation-examples { margin-block: clamp(2.5rem, 6vw, 5rem) 2rem; }
@@ -418,3 +426,27 @@
 
 .messenger-fab > .tg-fab { background: #dcc09a; color: #1d1510; box-shadow: 0 6px 24px rgba(194,163,120,.26); }
 .messenger-fab > .tg-fab:hover { background: #efdabd; }
+
+/* Keep sticky navigation clear of anchor targets and use one focus treatment. */
+:is(#request, #showroom, #installation, #interiors, #why, #specs) { scroll-margin-top: var(--anchor-offset); }
+:where(main, .site-header, .footer, .gocek-box) :where(a, button, summary):focus-visible {
+  outline: 2px solid var(--accent-light);
+  outline-offset: 3px;
+}
+:where(.page-crumbs, .reading-toc) a:hover { color: var(--accent-light); }
+:where(.page-intro, .material-editorial, .reading-body, .showroom-visit-guide) p {
+  text-wrap: pretty;
+  overflow-wrap: break-word;
+}
+:where(.page-intro, .reading-body, .material-editorial, .showroom-page) :where(h1, h2, h3) { text-wrap: balance; }
+:where(.material-specs, .material-price, .calc-row, .gocek-cost) { font-variant-numeric: tabular-nums; }
+.site-lead-panel .cart-lead-form :is(input, textarea), .product-estimate-fields input { min-height: var(--control-height); }
+.site-lead-panel .cart-lead-form :is(input, textarea), .store-select .store-select-trigger { border-radius: var(--control-radius); }
+@media (max-width: 480px) {
+  :root { --anchor-offset: 6.25rem; }
+  .page-section { padding-bottom: 2.25rem; }
+  .page-crumbs { gap: .3rem .6rem; }
+  .page-crumbs > * + *::before { margin-right: .55rem; }
+  .reading-layout, .material-layout { gap: 1.1rem; }
+  .installation-service-process, .journal-list { margin-top: var(--section-gap); }
+}
