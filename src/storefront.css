@@ -408,3 +408,13 @@
 .installation-contact > span { flex-basis: 100%; font-size: .82rem; color: var(--muted); }
 .installation-contact .social-contacts { margin: 0; }
 .installation-contact > a { box-sizing: border-box; min-height: 44px; }
+
+.material-gallery .material-editorial { padding: 1.1rem 0 0; border: 0; border-top: 1px solid var(--line); border-radius: 0; background: transparent; }
+.material-overview { gap: 1rem; border-block: 1px solid var(--line); padding-block: .65rem; }
+.material-overview div { padding: 0; border: 0; }
+.material-editorial p, .reading-body p { color: #d2c7b9; }
+.reading-body .reading-opening { margin: 0 0 1.8rem; font-size: clamp(1.05rem, 2vw, 1.22rem); }
+.reading-body .reading-practice { padding: 1rem 0; border: 0; border-block: 1px solid var(--line); border-radius: 0; background: transparent; }
+
+.messenger-fab > .tg-fab { background: #dcc09a; color: #1d1510; box-shadow: 0 6px 24px rgba(194,163,120,.26); }
+.messenger-fab > .tg-fab:hover { background: #efdabd; }
