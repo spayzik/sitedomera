@@ -450,3 +450,10 @@
   .reading-layout, .material-layout { gap: 1.1rem; }
   .installation-service-process, .journal-list { margin-top: var(--section-gap); }
 }
+
+.calc-project-groups { display: grid; gap: clamp(1.25rem,3vw,2.5rem); }
+.calc-project-groups > .secondary-action { justify-self: start; }
+.calc-group-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: .85rem; }
+.calc-group-heading h2, .calc-project-total h2 { font: 500 var(--heading-section)/1.12 var(--font-display); }
+.calc-project-total { padding: clamp(1rem,3vw,2rem); border: 1px solid var(--line); border-radius: .6rem; background: rgba(206,176,137,.055); }
+.calc-project-total > :is(p,.btn) { margin-top: .85rem; }

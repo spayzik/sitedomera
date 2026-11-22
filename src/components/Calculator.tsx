@@ -4,9 +4,9 @@ import { SocialContacts } from './SocialContacts'
 import { LeadAction } from './LeadProvider'
 import { SheetUnitPrice } from './SheetUnitPrice'
 import { StockAvailability } from './StockAvailability'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
-import { sheetProducts, CONTACTS, formatDimensions } from '../data/products'
+import { sheetProducts, CONTACTS, formatDimensions, type Product } from '../data/products'
 import { useCart } from '../context/CartContext'
 import { Counter } from './Counter'
 import { ArrowRight, Plus, X } from 'lucide-react'
@@ -14,17 +14,94 @@ import { buildTelegramDraftUrl, formatCalculatorTelegramMessage } from '../lib/t
 import { calculateProjectPanels, calculateWallLayout, calculatorWall, sheetArea, type WallDimensions } from '../lib/calculator'
 import { trackAnalyticsGoal } from '../lib/analytics'
 
+import { MAX_QTY } from '../lib/cart'
+
+type MaterialEstimate = { panel: Product | null; sheets: number; valid: boolean }
+
 export function Calculator({ standalone = false, base = './' }: { standalone?: boolean; base?: string } = {}) {
+  const { add, items } = useCart()
+  const [groups, setGroups] = useState([0])
+  const nextGroup = useRef(1)
+  const [estimates, setEstimates] = useState<Record<number, MaterialEstimate>>({})
+  const report = useCallback((id: number, estimate: MaterialEstimate) => {
+    setEstimates(previous => ({ ...previous, [id]: estimate }))
+  }, [])
+  function remove(id: number) {
+    setGroups(previous => previous.filter(group => group !== id))
+    setEstimates(previous => Object.fromEntries(Object.entries(previous).filter(([key]) => Number(key) !== id)))
+  }
+
+  const lines = new Map<string, { product: Product; quantity: number }>()
+  const complete = groups.every(id => {
+    const result = estimates[id]
+    return result?.panel && result.valid && result.sheets > 0
+  })
+  if (complete) {
+    for (const id of groups) {
+      const { panel, sheets } = estimates[id]
+      if (!panel) continue
+      lines.set(panel.id, { product: panel, quantity: (lines.get(panel.id)?.quantity ?? 0) + sheets })
+    }
+  }
+  const order = [...lines.values()]
+  const fits = order.every(({ product, quantity }) =>
+    quantity + (items.find(item => item.product.id === product.id)?.qty ?? 0) <= MAX_QTY)
+  const total = order.reduce((sum, line) => sum + line.product.priceRub * line.quantity, 0)
+
+  return <section className="section calculator" id="calculator">
+    <div className="container">
+      {!standalone && <div className="catalog-header">
+        <div><p className="eyebrow">Калькулятор</p><h2>Сколько листов нужно?</h2></div>
+        <p className="lead">Посчитайте панели для каждой стены или зоны и соберите материалы в одну подборку.</p>
+      </div>}
+      <div className="calc-project-groups">
+        {groups.map((id, index) => <section key={id} aria-label={'Материал ' + (index + 1)}>
+          {groups.length > 1 && <div className="calc-group-heading">
+            <h2>Материал {index + 1}</h2>
+            {id !== 0 && <button type="button" className="secondary-action" onClick={() => remove(id)}>
+              <X size={14} aria-hidden="true" /> Убрать
+            </button>}
+          </div>}
+          <MaterialCalculation id={id} standalone={standalone} base={base} report={report} />
+        </section>)}
+        <button type="button" className="secondary-action" disabled={groups.length >= 10} onClick={() => {
+          const id = nextGroup.current++
+          setGroups(previous => [...previous, id])
+        }}><Plus size={16} aria-hidden="true" /> Добавить другой материал</button>
+        {groups.length > 1 && <section className="calc-project-total">
+          <h2>Итого по материалам</h2>
+          {complete ? <>
+            {order.map(({ product, quantity }) => <div key={product.id} className="calc-row">
+              <span>{product.name} · {quantity} лист.</span><strong>{(product.priceRub * quantity).toLocaleString('ru-RU')} ₽</strong>
+            </div>)}
+            <div className="calc-row total"><span>Стоимость материалов</span><strong>{total.toLocaleString('ru-RU')} ₽</strong></div>
+          </> : <p>Выберите материал и укажите размеры для каждой группы.</p>}
+          {!fits && <p role="status">С учётом подборки превышен лимит {MAX_QTY.toLocaleString('ru-RU')} единиц одного товара.</p>}
+          <button type="button" className="btn btn-primary interactive" disabled={!complete || !fits}
+            onClick={() => { if (complete && fits) order.forEach(({ product, quantity }) => add(product, quantity)) }}>
+            Добавить все материалы в подборку <ArrowRight size={16} aria-hidden="true" />
+          </button>
+        </section>}
+      </div>
+    </div>
+  </section>
+}
+
+function MaterialCalculation({ id, standalone, base, report }: {
+  id: number; standalone: boolean; base: string; report: (id: number, estimate: MaterialEstimate) => void
+}) {
+  const suffix = id ? '-' + id : ''
   const initialSearch = ""
   const { add } = useCart()
   const [materialId, setMaterialId] = useState(() => new URLSearchParams(initialSearch).get('material') ?? '')
   const selectedPanel = sheetProducts.find(p => p.id === materialId) ?? null
   const [walls, setWalls] = useState<Array<WallDimensions & { id: number }>>(() => [{ id: 0, ...calculatorWall(new URLSearchParams(initialSearch)) }])
   useEffect(() => {
+    if (id !== 0) { setWalls([{ id: 0, length: '', height: '' }]); return }
     const params = new URLSearchParams(window.location.search)
     setMaterialId(params.get('material') ?? '')
     setWalls([{ id: 0, ...calculatorWall(params) }])
-  }, [])
+  }, [id])
   const nextWall = useRef(1)
   const [openings, setOpenings] = useState('0')
   const [reserve, setReserve] = useState('10')
@@ -38,6 +115,7 @@ export function Calculator({ standalone = false, base = './' }: { standalone?: b
     return { ...estimate, sheets, panel: selectedPanel }
   }, [walls, openings, reserve, selectedPanel, vertical])
 
+  useEffect(() => report(id, res), [id, report, res])
   const price = res.panel ? res.sheets * res.panel.priceRub : 0
   const completed = Boolean(res.panel && res.valid && res.sheets > 0)
   const reportedCompletion = useRef(false)
@@ -78,19 +156,6 @@ export function Calculator({ standalone = false, base = './' }: { standalone?: b
   )
 
   return (
-    <section className="section calculator" id="calculator">
-      <div className="container">
-        {!standalone && <div className="catalog-header" style={{ marginBottom: '3rem' }}>
-          <div>
-            <p className="eyebrow">Калькулятор</p>
-            <h2>Сколько листов<br/>нужно?</h2>
-          </div>
-          <p className="lead">
-            Выберите листовой материал и посчитайте ориентировочную
-            стоимость под ваши стены. Точный расчёт с профилями сделает менеджер.
-          </p>
-        </div>}
-
         <div className="calc-grid">
           <motion.div className="calc-editor"
             initial={standalone ? false : { opacity: 0, x: -30 }}
@@ -100,8 +165,8 @@ export function Calculator({ standalone = false, base = './' }: { standalone?: b
           >
             <div className="modern-form">
               <div className="form-group">
-                <label htmlFor="calculator-material">Листовой материал</label>
-                <StoreSelect id="calculator-material" label="Листовой материал" value={materialId} onChange={setMaterialId}>
+                <label htmlFor={'calculator-material' + suffix}>Листовой материал</label>
+                <StoreSelect id={'calculator-material' + suffix} label="Листовой материал" value={materialId} onChange={setMaterialId}>
                   <option value="">Выберите материал</option>
                   {sheetProducts.map(p => <option key={p.id} value={p.id}>{p.name} — {p.priceRub.toLocaleString('ru-RU')} ₽/{p.unit}</option>)}
                 </StoreSelect>
@@ -126,8 +191,8 @@ export function Calculator({ standalone = false, base = './' }: { standalone?: b
               {input(reserve, setReserve, 'Запас на подрезку', '%')}
               </div>
               <div className="form-group">
-                <label htmlFor="calculator-method">Способ оценки</label>
-                <StoreSelect id="calculator-method" label="Способ оценки" value={vertical ? 'vertical' : 'area'}
+                <label htmlFor={'calculator-method' + suffix}>Способ оценки</label>
+                <StoreSelect id={'calculator-method' + suffix} label="Способ оценки" value={vertical ? 'vertical' : 'area'}
                   onChange={value => setVertical(value === 'vertical')}>
                   <option value="area">По площади с вычетом проёмов</option>
                   <option value="vertical">По вертикальной раскладке</option>
@@ -193,7 +258,5 @@ export function Calculator({ standalone = false, base = './' }: { standalone?: b
             </div>
           </motion.div>
         </div>
-      </div>
-    </section>
   )
 }
