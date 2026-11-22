@@ -48,16 +48,18 @@ function MaxByPhone() {
   </details>
 }
 
-export function SocialContacts({ placement, base = './', onFollow, drafts }: {
+export function SocialContacts({ placement, base = './', onFollow, drafts, hidePhone = false }: {
   placement: Placement
   base?: string
   onFollow?: () => void
+  hidePhone?: boolean
   drafts?: { telegram: string; whatsapp?: string }
 }) {
   const circular = placement === 'cards' || placement === 'product'
   const showChannel = placement === 'floating'
   return <div className={['social-contacts', 'social-contacts-' + placement, circular && 'social-contacts-circular'].filter(Boolean).join(' ')} role="group" aria-label="Способы связи">
     {(showChannel ? [...channels, telegramChannel] : channels).map(({ id, label, detail, href }) => {
+      if (id === 'phone' && hidePhone) return null
       if (id === 'max' && !href && placement === 'cards') return <MaxByPhone key={label} />
       const maxByPhone = id === 'max' && !href
       const draft = id === 'telegram' || id === 'whatsapp' ? drafts?.[id] : undefined

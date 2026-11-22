@@ -44,6 +44,14 @@ export function ProductPage({ product, base }: { product: Product; base: string 
   const context = [product.name, product.sku && product.sku !== product.name ? 'Артикул: ' + product.sku : '',
     formatDimensions(product)].filter(Boolean).join(' · ')
   const images = scenes[product.categoryId] ?? []
+  const intro = product.sku === '671-A227'
+    ? 'Белая панель с рисунком рогожки. Светлый тканевый рисунок можно использовать как фон для мебели или выделить им стену за изголовьем.'
+    : productDescription(product)
+  const format = product.kind === 'profile'
+    ? 'Сверьте длину видимого стыка и толщину облицовки. Для открытой кромки, стыка и угла нужны разные формы профиля.'
+    : product.kind === 'slat'
+      ? 'Наметьте границы отделки и направление реек. Перед подсчётом количества согласуйте шаг и оформление крайней рейки.'
+      : 'На эскизе отметьте границы отделки, проёмы и розетки. Сравните размеры стены с форматом листа, чтобы заранее увидеть, где будут стыки и подрезка.'
   const editorial = productEditorialNote(product)
   const split = editorial.indexOf('. ', 70)
   const paragraphs = split > 0 ? [editorial.slice(0, split + 1), editorial.slice(split + 2)] : [editorial]
@@ -72,7 +80,14 @@ export function ProductPage({ product, base }: { product: Product; base: string 
           </a>
           <figcaption>Образец материала</figcaption>
         </figure>
-        <section className="material-editorial"><h2>Как выбрать и примерить материал</h2>{paragraphs.filter(Boolean).map(text => <p key={text}>{text}</p>)}</section>
+        <section className="material-editorial">
+          <h2>О материале</h2>
+          <dl className="material-overview"><div><dt>Формат</dt><dd>{formatDimensions(product)}</dd></div><div><dt>Продажа</dt><dd>{product.unit === 'шт' ? 'Поштучно' : product.unit === 'лист' ? 'За лист' : product.unit}</dd></div></dl>
+          <h3>{product.kind === 'profile' ? 'Как подобрать профиль' : 'Как выглядит в интерьере'}</h3>
+          {paragraphs.filter(Boolean).map(text => <p key={text}>{text}</p>)}
+          <h3>Что проверить перед заказом</h3>
+          <p>{format}</p>
+        </section>
         {images.length > 0 && <aside className="material-scenes" aria-label="Идеи для коллекции">
           <h2>Фактуры в интерьере</h2>
           {images.map(scene => {
@@ -91,7 +106,7 @@ export function ProductPage({ product, base }: { product: Product; base: string 
         <p className="eyebrow">{category.name}</p>
         <h1>{product.name}</h1>
         {product.sku && product.sku !== product.name && <p className="commerce-card-meta">Артикул {product.sku}</p>}
-        <p className="material-description">{productDescription(product)}</p>
+        <p className="material-description">{intro}</p>
         <div className="material-price">
           <strong>{product.priceRub.toLocaleString('ru-RU')} ₽</strong><span> / {product.unit === 'шт' ? 'шт.' : product.unit}</span>
           <SheetUnitPrice product={product} />
@@ -100,8 +115,6 @@ export function ProductPage({ product, base }: { product: Product; base: string 
         <div className="page-links material-actions">
           <button className="btn btn-primary interactive" type="button" onClick={() => add(product)}>Добавить в подборку</button>
           <LeadAction className="secondary-action" intent="consultation" context={context}>Задать вопрос <ArrowUpRight size={15} aria-hidden="true" /></LeadAction>
-        </div>
-        <div className="page-links">
           <LeadAction className="secondary-action" intent="samples" context={context}><Layers size={15} aria-hidden="true" /> Запросить образец</LeadAction>
           {sheetArea(product) > 0 && <a className="secondary-action" href={base + 'kalkulyator/?material=' + encodeURIComponent(product.id)}><CalculatorIcon size={15} aria-hidden="true" /> Рассчитать для моей стены</a>}
         </div>

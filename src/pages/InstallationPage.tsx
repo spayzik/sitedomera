@@ -3,6 +3,8 @@ import { ArrowRight, ArrowUpRight, Phone } from 'lucide-react'
 import { CONTACTS } from '../data/products'
 import { storefrontImageSize } from '../data/storefrontImageSizes'
 import { LeadAction } from '../components/LeadProvider'
+import { SocialContacts } from '../components/SocialContacts'
+import { inquiryTelegramLink, inquiryWhatsAppLink } from '../lib/contactLinks'
 import type { SeoPage } from '../data/seoRoutes'
 
 export function InstallationPage({ page, base }: {
@@ -10,6 +12,7 @@ export function InstallationPage({ page, base }: {
   base: string
 }) {
   const { copy } = page
+  const context = "Монтаж стеновых панелей · Хочу договориться о замере и получить смету"
   const gallery = useRef<HTMLDivElement>(null)
   return <section className="container page-section installation-service">
     <nav className="page-crumbs" aria-label="Хлебные крошки">
@@ -21,9 +24,16 @@ export function InstallationPage({ page, base }: {
         <h1>{page.heading}</h1>
         <p className="lead">Наши мастера приедут на объект, снимут размеры и проверят стены. До начала монтажа согласуем, где будут стыки, чем оформить углы и сколько будет стоить работа.</p>
         <div className="page-links">
-          <LeadAction className="btn btn-primary interactive" intent="consultation" context="Монтаж стеновых панелей · Хочу договориться о замере и получить смету">
+          <LeadAction className="btn btn-primary interactive" intent="consultation" context={context}>
             Договориться о замере <ArrowUpRight size={16} aria-hidden="true" />
           </LeadAction>
+        </div>
+        <div className="installation-contact">
+          <span>Связаться</span>
+          <SocialContacts base={base} placement="product" hidePhone drafts={{
+            telegram: inquiryTelegramLink('consultation', context),
+            whatsapp: inquiryWhatsAppLink('consultation', context),
+          }} />
           <a className="secondary-action" href={'tel:' + CONTACTS.phoneRaw}><Phone size={15} aria-hidden="true" /> Позвонить</a>
         </div>
       </header>

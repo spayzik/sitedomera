@@ -58,8 +58,19 @@ export function JournalPage({ page, base }: { page: SeoPage; base: string }) {
   </section>
 }
 
+const practicalGuides: Record<string, { example: string; checks: [string, string, string] }> = {
+  'kak-vybrat-fakturu': { example: 'Если пол уже с заметным рисунком, приложите к нему два образца: спокойную тканевую фактуру и дерево. Посмотрите с места входа в комнату, а вечером повторите сравнение при основном свете.', checks: ['Возьмите образец пола или обивки', 'Сравните два образца на вертикальной поверхности', 'Запишите артикул и направление рисунка'] },
+  'kak-sravnit-stoimost-otdelki': { example: 'Лист 1220 × 3000 мм имеет площадь 3,66 м². При цене 7 000 ₽ это около 1 913 ₽ за м² материала. Смету считайте по целым листам и добавляйте профили, доставку и монтаж отдельными строками.', checks: ['Проверьте, указана цена за лист или за м²', 'Сравните число целых листов по раскладкам', 'Запросите сметы с одинаковым составом работ'] },
+  'kak-rasschitat-paneli': { example: 'Стена 3 × 2,5 м — это 7,5 м². С запасом 10% получится 8,25 м². Для листа 1220 × 3000 мм оценка по площади даст 3 листа. Перед заказом проверьте раскладку по фактическим размерам стены.', checks: ['Запишите ширину и высоту каждой стены', 'Отметьте проёмы на эскизе', 'Сверьте количество с раскладкой, особенно возле углов'] },
+  'paneli-ili-gibkiy-kamen': { example: 'Для стены с нишей сравнивайте два участка отдельно. На плоскости важны рисунок и стыки. Для откоса или изгиба попросите подтвердить, подходит ли конкретный артикул и какое основание ему нужно.', checks: ['Приложите оба образца к полу и мебели', 'Отметьте ниши, края и места сгиба', 'Уточните условия крепления выбранного артикула'] },
+  'bambukovye-paneli-plyusy-i-ogranicheniya': { example: 'Для стены высотой 2,7 м лист длиной 3 м оставляет 30 см на подрезку по длине. Вертикальные стыки всё равно нужно отметить на эскизе, а возможность использовать остаток зависит от рисунка и раскроя.', checks: ['Проверьте формат панели по карточке', 'Нанесите стыки и вырезы на эскиз', 'Запросите документы, если помещение предъявляет особые требования'] },
+  'tv-zona-paneli-i-reyki': { example: 'На схеме ТВ-зоны отметьте край экрана, тумбу и место вывода проводов. Сначала выберите границу фоновой панели, затем проверьте, сколько места остаётся для ряда реек и оформления открытого края.', checks: ['Нанесите технику и точки подключения на эскиз', 'Определите границы фона и акцента', 'Уточните доступ к проводам и крепление кронштейна'] },
+  'stenovye-paneli-dlya-kommercheskih-pomescheniy': { example: 'Для стойки и зоны ожидания составьте две строки ведомости. В каждой укажите артикул, единицу, количество и дату потребности. Документы по материалу запросите отдельно для каждой зоны.', checks: ['Сверьте назначение и условия уборки зоны', 'Согласуйте требования с проектировщиком', 'Проверьте партии, объём и график поставки'] },
+}
+
 export function ArticlePage({ page, base }: { page: Extract<SeoPage, { copy: unknown }>; base: string }) {
   const [topic, image, small] = articleCover(page.path)
+  const guide = practicalGuides[page.path.split('/')[2]]
   return <article className="container page-section reading-page">
     <nav className="page-crumbs" aria-label="Хлебные крошки">
       <a href={base}>ДЕКОРАЙ</a><a href={base + 'news/'}>Статьи</a><span aria-current="page">{topic}</span>
@@ -78,11 +89,15 @@ export function ArticlePage({ page, base }: { page: Extract<SeoPage, { copy: unk
       <nav className="reading-toc" aria-label="В этой статье">
         <h2>В этой статье</h2>
         <ol>{page.copy.blocks.map(({ heading }, index) =>
-          <li key={heading}><a href={'#part-' + (index + 1)}>{heading}</a></li>)}</ol>
+          <li key={heading}><a href={'#part-' + (index + 1)}>{heading}</a></li>)}{guide && <li><a href="#practice">Практический пример</a></li>}</ol>
       </nav>
       <div className="reading-body">
         {page.copy.blocks.map(({ heading, text }, index) =>
           <section id={'part-' + (index + 1)} key={heading}><h2>{heading}</h2><p>{text}</p></section>)}
+        {guide && <section id="practice" className="reading-practice">
+          <h2>Практический пример</h2><p>{guide.example}</p>
+          <h3>Перед покупкой</h3><ul>{guide.checks.map(check => <li key={check}>{check}</li>)}</ul>
+        </section>}
         <nav className="reading-actions" aria-label="По теме статьи">
           {page.copy.links?.map(link => <a key={link.path} className="secondary-action"
             href={link.path.startsWith('/') ? base + link.path.slice(1) : link.path}>{link.label}<ArrowRight size={14} aria-hidden="true" /></a>)}
