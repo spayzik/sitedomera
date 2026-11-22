@@ -391,7 +391,7 @@
 @media (prefers-reduced-motion:no-preference) { .installation-gallery { scroll-behavior:smooth; } }
 
 .material-purchase .material-actions { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); align-items: stretch; gap: .65rem; }
-.material-purchase .material-actions > :is(a,button) { width: 100%; min-width: 0; min-height: 50px; padding: .6rem .75rem; justify-content: center; text-align: center; font: 600 .86rem/1.25 var(--font); letter-spacing: 0; text-transform: none; }
+.material-purchase .material-actions > :is(a,button), .material-purchase .material-actions > a.secondary-action:not(.btn) { width: 100%; min-width: 0; min-height: 50px; padding: .6rem .75rem; justify-content: center; text-align: center; font: 600 .86rem/1.25 var(--font); letter-spacing: 0; text-transform: none; }
 .material-editorial h3 { margin-top: 1.2rem; font: 500 clamp(1.2rem, 2vw, 1.55rem)/1.2 var(--font-display); }
 .material-overview { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .65rem; margin: .9rem 0 0; }
 .material-overview div { padding: .65rem .75rem; border: 1px solid var(--line); border-radius: .35rem; }
