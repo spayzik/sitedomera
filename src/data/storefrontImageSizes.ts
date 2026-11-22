@@ -1,5 +1,14 @@
 // Intrinsic dimensions of the original storefront assets.
 const imageSizes: Record<string, readonly [number, number]> = {
+  "catalog/hero/collection-wood.webp": [555, 310],
+  "catalog/hero/collection-fabric.webp": [555, 310],
+  "catalog/hero/collection-metal.webp": [554, 310],
+  "catalog/hero/collection-bamboo_stone.webp": [555, 312],
+  "catalog/hero/collection-soft.webp": [555, 312],
+  "catalog/hero/collection-flexible_stone.webp": [554, 312],
+  "catalog/hero/collection-plaster.webp": [555, 311],
+  "catalog/hero/collection-slats.webp": [555, 311],
+  "catalog/hero/collection-profiles.webp": [554, 311],
   "catalog/rooms/interior-bedroom.webp": [1122, 1402],
   "catalog/rooms/interior-fabric.webp": [1122, 1402],
   "catalog/rooms/interior-living.webp": [1122, 1402],

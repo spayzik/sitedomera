@@ -47,10 +47,17 @@ export function CatalogPage({ page, base }: { page: CatalogView; base: string })
   const reset = () => changeFilters(parseCatalogFilters(new URLSearchParams(), category))
   const total = category ? products.filter(product => product.categoryId === category).length : products.length
 
+  const catalogHero = 'catalog/hero/hero-catalog.webp'
+  const categoryHero = category ? 'catalog/hero/collection-' + category + '.webp' : catalogHero
+  const mobileHero = category ? 'catalog/categories/carousel-2026-' + category + '.webp' : null
+
   return <>
     <section className={page.kind === 'catalog' ? 'catalog-page-hero catalog-page-hero-index' : 'catalog-page-hero'} id="catalog">
       <div className="catalog-page-hero-bg">
-        <img src={base + 'catalog/hero/hero-catalog.webp'} {...storefrontImageSize('catalog/hero/hero-catalog.webp')} alt="" fetchPriority="high" />
+        <picture>
+          {mobileHero && <source media="(max-width: 600px)" srcSet={base + mobileHero} />}
+          <img src={base + categoryHero} {...storefrontImageSize(categoryHero)} alt="" fetchPriority="high" />
+        </picture>
         <div className="catalog-page-veil" />
       </div>
       <div className="container catalog-page-content">

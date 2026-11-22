@@ -11,6 +11,7 @@ export const publicReleaseFiles = new Set([
   ...['living', 'bedroom', 'dining', 'metal', 'fabric'].map(id => 'catalog/rooms/interior-' + id + '.webp'),
   ...['living', 'bedroom', 'dining', 'metal', 'fabric'].map(id => 'catalog/rooms/interior-' + id + '-480.webp'),
   'catalog/rooms/concept-wood.webp', 'catalog/rooms/concept-wood-small.webp',
+  ...collections.map(({ id }) => 'catalog/hero/collection-' + id + '.webp'),
   ...collections.map(({ id }) => 'catalog/categories/carousel-2026-' + id + '.webp'),
   ...products.map(({ image }) => image),
 ])
