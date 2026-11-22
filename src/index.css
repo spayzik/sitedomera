@@ -1151,7 +1151,6 @@ h4 { font-size: 1.25rem; font-weight: 500; }
 
 /* === CATEGORIES TEASER === */
 /* === CALCULATOR === */
-.catalog-select { display: block; width: 100%; min-width: 0; max-width: 100%; margin: 0.5rem 0 1rem; padding: 0.85rem; background: #14120f; color: var(--ink); border: 1px solid var(--line); font: inherit; }
 .quiz-category-choices { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .quiz-category-choices [aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
 .quiz-result-info { min-width: 0; }
@@ -1280,6 +1279,7 @@ h4 { font-size: 1.25rem; font-weight: 500; }
   border: 1px solid var(--line); background: var(--surface);
   padding: clamp(2rem, 5vw, 4rem); position: relative; overflow: hidden;
 }
+.quiz-box:has(.store-select-options) { overflow: visible; }
 .quiz-progress { height: 2px; background: rgba(255,255,255,0.08); margin-bottom: 3rem; }
 .quiz-progress-bar {
   height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-light));
@@ -1351,11 +1351,11 @@ h4 { font-size: 1.25rem; font-weight: 500; }
   display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
   justify-content: flex-end; padding-bottom: 0.2rem;
 }
-.reviews-toolbar select, .reviews-more {
+.reviews-toolbar .store-select { width: min(100%, 16rem); }
+.reviews-more {
   box-sizing: border-box; min-height: 44px; max-width: 100%; padding: 0 0.4rem;
   border: 0; border-radius: 0; color: var(--review-muted); background: transparent; font: 0.79rem var(--font);
 }
-.reviews-toolbar option { color: var(--review-ink); background: var(--surface); }
 .reviews-more { display: block; margin: 0.6rem 0 0; padding-inline: 0; color: var(--review-accent); }
 .reviews-more:hover { text-decoration: underline; text-underline-offset: 0.3em; }
 .reviews-list { display: grid; gap: 0.85rem; }
@@ -1391,7 +1391,7 @@ h4 { font-size: 1.25rem; font-weight: 500; }
   border-radius: 4px; color: #fff; background: rgba(16, 12, 9, 0.75);
 }
 .review-photo:hover { border-color: var(--review-accent); }
-.review-photo:focus-visible, .reviews-more:focus-visible, .reviews-toolbar select:focus-visible,
+.review-photo:focus-visible, .reviews-more:focus-visible,
 .reviews-avito-link:focus-visible { outline: 2px solid var(--review-accent); outline-offset: 3px; }
 .review-lightbox {
   position: fixed; inset: 0; margin: auto; padding: 0; width: fit-content; max-width: calc(100% - 2rem);

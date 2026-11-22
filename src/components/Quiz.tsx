@@ -1,3 +1,4 @@
+import { StoreSelect } from './StoreSelect'
 import { useEffect, useReducer, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { products, collections, CONTACTS, formatDimensions } from '../data/products'
@@ -61,10 +62,10 @@ export function Quiz() {
                   <p className="quiz-result-desc">Это подбор по внешнему виду, а не подтверждение пригодности для конкретного помещения. Выберите изделие, чтобы уточнить его у менеджера.</p>
                   <p className="quiz-result-context">{quizResultContext(state)}</p>
                   <label className="form-group" htmlFor="quiz-material">Материал из категории</label>
-                  <select className="catalog-select" id="quiz-material" value={productId} onChange={e => dispatch({ type: 'product', id: e.target.value })}>
+                  <StoreSelect id="quiz-material" label="Материал из категории" value={productId} onChange={id => dispatch({ type: 'product', id })}>
                     <option value="">Выберите материал</option>
                     {candidates.map(p => <option key={p.id} value={p.id}>{p.name} — {p.priceRub.toLocaleString('ru-RU')} ₽/{p.unit}</option>)}
-                  </select>
+                  </StoreSelect>
                   {product && <>
                     <p className="quiz-result-sku">{product.sku ? product.sku + ' · ' : ''}{formatDimensions(product)}</p>
                     <div className="quiz-result-price">{product.priceRub.toLocaleString('ru-RU')} ₽ <span>/ {product.unit}</span></div>

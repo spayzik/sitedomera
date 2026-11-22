@@ -1,3 +1,4 @@
+import { StoreSelect } from './StoreSelect'
 import { useEffect, useRef, useState } from 'react'
 import { ArrowUpRight, Images, Maximize2, Star, X } from 'lucide-react'
 import { avitoProfile } from '../lib/avitoProfile'
@@ -100,10 +101,10 @@ export function Reviews({ assetBase, compact = false }: { assetBase?: string; co
 
               {featured.length > 0 && <>
                 <div className="reviews-toolbar">
-                  {featured.length > 1 && <select aria-label="Порядок отзывов" value={sort} onChange={event => setSort(event.target.value)}>
+                  {featured.length > 1 && <StoreSelect label="Порядок отзывов" value={sort} onChange={setSort}>
                     <option value="recent">Сначала новые</option>
                     <option value="rating">Сначала с высокой оценкой</option>
-                  </select>}
+                  </StoreSelect>}
                 </div>
                 <div className="reviews-list" id="reviews-list">
                   {visible.map(review => (

@@ -1,3 +1,4 @@
+import { StoreSelect } from './StoreSelect'
 import { contactLinks } from '../lib/contactLinks'
 import { SocialContacts } from './SocialContacts'
 import { LeadAction } from './LeadProvider'
@@ -100,10 +101,10 @@ export function Calculator({ standalone = false, base = './' }: { standalone?: b
             <div className="modern-form">
               <div className="form-group">
                 <label htmlFor="calculator-material">Листовой материал</label>
-                <select id="calculator-material" className="catalog-select calc-select" value={materialId} onChange={e => setMaterialId(e.target.value)}>
+                <StoreSelect id="calculator-material" label="Листовой материал" value={materialId} onChange={setMaterialId}>
                   <option value="">Выберите материал</option>
                   {sheetProducts.map(p => <option key={p.id} value={p.id}>{p.name} — {p.priceRub.toLocaleString('ru-RU')} ₽/{p.unit}</option>)}
-                </select>
+                </StoreSelect>
                 {res.panel && <span>{formatDimensions(res.panel)}</span>}
               </div>
               <div className="calc-walls">
@@ -126,11 +127,11 @@ export function Calculator({ standalone = false, base = './' }: { standalone?: b
               </div>
               <div className="form-group">
                 <label htmlFor="calculator-method">Способ оценки</label>
-                <select id="calculator-method" className="catalog-select" value={vertical ? 'vertical' : 'area'}
-                  onChange={event => setVertical(event.target.value === 'vertical')}>
+                <StoreSelect id="calculator-method" label="Способ оценки" value={vertical ? 'vertical' : 'area'}
+                  onChange={value => setVertical(value === 'vertical')}>
                   <option value="area">По площади с вычетом проёмов</option>
                   <option value="vertical">По вертикальной раскладке</option>
-                </select>
+                </StoreSelect>
                 {vertical && <p>Считаем ряды по ширине и высоте каждой стены. В этой оценке проёмы не вычитаются, обрезки не используются повторно. Раскладку и швы уточнит менеджер.</p>}
               </div>
             </div>

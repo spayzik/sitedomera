@@ -1,3 +1,4 @@
+import { StoreSelect } from './StoreSelect'
 import { useId } from 'react'
 import { collections } from '../data/products'
 import { catalogFilterOptions, type CatalogFilters } from '../lib/catalogFilters'
@@ -20,39 +21,39 @@ export function CatalogFilterControls({ filters, showCategory, onChange, reset }
         <input id={id + '-query'} type="search" value={filters.query} maxLength={100}
           onChange={event => onChange({ query: event.target.value })} placeholder="Например, Ясень или A9001" />
       </label>
-      {showCategory && <label htmlFor={id + '-category'}>
-        Коллекция и фактура
-        <select id={id + '-category'} value={filters.category}
-          onChange={event => onChange({ category: event.target.value as CatalogFilters['category'], thickness: '' })}>
+      {showCategory && <div className="catalog-filter-field"><label htmlFor={id + '-category'}>
+        Коллекция и фактура</label>
+        <StoreSelect id={id + '-category'} label="Коллекция и фактура" value={filters.category}
+          onChange={value => onChange({ category: value as CatalogFilters['category'], thickness: '' })}>
           <option value="all">Все коллекции</option>
           {collections.map(category => <option key={category.id} value={category.id}>{category.name}</option>)}
-        </select>
-      </label>}
-      <label htmlFor={id + '-stock'}>
-        Наличие
-        <select id={id + '-stock'} value={filters.stock} onChange={event => onChange({ stock: event.target.value as CatalogFilters['stock'] })}>
+        </StoreSelect>
+      </div>}
+      <div className="catalog-filter-field"><label htmlFor={id + '-stock'}>
+        Наличие</label>
+        <StoreSelect id={id + '-stock'} label="Наличие" value={filters.stock} onChange={value => onChange({ stock: value as CatalogFilters['stock'] })}>
           <option value="">Любое</option>
           <option value="in_stock">В наличии</option>
           <option value="out_of_stock">Нет в наличии</option>
           <option value="unknown">Уточняется</option>
-        </select>
-      </label>
-      {!!thicknesses.length && <label htmlFor={id + '-thickness'}>
-        Толщина
-        <select id={id + '-thickness'} value={filters.thickness} onChange={event => onChange({ thickness: event.target.value })}>
+        </StoreSelect>
+      </div>
+      {!!thicknesses.length && <div className="catalog-filter-field"><label htmlFor={id + '-thickness'}>
+        Толщина</label>
+        <StoreSelect id={id + '-thickness'} label="Толщина" value={filters.thickness} onChange={value => onChange({ thickness: value })}>
           <option value="">Любая</option>
           {thicknesses.map(value => <option key={value} value={String(value)}>{value.toLocaleString('ru-RU')} мм</option>)}
-        </select>
-      </label>}
-      <label htmlFor={id + '-sort'}>
-        Сортировка
-        <select id={id + '-sort'} value={filters.sort} onChange={event => onChange({ sort: event.target.value as CatalogFilters['sort'] })}>
+        </StoreSelect>
+      </div>}
+      <div className="catalog-filter-field"><label htmlFor={id + '-sort'}>
+        Сортировка</label>
+        <StoreSelect id={id + '-sort'} label="Сортировка" value={filters.sort} onChange={value => onChange({ sort: value as CatalogFilters['sort'] })}>
           <option value="">По умолчанию</option>
           <option value="price-asc">Сначала дешевле</option>
           <option value="price-desc">Сначала дороже</option>
           <option value="name">По названию</option>
-        </select>
-      </label>
+        </StoreSelect>
+      </div>
       {hasFilters && <button className="catalog-filter-reset" type="button" onClick={reset}>Сбросить фильтры</button>}
     </div>
   )

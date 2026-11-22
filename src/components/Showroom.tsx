@@ -1,10 +1,9 @@
 import { useState } from 'react'
 import { SocialContacts } from './SocialContacts'
 import { MapEmbed } from './MapEmbed'
-import { ArrowUpRight, Copy } from 'lucide-react'
+import { ArrowUpRight, Calculator, Copy, Layers } from 'lucide-react'
 import { CONTACTS } from '../data/products'
 import { avitoProfile } from '../lib/avitoProfile'
-import { inquiryTelegramLink } from '../lib/contactLinks'
 import { useLeadService } from '../lib/leadState'
 import { LeadAction } from './LeadProvider'
 
@@ -54,13 +53,13 @@ export function Showroom({ base = "./" }: { base?: string } = {}) {
               </LeadAction>
             )}
             <SocialContacts base={base} placement="cards" />
-            <div className="showroom-commerce-sources">
-              <a href={inquiryTelegramLink('samples')} target="_blank" rel="noreferrer">Запросить образцы</a>
-              <a href={base + 'kalkulyator/'}>Рассчитать материалы</a>
+            <div className="showroom-commerce-actions">
+              <LeadAction intent="samples" className="secondary-action"><Layers size={16} aria-hidden="true" /> Запросить образцы</LeadAction>
+              <a className="secondary-action" href={base + 'kalkulyator/'}><Calculator size={16} aria-hidden="true" /> Рассчитать материалы</a>
             </div>
             <div className="showroom-commerce-sources">
-              <a href={CONTACTS.telegramChannel} target="_blank" rel="noreferrer">Канал в Telegram</a>
-              <a href={avitoProfile} target="_blank" rel="noreferrer">Магазин на Авито</a>
+              <a className="secondary-action" href={CONTACTS.telegramChannel} target="_blank" rel="noreferrer">Канал в Telegram <ArrowUpRight size={14} aria-hidden="true" /></a>
+              <a className="secondary-action" href={avitoProfile} target="_blank" rel="noreferrer">Магазин на Авито <ArrowUpRight size={14} aria-hidden="true" /></a>
             </div>
           </div>
         </div>

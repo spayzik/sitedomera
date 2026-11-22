@@ -1,0 +1,53 @@
+.store-select { position: relative; width: 100%; min-width: 0; }
+.store-select:has(.store-select-options) { z-index: 5; }
+.store-select .store-select-trigger,
+.catalog-filter-controls .store-select .store-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .65rem;
+  width: 100%;
+  min-height: 44px;
+  padding: .55rem .8rem;
+  border: 1px solid rgba(206,176,137,.32);
+  border-radius: .35rem;
+  background: rgba(26,19,14,.75);
+  color: var(--ink);
+  font: 500 .9rem/1.35 var(--font);
+  text-align: left;
+}
+.store-select-trigger svg { flex: none; color: var(--accent-light); }
+.store-select-trigger[aria-expanded="true"] svg { transform: rotate(180deg); }
+.store-select-options {
+  position: absolute;
+  inset: calc(100% + 3px) 0 auto;
+  max-height: min(20rem, 44dvh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid rgba(206,176,137,.4);
+  border-radius: .4rem;
+  background: rgba(27,19,13,.96);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 12px 30px rgba(0,0,0,.35);
+  scrollbar-color: rgba(206,176,137,.4) transparent;
+}
+.store-select-options.is-above { inset: auto 0 calc(100% + 3px); }
+.store-select-options button,
+.catalog-filter-controls .store-select-options button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  min-height: 40px;
+  width: 100%;
+  padding: .55rem .8rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  font: 500 .88rem/1.35 var(--font);
+  text-align: left;
+}
+.store-select-options button:is(:hover,:focus-visible,[aria-selected="true"]) { background: rgba(206,176,137,.15); }
+.store-select-options button svg { color: var(--accent-light); flex: none; }
+.store-select :is(button):focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }

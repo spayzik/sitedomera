@@ -84,16 +84,16 @@ export function LeadForm({ endpoint, terms, fields, attempt }: Props) {
     </p>
   }
 
-  return <form autoComplete={endpoint ? undefined : "off"} className="cart-lead-form ym-hide-content ym-disable-keys" onSubmit={submit} aria-busy={submitting}>
+  return <form method="post" autoComplete={endpoint ? undefined : "off"} className="cart-lead-form ym-hide-content ym-disable-keys" onSubmit={submit} aria-busy={submitting}>
     <fieldset disabled={submitting}>
       {cart && <legend>Обсудить подборку</legend>}
       <p>{!endpoint ? 'Демонстрация формы. Данные не отправляются и не сохраняются. Используйте вымышленные контакты.' : cart ? 'Передадим выбранные позиции менеджеру для проверки наличия и стоимости.'
         : 'Укажите контакты, чтобы менеджер мог ответить на ваш запрос.'}</p>
-      <label>Имя <input name="name" autoComplete={endpoint ? "name" : "off"} required minLength={2} maxLength={80} /></label>
-      <label>Телефон <input name="phone" type="tel" autoComplete={endpoint ? "tel" : "off"} required minLength={10} maxLength={32} /></label>
-      <label>Email (необязательно) <input name="email" type="email" autoComplete={endpoint ? "email" : "off"} maxLength={254} /></label>
-      <label>Комментарий (необязательно) <textarea name="comment" rows={3} maxLength={1000} /></label>
-      <div hidden aria-hidden="true"><input name="website" tabIndex={-1} autoComplete="off" /></div>
+      <label>Имя <input name={endpoint ? "name" : undefined} autoComplete={endpoint ? "name" : "off"} required minLength={2} maxLength={80} /></label>
+      <label>Телефон <input name={endpoint ? "phone" : undefined} type="tel" autoComplete={endpoint ? "tel" : "off"} required minLength={10} maxLength={32} /></label>
+      <label>Email (необязательно) <input name={endpoint ? "email" : undefined} type="email" autoComplete={endpoint ? "email" : "off"} maxLength={254} /></label>
+      <label>Комментарий (необязательно) <textarea name={endpoint ? "comment" : undefined} rows={3} maxLength={1000} /></label>
+      {endpoint && <div hidden aria-hidden="true"><input name="website" tabIndex={-1} autoComplete="off" /></div>}
       {terms && <div className="cart-lead-consent">
         <input type="checkbox" id={consentId} name="consent" required aria-describedby={consentId + '-document'} />
         <div>
@@ -101,7 +101,7 @@ export function LeadForm({ endpoint, terms, fields, attempt }: Props) {
           <a id={consentId + '-document'} href={terms.consentPath} target="_blank" rel="noopener noreferrer">Текст согласия</a>
         </div>
       </div>}
-      <button type="submit" disabled={!endpoint} className="btn btn-primary btn-full interactive">
+      <button type={endpoint ? "submit" : "button"} disabled={!endpoint} className="btn btn-primary btn-full interactive">
         {!endpoint ? 'Отправка отключена' : submitting ? 'Отправляем…' : error ? 'Повторить отправку' : 'Отправить заявку'}
       </button>
       {error && <p ref={errorRef} tabIndex={-1} role="alert" className="form-error">{error}</p>}

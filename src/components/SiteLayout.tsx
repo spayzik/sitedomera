@@ -6,6 +6,7 @@ import { Footer } from './Footer'
 import { FloatingCart } from './FloatingCart'
 import { AnalyticsBanner, PrivacyProvider } from './AnalyticsConsent'
 import { LeadProvider } from './LeadProvider'
+import { SiteLeadSection } from './SiteLeadSection'
 import { InventoryProvider } from '../context/InventoryContext'
 import { CartProvider, useCart } from '../context/CartContext'
 
@@ -33,7 +34,7 @@ export function SiteLayout({ base, path, children }: { base: string; path: strin
           <CartProvider>
             <ScrollGlow />
             <Header base={base} path={path} />
-            <main id="page-content">{children}</main>
+            <main id="page-content">{children}<SiteLeadSection /></main>
             <Footer base={base} />
             {ready && <StorefrontWidgets base={base} />}
           </CartProvider>
