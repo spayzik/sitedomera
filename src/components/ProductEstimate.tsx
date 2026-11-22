@@ -1,3 +1,4 @@
+import { ArrowUpRight, Calculator } from 'lucide-react'
 import { useId, useState } from 'react'
 import type { Product } from '../data/products'
 import { calculatorQuery, calculateProjectPanels } from '../lib/calculator'
@@ -9,7 +10,7 @@ export function ProductEstimate({ product, calculatorBase = import.meta.env.BASE
   const result = calculateProjectPanels([{ length, height }], '0', '10', product)
   return (
     <details className="product-estimate">
-      <summary>Рассчитать для одной стены</summary>
+      <summary><Calculator size={16} aria-hidden="true" /> Рассчитать для одной стены</summary>
       <div className="product-estimate-fields">
         <label htmlFor={id + '-width'}>Ширина, м
           <input id={id + '-width'} inputMode="decimal" value={length} onChange={event => setLength(event.target.value)} maxLength={16} />
@@ -23,7 +24,7 @@ export function ProductEstimate({ product, calculatorBase = import.meta.env.BASE
           ? result.sheets.toLocaleString('ru-RU') + ' лист. с запасом 10% · ' + (result.sheets * product.priceRub).toLocaleString('ru-RU') + ' ₽'
           : 'Введите ширину и высоту стены'}
       </output>
-      <a href={calculatorBase + 'kalkulyator/?' + calculatorQuery(product.id, { length, height })}>Учесть проёмы и другие стены</a>
+      <a className="secondary-action" href={calculatorBase + 'kalkulyator/?' + calculatorQuery(product.id, { length, height })}>Проёмы и другие стены <ArrowUpRight size={14} aria-hidden="true" /></a>
     </details>
   )
 }

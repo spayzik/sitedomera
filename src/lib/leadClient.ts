@@ -14,7 +14,8 @@ function configuredEndpoint(value: unknown) {
   } catch { return null }
 }
 
-export const leadEndpoint = configuredEndpoint(import.meta.env.VITE_DEKORAY_LEAD_API)
+export const leadFormPreview = import.meta.env.VITE_DEKORAY_PREVIEW === '1'
+export const leadEndpoint = leadFormPreview ? null : configuredEndpoint(import.meta.env.VITE_DEKORAY_LEAD_API)
 
 export type LeadTerms = {
   consentPath: string

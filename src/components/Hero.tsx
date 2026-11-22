@@ -1,6 +1,7 @@
 import { motion, useInView, useReducedMotion, useScroll, useTransform } from 'framer-motion'
-import { ArrowRight, ArrowDown } from 'lucide-react'
+import { ArrowRight, ArrowDown, ArrowUpRight } from 'lucide-react'
 import { useRef } from 'react'
+import { LeadAction } from './LeadProvider'
 import { HeroTitle } from './HeroTitle'
 import { HomeOverview } from './CatalogFacts'
 import './HomeCommerce.css'
@@ -45,9 +46,9 @@ export function Hero() {
               Рассчитать стены <ArrowDown size={16} aria-hidden="true" />
             </a>
           </div>
-          <a href="#showroom" className="hero-commerce-contact hero-enter-actions interactive">
-            Связаться с менеджером
-          </a>
+          <LeadAction intent="consultation" className="secondary-action hero-commerce-contact hero-enter-actions interactive">
+            Связаться с менеджером <ArrowUpRight size={15} aria-hidden="true" />
+          </LeadAction>
         </div>
       </div>
 

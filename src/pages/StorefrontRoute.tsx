@@ -11,7 +11,7 @@ import { HomePage } from './HomePage'
 import { CatalogPage } from './CatalogPage'
 import { ProductPage } from './ProductPage'
 import { OfferPage } from './OfferPage'
-import { JournalPage } from './JournalPage'
+import { ArticlePage, JournalPage } from './JournalPage'
 import { InstallationPage } from './InstallationPage'
 
 const actionMap: Record<string, [string, string]> = {
@@ -37,6 +37,7 @@ export function StorefrontRoute({ page, base, path }: { page?: SeoPage; base: st
   if (page.kind === 'catalog' || page.kind === 'category' || page.kind === 'selection') return <CatalogPage page={page} base={base} />
   if (page.kind === 'product') return <ProductPage product={page.product} base={base} />
 
+  if (page.kind === 'article') return <ArticlePage page={page} base={base} />
   if (page.kind === 'articles') return <JournalPage page={page} base={base} />
   if (page.path === '/montazh/' && 'copy' in page) return <InstallationPage page={page} base={base} />
 
@@ -47,13 +48,13 @@ export function StorefrontRoute({ page, base, path }: { page?: SeoPage; base: st
 
   return <div className="container page-section">
     <nav className="page-crumbs" aria-label="Хлебные крошки"><a href={base}>ДЕКОРАЙ</a>
-      {page.kind === 'article' && <a href={base + 'news/'}>Статьи</a>}<span aria-current="page">{page.heading}</span>
+      <span aria-current="page">{page.heading}</span>
     </nav>
     <header className="page-intro">
       <h1>{page.heading}</h1><p className="lead">{page.description}</p>
       {action && <a className="btn btn-outline interactive" href={href(base, action[0])}>{action[1]}</a>}
     </header>
-    {calculator && <Calculator standalone />}
+    {calculator && <Calculator standalone base={base} />}
     {venue && <Showroom base={base} />}
     {page.path === '/otzyvy/' && <>
       <Reviews assetBase={base} compact />
@@ -74,10 +75,7 @@ export function StorefrontRoute({ page, base, path }: { page?: SeoPage; base: st
     </>}
     <div className="page-links">
       {copy?.links?.filter(({ path }) => path !== action?.[0] && !(action && path === '/#lead') && !(venue && path === '/#showroom'))
-        .map(link => <a key={link.path} href={href(base, link.path)}>{link.label}</a>)}
-      {page.kind === 'article' && <a href={base + 'news/'}>Все статьи</a>}
-      {page.kind === 'article' && page.path !== '/news/kak-sravnit-stoimost-otdelki/' &&
-        <a href={base + 'news/kak-sravnit-stoimost-otdelki/'}>Сравнить стоимость материалов</a>}
+        .map(link => <a key={link.path} className={calculator ? 'secondary-action' : undefined} href={href(base, link.path)}>{link.label}</a>)}
     </div>
   </div>
 }

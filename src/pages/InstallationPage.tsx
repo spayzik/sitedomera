@@ -1,11 +1,8 @@
-import { ArrowRight, ArrowUpRight } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, Phone } from 'lucide-react'
 import { CONTACTS } from '../data/products'
 import { storefrontImageSize } from '../data/storefrontImageSizes'
-import { buildTelegramDraftUrl } from '../lib/telegramLink'
+import { LeadAction } from '../components/LeadProvider'
 import type { SeoPage } from '../data/seoRoutes'
-
-const measurementLink = buildTelegramDraftUrl(CONTACTS.telegram,
-  'Здравствуйте! Хочу договориться о замере и получить смету на монтаж панелей ДЕКОРАЙ. Адрес объекта: ')
 
 export function InstallationPage({ page, base }: {
   page: Extract<SeoPage, { copy: unknown }>
@@ -18,13 +15,14 @@ export function InstallationPage({ page, base }: {
     </nav>
     <div className="installation-service-hero">
       <header className="page-intro">
+        <p className="eyebrow">Услуги · Москва</p>
         <h1>{page.heading}</h1>
-        <p className="lead">Сами выезжаем на замер и берём на себя монтаж. Подбираем крепление под ваш материал, согласовываем раскладку и готовим смету до начала работ.</p>
+        <p className="lead">Наши мастера приедут на объект, снимут размеры и проверят стены. До начала монтажа согласуем, где будут стыки, чем оформить углы и сколько будет стоить работа.</p>
         <div className="page-links">
-          <a className="btn btn-primary interactive" href={measurementLink} target="_blank" rel="noreferrer">
+          <LeadAction className="btn btn-primary interactive" intent="consultation" context="Монтаж стеновых панелей · Хочу договориться о замере и получить смету">
             Договориться о замере <ArrowUpRight size={16} aria-hidden="true" />
-          </a>
-          <a href={'tel:' + CONTACTS.phoneRaw}>Позвонить</a>
+          </LeadAction>
+          <a className="secondary-action" href={'tel:' + CONTACTS.phoneRaw}><Phone size={15} aria-hidden="true" /> Позвонить</a>
         </div>
       </header>
       {copy.image && <figure className="installation-service-photo">
@@ -33,15 +31,15 @@ export function InstallationPage({ page, base }: {
       </figure>}
     </div>
     <section className="installation-service-process" aria-labelledby="installation-process">
-      <h2 id="installation-process">Что берём на себя</h2>
+      <h2 id="installation-process">Как проходит монтаж</h2>
       <div className="installation-service-steps">
-        {copy.blocks.map(({ heading, text }) =>
-          <section key={heading}><h3>{heading}</h3><p>{text}</p></section>
+        {copy.blocks.map(({ heading, text }, index) =>
+          <section key={heading}><span aria-hidden="true" className="installation-step-number">{String(index + 1).padStart(2, '0')}</span><h3>{heading}</h3><p>{text}</p></section>
         )}
       </div>
     </section>
     <nav className="page-links installation-service-links" aria-label="Материалы для монтажа">
-      {copy.links?.map(link => <a key={link.path} href={base + link.path.slice(1)}>{link.label} <ArrowRight size={14} aria-hidden="true" /></a>)}
+      {copy.links?.map(link => <a className="secondary-action" key={link.path} href={base + link.path.slice(1)}>{link.label} <ArrowRight size={14} aria-hidden="true" /></a>)}
     </nav>
   </section>
 }

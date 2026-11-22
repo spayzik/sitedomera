@@ -100,9 +100,9 @@ export function ProductModal({
                 </div>
                 <SheetUnitPrice product={selected} />
                 <StockAvailability productId={selected.id} details />
-                <a className="gocek-original-link" href={base + selected.image}
+                <a className="secondary-action gocek-original-link" href={base + selected.image}
                   target="_blank" rel="noopener" aria-label={'Открыть образец крупнее: ' + selected.name}>
-                  Открыть исходный образец
+                  Посмотреть фактуру
                 </a>
                 {sheetArea(selected) > 0 && <ProductEstimate key={selected.id} product={selected} />}
               </motion.div>

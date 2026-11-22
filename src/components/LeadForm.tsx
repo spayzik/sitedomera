@@ -5,9 +5,7 @@ import type { LeadIntent } from '../lib/leadIntents'
 import './CartLeadForm.css'
 
 type Fields = { items: readonly { id: string; qty: number }[] } | { intent: LeadIntent; context: string }
-type Props = {
-  endpoint: string
-  terms: LeadTerms
+type Props = ({ endpoint: string; terms: LeadTerms } | { endpoint?: undefined; terms?: undefined }) & {
   fields: Fields
   attempt: RefObject<LeadAttempt | null>
 }
@@ -38,7 +36,7 @@ export function LeadForm({ endpoint, terms, fields, attempt }: Props) {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (running.current) return
+    if (!endpoint || !terms || running.current) return
     const form = new FormData(event.currentTarget)
     if (form.get('consent') !== 'on') return
     const body = JSON.stringify({
@@ -86,25 +84,25 @@ export function LeadForm({ endpoint, terms, fields, attempt }: Props) {
     </p>
   }
 
-  return <form className="cart-lead-form ym-hide-content ym-disable-keys" onSubmit={submit} aria-busy={submitting}>
+  return <form autoComplete={endpoint ? undefined : "off"} className="cart-lead-form ym-hide-content ym-disable-keys" onSubmit={submit} aria-busy={submitting}>
     <fieldset disabled={submitting}>
       {cart && <legend>Обсудить подборку</legend>}
-      <p>{cart ? 'Передадим выбранные позиции менеджеру для проверки наличия и стоимости.'
+      <p>{!endpoint ? 'Демонстрация формы. Данные не отправляются и не сохраняются. Используйте вымышленные контакты.' : cart ? 'Передадим выбранные позиции менеджеру для проверки наличия и стоимости.'
         : 'Укажите контакты, чтобы менеджер мог ответить на ваш запрос.'}</p>
-      <label>Имя <input name="name" autoComplete="name" required minLength={2} maxLength={80} /></label>
-      <label>Телефон <input name="phone" type="tel" autoComplete="tel" required minLength={10} maxLength={32} /></label>
-      <label>Email (необязательно) <input name="email" type="email" autoComplete="email" maxLength={254} /></label>
+      <label>Имя <input name="name" autoComplete={endpoint ? "name" : "off"} required minLength={2} maxLength={80} /></label>
+      <label>Телефон <input name="phone" type="tel" autoComplete={endpoint ? "tel" : "off"} required minLength={10} maxLength={32} /></label>
+      <label>Email (необязательно) <input name="email" type="email" autoComplete={endpoint ? "email" : "off"} maxLength={254} /></label>
       <label>Комментарий (необязательно) <textarea name="comment" rows={3} maxLength={1000} /></label>
       <div hidden aria-hidden="true"><input name="website" tabIndex={-1} autoComplete="off" /></div>
-      <div className="cart-lead-consent">
+      {terms && <div className="cart-lead-consent">
         <input type="checkbox" id={consentId} name="consent" required aria-describedby={consentId + '-document'} />
         <div>
           <label htmlFor={consentId}>Даю согласие на обработку персональных данных для ответа на заявку.</label>
           <a id={consentId + '-document'} href={terms.consentPath} target="_blank" rel="noopener noreferrer">Текст согласия</a>
         </div>
-      </div>
-      <button type="submit" className="btn btn-primary btn-full interactive">
-        {submitting ? 'Отправляем…' : error ? 'Повторить отправку' : 'Отправить заявку'}
+      </div>}
+      <button type="submit" disabled={!endpoint} className="btn btn-primary btn-full interactive">
+        {!endpoint ? 'Отправка отключена' : submitting ? 'Отправляем…' : error ? 'Повторить отправку' : 'Отправить заявку'}
       </button>
       {error && <p ref={errorRef} tabIndex={-1} role="alert" className="form-error">{error}</p>}
     </fieldset>

@@ -10,7 +10,7 @@ import { ProductEstimate } from '../components/ProductEstimate'
 import { SheetUnitPrice } from '../components/SheetUnitPrice'
 import { StockAvailability } from '../components/StockAvailability'
 import { sheetArea } from '../lib/calculator'
-import { inquiryTelegramLink } from '../lib/contactLinks'
+import { ArrowUpRight, Calculator as CalculatorIcon, Layers } from 'lucide-react'
 import { productDescription, productEditorialNote, relatedProducts, suggestedComplements } from '../lib/productPresentation'
 
 const visualizations = {
@@ -56,7 +56,7 @@ export function ProductPage({ product, base }: { product: Product; base: string 
     data.textContent = JSON.stringify(schema)
   }, [availability.status])
 
-  return <div className="container page-section">
+  return <div className="container page-section product-page">
     <nav className="page-crumbs" aria-label="Хлебные крошки">
       <a href={base}>ДЕКОРАЙ</a><a href={base + 'catalog/'}>Каталог</a>
       <a href={base + categoryPath(category.id).slice(1)}>{category.name}</a><span aria-current="page">{product.name}</span>
@@ -86,24 +86,26 @@ export function ProductPage({ product, base }: { product: Product; base: string 
         <p className="eyebrow">{category.name}</p>
         <h1>{product.name}</h1>
         {product.sku && product.sku !== product.name && <p className="commerce-card-meta">Артикул {product.sku}</p>}
+        <p className="material-description">{productDescription(product)}</p>
         <div className="material-price">
           <strong>{product.priceRub.toLocaleString('ru-RU')} ₽</strong><span> / {product.unit === 'шт' ? 'шт.' : product.unit}</span>
           <SheetUnitPrice product={product} />
         </div>
         <StockAvailability productId={product.id} />
-        <div className="page-links">
+        <div className="page-links material-actions">
           <button className="btn btn-primary interactive" type="button" onClick={() => add(product)}>Добавить в подборку</button>
-          <LeadAction className="btn btn-outline interactive" intent="consultation" context={context}>Связаться с менеджером</LeadAction>
+          <LeadAction className="secondary-action" intent="consultation" context={context}>Задать вопрос <ArrowUpRight size={15} aria-hidden="true" /></LeadAction>
         </div>
         <div className="page-links">
-          <a href={inquiryTelegramLink('samples', context)}>Запросить образец</a>
-          {sheetArea(product) > 0 && <a href={base + 'kalkulyator/?material=' + encodeURIComponent(product.id)}>Рассчитать для моей стены</a>}
+          <LeadAction className="secondary-action" intent="samples" context={context}><Layers size={15} aria-hidden="true" /> Запросить образец</LeadAction>
+          {sheetArea(product) > 0 && <a className="secondary-action" href={base + 'kalkulyator/?material=' + encodeURIComponent(product.id)}><CalculatorIcon size={15} aria-hidden="true" /> Рассчитать для моей стены</a>}
         </div>
-        <div className="page-copy"><p>{productDescription(product)}</p><p>{productEditorialNote(product)}</p></div>
-        <dl>{productDetails(product).map(([name, value]) => <div key={name}><dt>{name}</dt><dd>{value}</dd></div>)}</dl>
+        <div className="material-specs"><h2>Характеристики</h2>
+        <dl>{productDetails(product).map(([name, value]) => <div key={name}><dt>{name}</dt><dd>{value}</dd></div>)}</dl></div>
         {sheetArea(product) > 0 && <ProductEstimate product={product} calculatorBase={base} />}
       </section>
     </div>
+    <section className="material-editorial"><h2>Как выбрать и примерить материал</h2><p>{productEditorialNote(product)}</p></section>
     <RelatedMaterials base={base} heading="Похожие материалы" items={relatedProducts(product, products)} />
     <RelatedMaterials base={base} heading="Сопутствующие материалы" items={suggestedComplements(product, products)}
       note="Совместимость с выбранным изделием уточнит менеджер." />

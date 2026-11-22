@@ -1,4 +1,5 @@
 import { contactLinks } from '../lib/contactLinks'
+import { SocialContacts } from './SocialContacts'
 import { LeadAction } from './LeadProvider'
 import { SheetUnitPrice } from './SheetUnitPrice'
 import { StockAvailability } from './StockAvailability'
@@ -7,12 +8,12 @@ import { motion } from 'framer-motion'
 import { sheetProducts, CONTACTS, formatDimensions } from '../data/products'
 import { useCart } from '../context/CartContext'
 import { Counter } from './Counter'
-import { ArrowRight, ArrowUpRight } from 'lucide-react'
+import { ArrowRight, Plus, X } from 'lucide-react'
 import { buildTelegramDraftUrl, formatCalculatorTelegramMessage } from '../lib/telegramLink'
 import { calculateProjectPanels, calculateWallLayout, calculatorWall, sheetArea, type WallDimensions } from '../lib/calculator'
 import { trackAnalyticsGoal } from '../lib/analytics'
 
-export function Calculator({ standalone = false }: { standalone?: boolean } = {}) {
+export function Calculator({ standalone = false, base = './' }: { standalone?: boolean; base?: string } = {}) {
   const initialSearch = ""
   const { add } = useCart()
   const [materialId, setMaterialId] = useState(() => new URLSearchParams(initialSearch).get('material') ?? '')
@@ -61,7 +62,7 @@ export function Calculator({ standalone = false }: { standalone?: boolean } = {}
   ) => (
     <div className="form-group" key={label}>
       <label>{label}</label>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
+      <div className="calc-input-unit">
         <input
           type="text"
           inputMode="decimal"
@@ -70,7 +71,7 @@ export function Calculator({ standalone = false }: { standalone?: boolean } = {}
           value={w}
           onChange={(e) => set(e.target.value)}
         />
-        <span style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>{unit}</span>
+        <span aria-hidden="true">{unit}</span>
       </div>
     </div>
   )
@@ -89,8 +90,8 @@ export function Calculator({ standalone = false }: { standalone?: boolean } = {}
           </p>
         </div>}
 
-        <div className="split-grid calc-grid" style={{ gap: '4rem' }}>
-          <motion.div
+        <div className="calc-grid">
+          <motion.div className="calc-editor"
             initial={standalone ? false : { opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: '-50px' }}
@@ -99,26 +100,30 @@ export function Calculator({ standalone = false }: { standalone?: boolean } = {}
             <div className="modern-form">
               <div className="form-group">
                 <label htmlFor="calculator-material">Листовой материал</label>
-                <select id="calculator-material" className="catalog-select" value={materialId} onChange={e => setMaterialId(e.target.value)}>
+                <select id="calculator-material" className="catalog-select calc-select" value={materialId} onChange={e => setMaterialId(e.target.value)}>
                   <option value="">Выберите материал</option>
                   {sheetProducts.map(p => <option key={p.id} value={p.id}>{p.name} — {p.priceRub.toLocaleString('ru-RU')} ₽/{p.unit}</option>)}
                 </select>
                 {res.panel && <span>{formatDimensions(res.panel)}</span>}
               </div>
+              <div className="calc-walls">
               {walls.map((wall, index) => (
                 <fieldset key={wall.id} className="calc-wall">
                   <legend>Стена {index + 1}</legend>
                   {input(wall.length, value => setDimension(wall.id, 'length', value), 'Ширина стены ' + (index + 1), 'м')}
                   {input(wall.height, value => setDimension(wall.id, 'height', value), 'Высота стены ' + (index + 1), 'м')}
-                  {walls.length > 1 && <button type="button" className="contact-inline-phone" onClick={() => setWalls(previous => previous.filter(value => value.id !== wall.id))}>Убрать стену {index + 1}</button>}
+                  {walls.length > 1 && <button type="button" className="secondary-action calc-remove-wall" onClick={() => setWalls(previous => previous.filter(value => value.id !== wall.id))}><X size={14} aria-hidden="true" /> Убрать стену {index + 1}</button>}
                 </fieldset>
               ))}
-              <button type="button" className="btn btn-outline" disabled={walls.length >= 20} onClick={() => {
+              <button type="button" className="secondary-action" disabled={walls.length >= 20} onClick={() => {
                 const id = nextWall.current++
                 setWalls(previous => [...previous, { id, length: '', height: '' }])
-              }}>Добавить стену</button>
+              }}><Plus size={16} aria-hidden="true" /> Добавить стену</button>
+              </div>
+              <div className="calc-adjustments">
               {!vertical && input(openings, setOpenings, 'Общая площадь проёмов', 'м²')}
               {input(reserve, setReserve, 'Запас на подрезку', '%')}
+              </div>
               <div className="form-group">
                 <label htmlFor="calculator-method">Способ оценки</label>
                 <select id="calculator-method" className="catalog-select" value={vertical ? 'vertical' : 'area'}
@@ -142,7 +147,7 @@ export function Calculator({ standalone = false }: { standalone?: boolean } = {}
 
           <motion.div
             className="split-form calc-result"
-            initial={{ opacity: 0, y: 40 }}
+            initial={standalone ? false : { opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-50px' }}
             transition={{ duration: 0.9, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
@@ -161,37 +166,28 @@ export function Calculator({ standalone = false }: { standalone?: boolean } = {}
 
             {res.panel && <StockAvailability productId={res.panel.id} />}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '2rem' }}>
+            <div className="calc-actions">
               <button
                 className="btn btn-primary interactive"
                 disabled={!res.panel || !res.valid || res.sheets < 1 || res.sheets > 9999}
                 onClick={() => { if (res.panel && res.valid) add(res.panel, res.sheets) }}
               >
-                Добавить {res.sheets} листов в подборку <ArrowRight size={16} />
+                В подборку{completed ? ` · ${res.sheets} лист.` : ''} <ArrowRight size={16} />
               </button>
               {res.sheets > 9999 && <p>Такой объём уточните у менеджера в Telegram: подборка ограничена 9 999 единицами одного товара.</p>}
 
-              <div className="contact-inline">
+              <div className="calc-followup">
                 <p className="eyebrow" style={{ margin: 0 }}>Точный расчёт с профилями</p>
-                <p>Менеджер уточнит детали проекта. Расчёт попадёт в черновик Telegram только после вашего нажатия; сообщение вы отправите сами.</p>
+                <p>Менеджер поможет уточнить раскладку и комплектацию.</p>
                 {res.panel && res.valid && res.sheets > 0 && res.sheets <= 9999 && (
-                  <LeadAction intent="calculation" className="btn btn-outline btn-full interactive"
+                  <LeadAction intent="calculation" className="secondary-action"
                     context={[res.panel.name, res.panel.sku && res.panel.sku !== res.panel.name ? 'Артикул: ' + res.panel.sku : '',
                       res.sheets + ' лист.', price.toLocaleString('ru-RU') + ' ₽', method, 'Запас: ' + reserve + '%'].filter(Boolean).join(' · ')}>
                     Отправить расчёт в заявку
                   </LeadAction>
                 )}
-                {whatsappDraftUrl && <a className="btn btn-outline btn-full interactive" href={whatsappDraftUrl} target="_blank" rel="noreferrer">
-                  Отправить расчёт в WhatsApp
-                </a>}
-                {telegramDraftUrl && (
-                  <a className="btn btn-white btn-full interactive" href={telegramDraftUrl} target="_blank" rel="noreferrer">
-                    Уточнить расчёт в Telegram <ArrowUpRight size={16} />
-                  </a>
-                )}
-                <a className="contact-inline-phone interactive" href={`tel:${CONTACTS.phoneRaw}`}>
-                  Позвонить: {CONTACTS.phone}
-                </a>
+                <SocialContacts placement="product" base={base}
+                  drafts={telegramDraftUrl ? { telegram: telegramDraftUrl, whatsapp: whatsappDraftUrl ?? undefined } : undefined} />
               </div>
             </div>
           </motion.div>

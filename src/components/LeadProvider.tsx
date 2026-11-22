@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import { contactLinks, inquiryTelegramLink, inquiryWhatsAppLink } from '../lib/contactLinks'
-import { fetchLeadTerms, leadEndpoint, type LeadAttempt, type LeadTerms } from '../lib/leadClient'
+import { fetchLeadTerms, leadEndpoint, leadFormPreview, type LeadAttempt, type LeadTerms } from '../lib/leadClient'
 import { leadContextLimit, leadIntents, type LeadIntent } from '../lib/leadIntents'
 import { LeadContext, useLeadService } from '../lib/leadState'
 import { useDialog } from '../lib/useDialog'
@@ -82,7 +82,9 @@ export function LeadProvider({ children }: { children: ReactNode }) {
           {formAvailable && leadEndpoint && terms
             ? <LeadForm key={request.intent} endpoint={leadEndpoint} terms={terms} attempt={attempt}
                 fields={{ intent: request.intent, context: request.context }} />
-            : <p className="lead-dialog-note" role="status">{loading
+            : leadFormPreview
+              ? <LeadForm key={request.intent} attempt={attempt} fields={{ intent: request.intent, context: request.context }} />
+              : <p className="lead-dialog-note" role="status">{loading
               ? 'Проверяем доступность формы…'
               : 'Заявка через сайт сейчас недоступна. Напишите нам в Telegram или позвоните.'}</p>}
           <div className="lead-dialog-links">
