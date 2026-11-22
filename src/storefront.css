@@ -360,3 +360,32 @@
 .site-lead-panel .cart-lead-form input, .site-lead-panel .cart-lead-form textarea { border-radius: .35rem; background: rgba(14,11,9,.65); }
 @media (max-width: 760px) { .site-lead-panel { grid-template-columns: minmax(0,1fr); } }
 @media (max-width: 480px) { .site-lead-panel .cart-lead-form fieldset { grid-template-columns: minmax(0,1fr); } }
+
+.gocek-cost { display: grid; justify-items: start; gap: .35rem; }
+.gocek-cost .gocek-price-pill, .gocek-cost .sheet-unit-price, .gocek-cost .stock-availability { margin: 0; }
+.material-gallery .material-editorial { margin-top: 1.2rem; padding: 1.1rem; border: 1px solid var(--line); border-radius: .5rem; background: rgba(206,176,137,.055); }
+.material-scenes > h2 { grid-column: 1 / -1; font-size: clamp(1.5rem, 2.8vw, 2.15rem); }
+@media (max-width:768px) {
+  .product-page .material-editorial { margin: 0; }
+  .product-page .material-scenes { margin-top: 0; }
+}
+.showroom-route .showroom-page { padding: 0; border: 0; background: transparent; }
+.showroom-page > .container { padding: 0; }
+.showroom-page .showroom-commerce-grid { grid-template-columns: minmax(0,1.2fr) minmax(0,.8fr); gap: clamp(1.4rem, 5vw, 4rem); align-items: center; }
+.showroom-page h1 { font-size: clamp(2.45rem, 5vw, 5rem); }
+.showroom-page .lead { margin-top: 1rem; }
+.showroom-page .showroom-commerce-manager { border-radius: .55rem; background: rgba(206,176,137,.06); }
+.showroom-visit-guide { margin-top: 2.5rem; padding: clamp(1rem, 3vw, 2rem); border: 1px solid var(--line); border-radius: .55rem; }
+.showroom-visit-guide h2, .installation-examples h2 { font: 500 clamp(1.8rem, 3vw, 2.7rem)/1.15 var(--font-display); }
+.showroom-visit-guide p { margin: .55rem 0 1rem; color: var(--muted); max-width: 64ch; }
+@media (max-width:768px) { .showroom-page .showroom-commerce-grid { grid-template-columns: 1fr; } }
+.installation-examples { margin-block: clamp(2.5rem, 6vw, 5rem) 2rem; }
+.installation-examples-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: .75rem; }
+.installation-examples-head p { margin-top: .45rem; color: var(--muted); }
+.installation-carousel-nav { display: flex; gap: .45rem; }
+.installation-gallery { display: grid; grid-auto-flow: column; grid-auto-columns: 32%; gap: 1rem; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-color: var(--accent) transparent; margin-top: 1rem; padding-bottom: .65rem; }
+.installation-gallery figure { margin: 0; scroll-snap-align: start; border: 1px solid var(--line); border-radius: .5rem; overflow: hidden; }
+.installation-gallery img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; }
+.installation-gallery figcaption { padding: .8rem; }
+@media (max-width:760px) { .installation-gallery { grid-auto-columns: 78%; } }
+@media (prefers-reduced-motion:no-preference) { .installation-gallery { scroll-behavior:smooth; } }

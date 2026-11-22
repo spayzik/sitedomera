@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { ArrowRight, ArrowUpRight, Phone } from 'lucide-react'
 import { CONTACTS } from '../data/products'
 import { storefrontImageSize } from '../data/storefrontImageSizes'
@@ -9,6 +10,7 @@ export function InstallationPage({ page, base }: {
   base: string
 }) {
   const { copy } = page
+  const gallery = useRef<HTMLDivElement>(null)
   return <section className="container page-section installation-service">
     <nav className="page-crumbs" aria-label="Хлебные крошки">
       <a href={base}>ДЕКОРАЙ</a><span aria-current="page">Монтаж</span>
@@ -36,6 +38,31 @@ export function InstallationPage({ page, base }: {
         {copy.blocks.map(({ heading, text }, index) =>
           <section key={heading}><span aria-hidden="true" className="installation-step-number">{String(index + 1).padStart(2, '0')}</span><h3>{heading}</h3><p>{text}</p></section>
         )}
+      </div>
+    </section>
+    <section className="installation-examples" aria-labelledby="installation-examples-heading">
+      <div className="installation-examples-head">
+        <div><h2 id="installation-examples-heading">Как панели смотрятся в интерьере</h2><p>Визуализации применения материалов ДЕКОРАЙ.</p></div>
+        <div className="installation-carousel-nav">
+          {[-1, 1].map(direction => <button className="secondary-action" key={direction} type="button"
+            aria-label={direction < 0 ? 'Предыдущий пример' : 'Следующий пример'}
+            onClick={() => {
+              const rail = gallery.current
+              if (!rail) return
+              const left = rail.getBoundingClientRect().left
+              const stops = Array.from(rail.querySelectorAll('figure'), card => card.getBoundingClientRect().left - left + rail.scrollLeft)
+              const next = direction > 0 ? stops.find(stop => stop > rail.scrollLeft + 2)
+                : stops.findLast(stop => stop < rail.scrollLeft - 2)
+              rail.scrollTo({ left: next ?? (direction > 0 ? rail.scrollWidth : 0) })
+            }}>
+            <ArrowRight style={{ rotate: direction < 0 ? '180deg' : undefined }} size={17} aria-hidden="true" />
+          </button>)}
+        </div>
+      </div>
+      <div ref={gallery} className="installation-gallery" tabIndex={0} aria-label="Примеры отделки">
+        {([['living', 'Панели и рейки в гостиной'], ['bedroom', 'Акцентная стена в спальне'], ['dining', 'Отделка обеденной зоны'], ['fabric', 'Тканевая фактура при боковом свете']] as const).map(([scene, caption]) =>
+          <figure key={scene}><img src={base + 'catalog/rooms/interior-' + scene + '.webp'} width={1122} height={1402}
+            alt={caption} loading="lazy" decoding="async" /><figcaption>{caption}</figcaption></figure>)}
       </div>
     </section>
     <nav className="page-links installation-service-links" aria-label="Материалы для монтажа">

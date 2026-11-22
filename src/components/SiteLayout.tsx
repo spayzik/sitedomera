@@ -34,7 +34,7 @@ export function SiteLayout({ base, path, children }: { base: string; path: strin
           <CartProvider>
             <ScrollGlow />
             <Header base={base} path={path} />
-            <main id="page-content">{children}<SiteLeadSection /></main>
+            <main id="page-content">{children}<SiteLeadSection base={base} /></main>
             <Footer base={base} />
             {ready && <StorefrontWidgets base={base} />}
           </CartProvider>

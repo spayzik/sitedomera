@@ -44,6 +44,9 @@ export function ProductPage({ product, base }: { product: Product; base: string 
   const context = [product.name, product.sku && product.sku !== product.name ? 'Артикул: ' + product.sku : '',
     formatDimensions(product)].filter(Boolean).join(' · ')
   const images = scenes[product.categoryId] ?? []
+  const editorial = productEditorialNote(product)
+  const split = editorial.indexOf('. ', 70)
+  const paragraphs = split > 0 ? [editorial.slice(0, split + 1), editorial.slice(split + 2)] : [editorial]
 
   useEffect(() => {
     const data = document.querySelector<HTMLScriptElement>('script[type="application/ld+json"]')
@@ -69,7 +72,9 @@ export function ProductPage({ product, base }: { product: Product; base: string 
           </a>
           <figcaption>Образец материала</figcaption>
         </figure>
+        <section className="material-editorial"><h2>Как выбрать и примерить материал</h2>{paragraphs.filter(Boolean).map(text => <p key={text}>{text}</p>)}</section>
         {images.length > 0 && <aside className="material-scenes" aria-label="Идеи для коллекции">
+          <h2>Фактуры в интерьере</h2>
           {images.map(scene => {
             const src = base + 'catalog/rooms/interior-' + scene
             const width = scene === 'metal' ? 1448 : 1122
@@ -105,7 +110,6 @@ export function ProductPage({ product, base }: { product: Product; base: string 
         {sheetArea(product) > 0 && <ProductEstimate product={product} calculatorBase={base} />}
       </section>
     </div>
-    <section className="material-editorial"><h2>Как выбрать и примерить материал</h2><p>{productEditorialNote(product)}</p></section>
     <RelatedMaterials base={base} heading="Похожие материалы" items={relatedProducts(product, products)} />
     <RelatedMaterials base={base} heading="Сопутствующие материалы" items={suggestedComplements(product, products)}
       note="Совместимость с выбранным изделием уточнит менеджер." />

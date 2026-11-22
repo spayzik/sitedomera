@@ -95,11 +95,11 @@ export function ProductModal({
                 <p>
                   {productDescription(selected)}
                 </p>
-                <div className="gocek-price-pill">
+                <div className="gocek-cost"><div className="gocek-price-pill">
                   {selected.priceRub.toLocaleString('ru-RU')} ₽/{selected.unit}
                 </div>
                 <SheetUnitPrice product={selected} />
-                <StockAvailability productId={selected.id} details />
+                <StockAvailability productId={selected.id} details /></div>
                 {sheetArea(selected) > 0 && <ProductEstimate key={selected.id} product={selected} calculatorBase={base} />}
               </motion.div>
 

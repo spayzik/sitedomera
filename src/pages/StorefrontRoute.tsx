@@ -16,7 +16,6 @@ import { InstallationPage } from './InstallationPage'
 
 const actionMap: Record<string, [string, string]> = {
   '/dostavka/': [buildTelegramDraftUrl(CONTACTS.telegram, 'Здравствуйте! Хочу уточнить условия доставки материалов ДЕКОРАЙ.'), 'Уточнить доставку'],
-  '/showroom/': [CONTACTS.mapOrganization, 'Открыть в Яндекс Картах'],
   '/kontakty/': ['tel:' + CONTACTS.phoneRaw, 'Позвонить ' + CONTACTS.phone],
   '/proekty/': ['/catalog/derevo/', 'Смотреть древесные фактуры'],
   '/opt/': [buildTelegramDraftUrl(CONTACTS.telegram, 'Здравствуйте! Хочу обсудить поставку материалов ДЕКОРАЙ для объекта.'), 'Обсудить поставку'],
@@ -41,8 +40,13 @@ export function StorefrontRoute({ page, base, path }: { page?: SeoPage; base: st
   if (page.kind === 'articles') return <JournalPage page={page} base={base} />
   if (page.path === '/montazh/' && 'copy' in page) return <InstallationPage page={page} base={base} />
 
+  if (page.path === '/showroom/') return <div className="container page-section showroom-route">
+    <nav className="page-crumbs" aria-label="Хлебные крошки"><a href={base}>ДЕКОРАЙ</a><span aria-current="page">Шоурум</span></nav>
+    <Showroom base={base} heading={page.heading} />
+  </div>
+
   const action = actionMap[page.path]
-  const venue = page.path === '/kontakty/' || page.path === '/showroom/'
+  const venue = page.path === '/kontakty/'
   const copy = 'copy' in page ? page.copy : undefined
   const calculator = page.path === '/kalkulyator/'
 

@@ -7,7 +7,7 @@ import { avitoProfile } from '../lib/avitoProfile'
 import { useLeadService } from '../lib/leadState'
 import { LeadAction } from './LeadProvider'
 
-export function Showroom({ base = "./" }: { base?: string } = {}) {
+export function Showroom({ base = "./", heading }: { base?: string; heading?: string } = {}) {
   const consultationAvailable = useLeadService()?.terms?.intents.includes('consultation')
   const [copyStatus, setCopyStatus] = useState('')
 
@@ -21,11 +21,11 @@ export function Showroom({ base = "./" }: { base?: string } = {}) {
   }
 
   return (
-    <section className="section showroom showroom-commerce" id="showroom" aria-labelledby="showroom-heading">
+    <section className={heading ? "showroom showroom-commerce showroom-page" : "section showroom showroom-commerce"} id="showroom" aria-labelledby="showroom-heading">
       <div className="container">
         <div className="showroom-commerce-grid">
           <div className="showroom-commerce-visit">
-            <h2 id="showroom-heading">Шоурум ДЕКОРАЙ<br />в Москве</h2>
+            {heading ? <h1 id="showroom-heading">{heading}</h1> : <h2 id="showroom-heading">Шоурум ДЕКОРАЙ<br />в Москве</h2>}
             <p className="lead">
               Посмотрите образцы вживую и сравните фактуры. Наличие нужного образца уточните перед поездкой.
             </p>
@@ -64,6 +64,7 @@ export function Showroom({ base = "./" }: { base?: string } = {}) {
           </div>
         </div>
 
+        {heading && <div className="showroom-visit-guide"><h2>Что посмотреть в шоуруме</h2><p>Сравните панели, рейки и профили вживую. Если вы уже выбрали материал в каталоге, сохраните его артикул и уточните, есть ли нужный образец.</p><a className="secondary-action" href={base + "catalog/"}>Выбрать фактуры в каталоге</a></div>}
         <div className="showroom-commerce-map">
           <MapEmbed src={CONTACTS.mapWidget} title="Склад и шоурум ДЕКОРАЙ на карте" />
         </div>
