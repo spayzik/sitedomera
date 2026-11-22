@@ -4,7 +4,7 @@ import { contactLinks } from '../lib/contactLinks'
 import { socialIcons } from './socialIcons'
 import './SocialContacts.css'
 
-type Placement = 'header' | 'menu' | 'cards' | 'footer' | 'floating'
+type Placement = 'header' | 'menu' | 'cards' | 'product' | 'footer' | 'floating'
 type Channel = keyof typeof socialIcons | 'phone'
 
 const channels: { id: Channel; label: string; detail: string; href?: string }[] = [
@@ -48,19 +48,26 @@ function MaxByPhone() {
   </details>
 }
 
-export function SocialContacts({ placement, base = './', onFollow }: { placement: Placement; base?: string; onFollow?: () => void }) {
+export function SocialContacts({ placement, base = './', onFollow, drafts }: {
+  placement: Placement
+  base?: string
+  onFollow?: () => void
+  drafts?: { telegram: string; whatsapp?: string }
+}) {
+  const circular = placement === 'cards' || placement === 'product'
   const showChannel = placement === 'floating'
-  return <div className={'social-contacts social-contacts-' + placement} role="group" aria-label="Способы связи">
+  return <div className={['social-contacts', 'social-contacts-' + placement, circular && 'social-contacts-circular'].filter(Boolean).join(' ')} role="group" aria-label="Способы связи">
     {(showChannel ? [...channels, telegramChannel] : channels).map(({ id, label, detail, href }) => {
       if (id === 'max' && !href && placement === 'cards') return <MaxByPhone key={label} />
       const maxByPhone = id === 'max' && !href
-      const destination = maxByPhone ? base + 'kontakty/#max-contact' : href
+      const draft = id === 'telegram' || id === 'whatsapp' ? drafts?.[id] : undefined
+      const destination = maxByPhone ? base + 'kontakty/#max-contact' : draft ?? href
       if (!destination) return null
       return (<a key={label} href={destination} className="social-contact" data-channel={id} onClick={onFollow}
         target={id === 'phone' || maxByPhone ? undefined : '_blank'} rel={id === 'phone' || maxByPhone ? undefined : 'noreferrer'}
-        aria-label={id === 'phone' ? 'Позвонить ' + detail : label} title={placement === 'cards' ? label : undefined}>
+        aria-label={id === 'phone' ? 'Позвонить ' + detail : label} title={circular ? label : undefined}>
         <ChannelIcon id={id} />
-        <span className="social-contact-label">{id === 'phone' && placement !== 'cards' ? detail : label}</span>
+        <span className="social-contact-label">{id === 'phone' && !circular ? detail : label}</span>
       </a>)})}
   </div>
 }

@@ -1,6 +1,7 @@
 import { inquiryWhatsAppLink } from '../lib/contactLinks'
 import { productPath } from '../data/seoPaths'
 import { LeadAction } from './LeadProvider'
+import { SocialContacts } from './SocialContacts'
 import { ProductEstimate } from './ProductEstimate'
 import { sheetArea } from '../lib/calculator'
 import { SheetUnitPrice } from './SheetUnitPrice'
@@ -45,7 +46,7 @@ export function ProductModal({
   const collection = selected ? collections.find(c => c.id === selected.categoryId)?.name ?? '' : ''
   const telegramDraftUrl = selected
     ? buildTelegramDraftUrl(CONTACTS.telegram, formatProductTelegramMessage(selected, collection))
-    : null
+    : undefined
 
   const whatsapp = selected ? inquiryWhatsAppLink("consultation", selected.name + (selected.sku && selected.sku !== selected.name ? " · Артикул " + selected.sku : "")) : undefined
 
@@ -139,13 +140,11 @@ export function ProductModal({
                 </button>
                 <LeadAction intent="samples" context={selected.name + (selected.sku ? ' · Артикул ' + selected.sku : '') + ' · 1 образец'} className="gocek-telegram-link">Запросить образец</LeadAction>
                 <a className="gocek-telegram-link" href={import.meta.env.BASE_URL + productPath(selected).slice(1)}>Страница материала</a>
-                {whatsapp && <a className="gocek-telegram-link" href={whatsapp} target="_blank" rel="noreferrer">Спросить в WhatsApp</a>}
-                {telegramDraftUrl && (
-                  <a className="gocek-telegram-link" href={telegramDraftUrl} target="_blank" rel="noreferrer">
-                    <span>СПРОСИТЬ В TELEGRAM</span>
-                    <span aria-hidden="true">↗</span>
-                  </a>
-                )}
+                {telegramDraftUrl && <div className="gocek-contact">
+                  <p>Связаться с менеджером</p>
+                  <SocialContacts placement="product" base={import.meta.env.BASE_URL}
+                    drafts={{ telegram: telegramDraftUrl, whatsapp }} />
+                </div>}
               </motion.div>
 
               {/* Bottom Dock Thumbnails */}

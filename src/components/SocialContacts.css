@@ -11,8 +11,8 @@
 .social-contacts-header [data-channel="phone"] .social-contact-label { display: inline; }
 .social-contacts-menu { justify-content: center; gap: .15rem 1.15rem; }
 .nav-mobile .social-contact { font: .92rem var(--font); }
-.social-contacts-cards { position: relative; gap: .65rem; margin-block: .85rem 1rem; }
-.social-contacts-cards .social-contact {
+.social-contacts-circular { position: relative; gap: .65rem; margin-block: .85rem 1rem; }
+.social-contacts-circular .social-contact {
   display: inline-flex;
   justify-content: center;
   width: 44px;
@@ -23,8 +23,9 @@
   background: rgba(194, 163, 120, .055);
   cursor: pointer;
 }
-.social-contacts-cards .social-contact:hover { border-color: var(--accent-light); }
-.social-contacts-cards .social-contact-label { display: none; }
+.social-contacts-circular .social-contact:hover { border-color: var(--accent-light); }
+.social-contacts-circular .social-contact-label { display: none; }
+.social-contacts-product { margin-block: .55rem 0; }
 .social-contacts-floating { display: grid; gap: 0; }
 .social-contacts-floating .social-contact { justify-content: flex-start; }
 @media (max-width: 1200px) { .social-contacts-header [data-channel="phone"] .social-contact-label { display: none; } }

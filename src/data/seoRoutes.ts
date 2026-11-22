@@ -291,7 +291,7 @@ const pages: readonly (SeoPage & { lastmod?: string })[] = [
   ...productPages,
   ...commercial,
   { kind: 'info', path: '/privacy/', heading: 'Политика конфиденциальности', ...SEO.privacy, copy: privacyCopy },
-  { kind: 'articles', path: '/stati/', heading: 'Журнал ДЕКОРАЙ', title: withBrand('Журнал об отделке стен'), description: 'Как выбрать фактуру, рассчитать материалы и продумать отделку для дома или коммерческого пространства.' },
+  { kind: 'articles', path: '/stati/', heading: 'Статьи', title: 'Статьи', description: 'Как выбрать фактуру, рассчитать материалы и продумать отделку для дома или коммерческого пространства.' },
   ...articles,
 ]
 
