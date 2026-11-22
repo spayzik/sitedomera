@@ -18,11 +18,13 @@ import { trackAnalyticsGoal } from '../lib/analytics'
 
 export function ProductModal({
   selected,
+  base = import.meta.env.BASE_URL,
   closelyRelated = products,
   onSelect,
   onClose,
 }: {
   selected: Product | null
+  base?: string
   closelyRelated?: Product[]
   onSelect?: (p: Product) => void
   onClose: () => void
@@ -73,7 +75,7 @@ export function ProductModal({
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           >
-            <img className="gocek-material-backdrop" src={import.meta.env.BASE_URL + selected.image}
+            <img className="gocek-material-backdrop" src={base + selected.image}
               alt="" aria-hidden="true" decoding="async" />
             <div className="gocek-gradient" aria-hidden="true" />
             <button className="gocek-close-mobile icon-btn" onClick={onClose} aria-label="Закрыть карточку">
@@ -98,7 +100,7 @@ export function ProductModal({
                 </div>
                 <SheetUnitPrice product={selected} />
                 <StockAvailability productId={selected.id} details />
-                <a className="gocek-original-link" href={import.meta.env.BASE_URL + selected.image}
+                <a className="gocek-original-link" href={base + selected.image}
                   target="_blank" rel="noopener" aria-label={'Открыть образец крупнее: ' + selected.name}>
                   Открыть исходный образец
                 </a>
@@ -139,10 +141,10 @@ export function ProductModal({
                   <span style={{ fontSize: '1.25rem', lineHeight: 1 }}>+</span>
                 </button>
                 <LeadAction intent="samples" context={selected.name + (selected.sku ? ' · Артикул ' + selected.sku : '') + ' · 1 образец'} className="gocek-telegram-link">Запросить образец</LeadAction>
-                <a className="gocek-telegram-link" href={import.meta.env.BASE_URL + productPath(selected).slice(1)}>Страница материала</a>
+                <a className="gocek-telegram-link" href={base + productPath(selected).slice(1)}>Страница материала</a>
                 {telegramDraftUrl && <div className="gocek-contact">
                   <p>Связаться с менеджером</p>
-                  <SocialContacts placement="product" base={import.meta.env.BASE_URL}
+                  <SocialContacts placement="product" base={base}
                     drafts={{ telegram: telegramDraftUrl, whatsapp }} />
                 </div>}
               </motion.div>
@@ -164,7 +166,7 @@ export function ProductModal({
                       whileHover={{ scale: 1.05, y: -4 }}
                       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                     >
-                      <img src={p.image} alt={p.name} />
+                      <img src={base + p.image} alt={p.name} />
                       {isActive && <span>{p.name}</span>}
                     </motion.button>
                   )

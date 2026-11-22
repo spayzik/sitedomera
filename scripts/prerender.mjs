@@ -3,8 +3,8 @@ import { mkdir, readFile, unlink, writeFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { build } from 'vite'
-import { seoAssetPrefix, seoPageFile, seoPages } from '../src/data/seoRoutes.ts'
-import { jsonLd, renderRoot, renderSeoPage, renderSitemap, renderYml } from './seo-static.mjs'
+import { legacyNewsRedirects, seoAssetPrefix, seoPageFile, seoPages } from '../src/data/seoRoutes.ts'
+import { jsonLd, renderRoot, renderSeoPage, renderNewsRedirect, renderSitemap, renderYml } from './seo-static.mjs'
 
 const ssrDirectory = resolve('node_modules/.cache/dekoray-ssg')
 await build({
@@ -30,6 +30,11 @@ for (const page of seoPages.slice(1)) {
   const path = join(dist, seoPageFile(page.path))
   await mkdir(dirname(path), { recursive: true })
   await writeFile(path, renderSeoPage(page, seoAssetPrefix(page.path), assets, ui))
+}
+for (const { from, to } of legacyNewsRedirects) {
+  const path = join(dist, seoPageFile(from))
+  await mkdir(dirname(path), { recursive: true })
+  await writeFile(path, renderNewsRedirect(from, to))
 }
 await writeFile(rootFile, index
   .replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/, () => jsonLd(seoPages[0]))

@@ -4,7 +4,7 @@ import { extname, join, relative, resolve, sep } from 'node:path'
 import sharp from 'sharp'
 import { CONTACTS, products, sourceInventory } from '../src/data/products.ts'
 import { SEO } from '../src/data/seo.ts'
-import { canonicalUrl, seoPageFile, seoPages } from '../src/data/seoRoutes.ts'
+import { legacyNewsRedirects, canonicalUrl, seoPageFile, seoPages } from '../src/data/seoRoutes.ts'
 import { escape } from './seo-static.mjs'
 import { publicReleaseFiles, optionalPublicReleaseFiles } from '../src/data/publicReleaseFiles.ts'
 import { assertPublicAvitoSnapshot } from './public-avito-snapshot.mjs'
@@ -209,7 +209,7 @@ async function verify() {
   const avito = JSON.parse(await readFile(await requireFile('generated/avito-reviews.json'), 'utf8'))
   assertPublicAvitoSnapshot(avito, { allowFallback: true })
 
-  const required = new Set(['404.html', 'yml.xml', ...seoPages.map(page => seoPageFile(page.path)), ...publicReleaseFiles])
+  const required = new Set(['404.html', 'yml.xml', ...seoPages.map(page => seoPageFile(page.path)), ...legacyNewsRedirects.map(({ from }) => seoPageFile(from)), ...publicReleaseFiles])
   for (const path of required) await requireFile(path)
   const internalNames = /(?:^|[/_.-])(?:requirements?|roadmap|handoff|evidence|screenshots?|private|internal|codex|debug|fixtures?|test|spec|backup|manifest)(?:[/_.-]|$)/i
   const blockedText = /__SITE_[A-Z_]+__|AVITO_CLIENT_(?:SECRET|ID)|client_secret|access_token|Authorization:\s*Bearer|api\.telegram\.org\/bot|TELEGRAM_BOT_TOKEN|(?:S?FTP|REG(?:RU)?)[_ -]?(?:PASSWORD|TOKEN)|-----BEGIN [^-]*PRIVATE KEY-----|gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|(?:AKIA|ASIA)[A-Z0-9]{16}|sourceMappingURL|\bdomera\.ru\b|\blocalhost\b|\b127\.0\.0\.1\b|(?:[a-z]:[\\/]Users[\\/]|\/home\/[^/\s]+\/|file:\/\/)/i

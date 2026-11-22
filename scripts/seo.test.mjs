@@ -4,7 +4,7 @@ import { CONTACTS, collections, products } from '../src/data/products.ts'
 import { SEO, metadataForRoute } from '../src/data/seo.ts'
 import { readFileSync } from 'node:fs'
 import { domainToASCII } from 'node:url'
-import { canonicalUrl, categoryPath, productPath, seoAssetPrefix, seoPageFile, seoPages } from '../src/data/seoRoutes.ts'
+import { legacyNewsRedirects, canonicalUrl, categoryPath, productPath, seoAssetPrefix, seoPageFile, seoPages } from '../src/data/seoRoutes.ts'
 import { renderSitemap, renderYml } from './seo-static.mjs'
 
 test('launch uses the owner-provided brand and IDN hostname', () => {
@@ -96,6 +96,14 @@ test('privacy and seven substantive article routes remain available without JS',
   assert.match(htmlFor('/privacy/'), /Яндекс\.Метрика/)
   const articles = seoPages.filter(page => page.kind === 'article')
   assert.equal(articles.length, 7)
+  assert(articles.every(page => page.path.startsWith('/news/')))
+  assert.match(htmlFor('/news/'), /<h1>Статьи<\/h1>/)
+  for (const { from, to } of legacyNewsRedirects) {
+    const redirect = htmlFor(from)
+    assert(redirect.includes('0;url=' + seoAssetPrefix(from) + to.slice(1)))
+    assert(redirect.includes(canonicalUrl(to)))
+    assert.match(redirect, /noindex, follow/)
+  }
   assert(articles.every(page => page.copy.blocks.length >= 3 && htmlFor(page.path).includes('"@type":"Article"')))
 })
 

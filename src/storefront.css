@@ -56,6 +56,8 @@
   text-wrap: balance;
   max-inline-size: 13ch;
 }
+.catalog-page-hero-index .catalog-page-content h1 { font-size: clamp(4rem, 10vw, 8.5rem); line-height: 1.05; max-inline-size: none; }
+@media (max-width: 768px) { .catalog-page-hero-index .catalog-page-content h1 { font-size: clamp(2.8rem, 13vw, 4rem); line-height: .98; } }
 @media (max-width: 480px) {
   .catalog-page-content h1 { font-size: clamp(2.65rem, 10vw, 3.6rem); }
   .catalog-page-cta .btn { min-height: 44px; padding: .65rem .85rem; }
@@ -85,15 +87,36 @@
 
 /* Entrance motion uses the existing editorial text masks. Markup stays visible with reduced motion. */
 @media (prefers-reduced-motion: no-preference) {
-  .hero-enter-title .editorial-line {
+  .hero-arch .hero-enter-title .editorial-line {
     animation: storefront-title-in .82s cubic-bezier(.16, 1, .3, 1) both;
   }
-  .hero-enter-title .editorial-mask + .editorial-mask .editorial-line { animation-delay: .11s; }
-  .hero-enter-eyebrow, .hero-enter-lead, .hero-enter-actions,
+  .hero-arch .hero-enter-title .editorial-mask + .editorial-mask .editorial-line { animation-delay: .11s; }
   .page-intro > *, .material-purchase > h1, .material-gallery,
   .page-section > h1 { animation: storefront-content-in .65s cubic-bezier(.22, 1, .36, 1) both; }
-  .hero-enter-lead, .page-intro .lead { animation-delay: .08s; }
-  .hero-enter-actions, .page-intro > .btn { animation-delay: .16s; }
+  .page-intro .lead { animation-delay: .08s; }
+  .page-intro > .btn { animation-delay: .16s; }
+  .site-header { animation: archive-header-in .8s .5s cubic-bezier(.22, 1, .36, 1) both; }
+  .hero-arch-bg { animation: archive-hero-reveal 1.6s cubic-bezier(.7, 0, .1, 1) both; }
+  .hero-arch-bg img { animation: archive-hero-zoom 3s cubic-bezier(.22, 1, .36, 1) both; }
+  .hero-arch :is(.hero-enter-eyebrow, .hero-enter-lead, .hero-enter-actions, .hero-arch-bottom) {
+    animation: archive-fade-up 1s cubic-bezier(.22, 1, .36, 1) both;
+  }
+  .hero-arch .hero-enter-lead { animation-delay: .2s; }
+  .hero-arch .hero-enter-actions { animation-delay: .3s; }
+  .hero-arch .hero-arch-bottom { animation-delay: 1s; }
+  .catalog-page-hero-bg img { animation: archive-catalog-image 1.2s ease-out both; }
+  .catalog-page-content :is(.hero-enter-title, .hero-enter-lead, .hero-enter-actions, .hero-enter-eyebrow) {
+    animation: archive-fade-up .7s .2s ease-out both;
+  }
+  .catalog-page-content .hero-enter-eyebrow { animation-duration: .6s; animation-delay: .1s; }
+  .catalog-page-content .hero-enter-lead { animation-delay: .3s; }
+  .catalog-page-content .hero-enter-actions { animation-delay: .4s; }
+
+  @keyframes archive-header-in { from { opacity: 0; translate: 0 -30px; } }
+  @keyframes archive-hero-reveal { from { clip-path: inset(100% 0 0); } to { clip-path: inset(0); } }
+  @keyframes archive-hero-zoom { from { transform: scale(1.25); } }
+  @keyframes archive-catalog-image { from { opacity: 0; transform: scale(1.05); } }
+  @keyframes archive-fade-up { from { opacity: 0; translate: 0 30px; } }
   @keyframes storefront-title-in { from { translate: 0 106%; } to { translate: 0 0; } }
   @keyframes storefront-content-in { from { opacity: 0; translate: 0 14px; } to { opacity: 1; translate: 0 0; } }
 }

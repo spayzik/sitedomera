@@ -36,12 +36,17 @@ export function CatalogCard({ product, category, base = "./", detailsHref, onDet
   return (
     <article className={`card-arch commerce-card${product.kind === "profile" ? " is-profile" : ""}`} aria-labelledby={titleId}>
       {detailsHref ? <a className="card-arch-img commerce-card-sample interactive" href={detailsHref}
-        aria-label={`Подробнее: ${product.name}`}>{sample}</a>
+        aria-label={`Подробнее: ${product.name}`} aria-haspopup={onDetails ? 'dialog' : undefined}
+        onClick={event => {
+          if (!onDetails || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+          event.preventDefault()
+          onDetails(product)
+        }}>{sample}</a>
         : <button type="button" className="card-arch-img commerce-card-sample interactive"
           aria-label={`Подробнее: ${product.name}`} aria-haspopup="dialog" onClick={() => onDetails?.(product)}>{sample}</button>}
       <div className="commerce-card-body">
         <div>
-          <h3 id={titleId}>{product.name}</h3>
+          <h3 id={titleId}>{detailsHref && onDetails ? <a href={detailsHref}>{product.name}</a> : product.name}</h3>
           <p className="commerce-card-meta">{sku && <span>Артикул {sku}</span>}<span>{dimensions}</span></p>
           <div className="commerce-card-pricing">
             <div className="commerce-card-costs">

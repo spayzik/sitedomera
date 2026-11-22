@@ -1,35 +1,20 @@
-.catalog-facts {
-  position: relative;
-  border-top: 1px solid var(--line);
-  background: rgba(13, 10, 8, .78);
-  backdrop-filter: blur(12px);
+.catalog-facts.catalog-page-metrics { position: relative; }
+.catalog-facts-grid { margin-block: 0; }
+.catalog-facts-grid > div { display: grid; gap: .25rem; }
+.catalog-facts dt { color: rgba(255, 255, 255, .55); font-size: .7rem; text-transform: uppercase; letter-spacing: .15em; display: inline-flex; align-items: center; gap: .4rem; }
+.catalog-facts dd { grid-row: 1; margin: 0; font: 500 1.35rem/1 var(--font-num); letter-spacing: -.02em; }
+
+.home-overview-inner dl { display: flex; justify-content: space-between; flex: 1; gap: 2rem; margin: 0; }
+.home-overview dd { margin: 0; }
+.home-overview .btn-explore { min-height: 44px; }
+@media (min-width: 981px) {
+  .home-overview-inner dl { flex: 0 1 72%; }
 }
-
-.catalog-facts-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  column-gap: 1.5rem;
-  row-gap: .9rem;
-  margin-block: 0;
-  padding-block: clamp(.85rem, 2.5vw, 1.7rem);
+@media (max-width: 980px) {
+  .home-overview-inner dl { width: 100%; flex-direction: column; gap: .8rem; }
+  .home-overview .btn-explore { margin-right: 0; }
 }
-
-.catalog-facts-grid > div { display: grid; gap: .28rem; }
-.catalog-facts dt { color: var(--muted); font-size: .68rem; text-transform: uppercase; letter-spacing: .1em; }
-.catalog-facts dd { grid-row: 1; margin: 0; color: var(--ink); font: 500 clamp(1.02rem, 2.1vw, 1.45rem)/1.2 var(--font-num); }
-
-@media (max-width: 640px) {
-  .catalog-facts-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .catalog-facts dt { letter-spacing: .055em; }
-}
-
-.home-overview-inner, .home-overview-inner dl { display: grid; gap: .85rem 1.5rem; }
-.home-overview-inner { grid-template-columns: 3fr minmax(max-content, 1fr); align-items: center; padding-block: clamp(.8rem, 2.2vw, 1.55rem); }
-.home-overview-inner dl { grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0; }
-.home-overview dd { margin-top: .35rem; font: 500 clamp(.82rem, 1.3vw, 1rem)/1.35 var(--font); }
-.home-overview a { display: inline-flex; min-height: 44px; gap: .65rem; align-items: center; justify-self: end; color: var(--accent-light); font-size: .84rem; }
-@media (max-width: 640px) {
-  .home-overview-inner, .home-overview-inner dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .home-overview-inner dl { display: contents; }
-  .home-overview a { grid-column: 2; grid-row: 2; justify-self: start; }
+@media (max-width: 768px) {
+  .catalog-facts-grid > div { display: flex; flex-direction: row-reverse; justify-content: space-between; align-items: baseline; width: 100%; }
+  .catalog-facts dt { letter-spacing: .1em; text-align: right; }
 }

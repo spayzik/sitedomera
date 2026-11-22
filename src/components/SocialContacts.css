@@ -4,6 +4,7 @@
 .social-contact:hover { color: var(--accent-light); }
 .social-contact:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 2px; }
 .social-contacts-header { flex-wrap: nowrap; }
+@media (min-width: 1025px) { .social-contacts-header .social-contact { min-height: 28px; } }
 .social-contacts-header .social-contact, .social-contacts-footer .social-contact {
   justify-content: center; min-width: 40px; gap: .45rem; font-size: .82rem; white-space: nowrap;
 }

@@ -3,19 +3,11 @@
   object-position: center 42%;
 }
 
-.hero-commerce .hero-arch-veil {
-  background: linear-gradient(100deg, rgba(12, 9, 6, .76), rgba(12, 9, 6, .30) 60%, transparent),
-    linear-gradient(to top, rgba(12, 9, 6, .60), transparent 35%);
-}
-
-.hero-commerce .hero-arch-content { padding-bottom: 2.5rem; }
-.hero-commerce .hero-lead { max-width: 40ch; }
-
 .hero-commerce-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: .75rem;
-  margin-top: clamp(1.25rem, 4vw, 2.25rem);
+  gap: 1rem;
+  margin-top: clamp(1.25rem, 4vw, 2.5rem);
 }
 
 .hero-commerce .hero-commerce-actions .btn { min-height: 48px; }
@@ -34,20 +26,6 @@
   margin-top: .45rem;
   text-decoration: underline;
   text-underline-offset: .28em;
-}
-
-.hero-commerce .hero-arch-bottom {
-  background: rgba(13, 10, 8, .86);
-  backdrop-filter: none;
-}
-
-.hero-commerce-facts {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: .25rem 1.5rem;
-  min-height: 56px;
-  font-size: .9rem;
 }
 
 .hero-commerce :is(a, button):focus-visible,
@@ -126,7 +104,6 @@
 
 @media (max-width: 768px) {
   .hero-commerce .hero-arch-content { padding-bottom: 1.6rem; }
-  .hero-commerce-facts { font-size: .75rem; }
   .interiors-commerce .interior-previews { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .showroom-commerce-grid { grid-template-columns: minmax(0, 1fr); }
 }

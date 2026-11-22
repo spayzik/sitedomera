@@ -2,12 +2,13 @@ import { storefrontImageSize } from '../data/storefrontImageSizes'
 import { useContext, useEffect, useState } from 'react'
 import { ArrowDown, SlidersHorizontal } from 'lucide-react'
 import { categoryPath, productPath, seoPages, type SeoPage } from '../data/seoRoutes'
-import { collections, products } from '../data/products'
+import { collections, products, type Product } from '../data/products'
 import { useCart } from '../context/CartContext'
 import { InventoryContext } from '../context/inventoryState'
 import { availabilityFor } from '../lib/inventory'
 import { HeroTitle } from '../components/HeroTitle'
 import { CatalogFacts } from '../components/CatalogFacts'
+import { ProductModal } from '../components/ProductModal'
 import { CatalogCard } from '../components/CatalogCard'
 import { CatalogFilterControls } from '../components/CatalogFilterControls'
 import { catalogResults, parseCatalogFilters, writeCatalogFilters, type CatalogFilters } from '../lib/catalogFilters'
@@ -21,6 +22,7 @@ export function CatalogPage({ page, base }: { page: CatalogView; base: string })
   const stock = useContext(InventoryContext)
   const [filters, setFilters] = useState(() => parseCatalogFilters(new URLSearchParams(), category))
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const [selected, setSelected] = useState<Product | null>(null)
 
   useEffect(() => {
     const sync = () => setFilters(parseCatalogFilters(new URLSearchParams(location.search), category))
@@ -46,13 +48,13 @@ export function CatalogPage({ page, base }: { page: CatalogView; base: string })
   const total = category ? products.filter(product => product.categoryId === category).length : products.length
 
   return <>
-    <section className="catalog-page-hero" id="catalog">
+    <section className={page.kind === 'catalog' ? 'catalog-page-hero catalog-page-hero-index' : 'catalog-page-hero'} id="catalog">
       <div className="catalog-page-hero-bg">
         <img src={base + 'catalog/hero/hero-catalog.webp'} {...storefrontImageSize('catalog/hero/hero-catalog.webp')} alt="" fetchPriority="high" />
         <div className="catalog-page-veil" />
       </div>
       <div className="container catalog-page-content">
-        <p className="hero-eyebrow hero-enter-eyebrow">Коллекция ДЕКОРАЙ</p>
+        <p className="hero-eyebrow hero-enter-eyebrow">{page.kind === 'catalog' ? 'Декорай · Full Catalog' : 'Коллекция ДЕКОРАЙ'}</p>
         <HeroTitle lines={page.kind === 'catalog' ? ['Каталог', 'материалов'] : [page.heading]} />
         <p className="catalog-page-lead hero-enter-lead">{page.kind === 'category' ? page.intro : page.description}</p>
         <div className="catalog-page-cta hero-enter-actions">
@@ -82,7 +84,7 @@ export function CatalogPage({ page, base }: { page: CatalogView; base: string })
         </>}
         <div className="grid-arch catalog-page-grid" data-catalog-list="">
           {list.map(product => <div key={product.id} data-catalog-product={product.id}>
-            <CatalogCard product={product} base={base} detailsHref={base + productPath(product).slice(1)} onAdd={add}
+            <CatalogCard product={product} base={base} detailsHref={base + productPath(product).slice(1)} onDetails={setSelected} onAdd={add}
               category={collections.find(item => item.id === product.categoryId)?.name} />
           </div>)}
         </div>
@@ -105,5 +107,6 @@ export function CatalogPage({ page, base }: { page: CatalogView; base: string })
         </div>
       </div>
     </section>
+    <ProductModal selected={selected} base={base} onSelect={setSelected} onClose={() => setSelected(null)} />
   </>
 }

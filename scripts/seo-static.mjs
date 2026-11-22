@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
 import { CONTACTS, collections, products, faq } from '../src/data/products.ts'
 import { productDescription } from '../src/lib/productPresentation.ts'
-import { canonicalUrl, categoryPath, productPath, seoPages } from '../src/data/seoRoutes.ts'
+import { canonicalUrl, categoryPath, productPath, seoAssetPrefix, seoPages } from '../src/data/seoRoutes.ts'
 
 export const escape = value => String(value).replace(/[&<>"']/g, character => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
@@ -16,7 +16,7 @@ function crumbs(page) {
     const category = categoryPath(page.product.categoryId)
     return [['/', CONTACTS.brand], ['/catalog/', 'Каталог'], [category, pageFor(category).heading], [page.path, page.heading]]
   }
-  if (page.kind === 'article') return [['/', CONTACTS.brand], ['/stati/', 'Статьи'], [page.path, page.heading]]
+  if (page.kind === 'article') return [['/', CONTACTS.brand], ['/news/', 'Статьи'], [page.path, page.heading]]
   return [['/', CONTACTS.brand], [page.path, page.heading]]
 }
 
@@ -89,6 +89,14 @@ export function renderSeoPage(page, base, assets, ui) {
     '<meta property="og:url" content="' + escape(canonicalUrl(page.path)) + '"><meta property="og:image" content="' + escape(canonicalUrl('/' + socialImage(page))) + '">' +
     '<meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="' + escape(canonicalUrl('/' + socialImage(page))) + '">' +
     jsonLd(page) + '</head><body>' + renderRoot(page.path, base, ui) + script + '</body></html>'
+}
+
+export function renderNewsRedirect(from, to) {
+  const destination = escape(seoAssetPrefix(from) + to.slice(1))
+  return '<!doctype html><html lang="ru"><head><meta charset="utf-8">' +
+    '<meta name="robots" content="noindex, follow"><meta http-equiv="refresh" content="0;url=' + destination + '">' +
+    '<link rel="canonical" href="' + escape(canonicalUrl(to)) + '"><title>Страница переехала</title>' +
+    '</head><body><a href="' + destination + '">Открыть статьи</a></body></html>'
 }
 
 export function renderSitemap() {

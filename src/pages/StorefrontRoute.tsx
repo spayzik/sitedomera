@@ -47,7 +47,7 @@ export function StorefrontRoute({ page, base, path }: { page?: SeoPage; base: st
 
   return <div className="container page-section">
     <nav className="page-crumbs" aria-label="Хлебные крошки"><a href={base}>ДЕКОРАЙ</a>
-      {page.kind === 'article' && <a href={base + 'stati/'}>Статьи</a>}<span aria-current="page">{page.heading}</span>
+      {page.kind === 'article' && <a href={base + 'news/'}>Статьи</a>}<span aria-current="page">{page.heading}</span>
     </nav>
     <header className="page-intro">
       <h1>{page.heading}</h1><p className="lead">{page.description}</p>
@@ -75,9 +75,9 @@ export function StorefrontRoute({ page, base, path }: { page?: SeoPage; base: st
     <div className="page-links">
       {copy?.links?.filter(({ path }) => path !== action?.[0] && !(action && path === '/#lead') && !(venue && path === '/#showroom'))
         .map(link => <a key={link.path} href={href(base, link.path)}>{link.label}</a>)}
-      {page.kind === 'article' && <a href={base + 'stati/'}>Все статьи</a>}
-      {page.kind === 'article' && page.path !== '/stati/kak-sravnit-stoimost-otdelki/' &&
-        <a href={base + 'stati/kak-sravnit-stoimost-otdelki/'}>Сравнить стоимость материалов</a>}
+      {page.kind === 'article' && <a href={base + 'news/'}>Все статьи</a>}
+      {page.kind === 'article' && page.path !== '/news/kak-sravnit-stoimost-otdelki/' &&
+        <a href={base + 'news/kak-sravnit-stoimost-otdelki/'}>Сравнить стоимость материалов</a>}
     </div>
   </div>
 }

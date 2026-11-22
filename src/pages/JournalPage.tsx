@@ -12,7 +12,7 @@ const covers: Record<string, readonly [string, string, string?]> = {
   'stenovye-paneli-dlya-kommercheskih-pomescheniy': ['Коммерческие пространства', 'catalog/rooms/interior-metal.webp', 'catalog/rooms/interior-metal-480.webp'],
 }
 
-const featuredPath = '/stati/kak-vybrat-fakturu/'
+const featuredPath = '/news/kak-vybrat-fakturu/'
 const articles = seoPages.filter(page => page.kind === 'article')
 
 function ArticleCard({ article, base, featured = false }: { article: SeoPage; base: string; featured?: boolean }) {

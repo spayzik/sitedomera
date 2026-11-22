@@ -14,13 +14,13 @@ const links = [
   { href: '#interiors', label: 'Интерьеры' },
   { href: 'montazh/', label: 'Монтаж' },
   { href: 'showroom/', label: 'Шоурум' },
-  { href: 'stati/', label: 'Статьи' },
+  { href: 'news/', label: 'Статьи' },
 ]
 
 export function Header({ base = './', path = '/' }: { base?: string; path?: string }) {
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
-  const selected = path.startsWith('/catalog/') ? 'catalog/' : path.startsWith('/stati/') ? 'stati/' : path.slice(1)
+  const selected = path.startsWith('/catalog/') ? 'catalog/' : path.startsWith('/news/') ? 'news/' : path.slice(1)
   const href = (target: string) => path === '/' && target.startsWith('#') ? target : base + target
   const { count, setOpen } = useCart()
   const [scrolled, setScrolled] = useState(false)
