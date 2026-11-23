@@ -49,7 +49,7 @@ export function CatalogPage({ page, base }: { page: CatalogView; base: string })
 
   const catalogHero = 'catalog/hero/hero-catalog.webp'
   const categoryHero = category ? 'catalog/hero/collection-' + category + '.webp' : catalogHero
-  const mobileHero = category ? 'catalog/categories/carousel-2026-' + category + '.webp' : null
+  const mobileHero = category && ['fabric', 'profiles'].includes(category) ? 'catalog/categories/carousel-2026-' + category + '.webp' : null
 
   return <>
     <section className={page.kind === 'catalog' ? 'catalog-page-hero catalog-page-hero-index' : 'catalog-page-hero'} id="catalog">
