@@ -5,7 +5,14 @@ $archive = [IO.Path]::GetFullPath($OutputPath)
 if (Test-Path -LiteralPath $archive) { throw 'Release archive already exists' }
 
 Push-Location -LiteralPath (Split-Path -Parent $PSScriptRoot)
+$previousEpoch = $env:SOURCE_DATE_EPOCH
 try {
+    if (!$env:SOURCE_DATE_EPOCH) {
+        $env:SOURCE_DATE_EPOCH = git log -1 --format='%ct'
+        if ($LASTEXITCODE) { throw 'Supply SOURCE_DATE_EPOCH outside a Git checkout' }
+    }
+    $releaseStamp = [DateTimeOffset]::FromUnixTimeSeconds([long]$env:SOURCE_DATE_EPOCH)
+    if ($releaseStamp.Year -lt 1980 -or $releaseStamp.Year -gt 2107) { throw 'Release timestamp is out of range for ZIP' }
     node scripts/build-profile.mjs production
     if ($LASTEXITCODE) { throw 'Production build failed verification' }
     $dist = (Resolve-Path 'dist').Path
@@ -31,10 +38,13 @@ try {
     try {
         foreach ($name in $files.Keys) {
             $expected[$name] = (Get-FileHash -LiteralPath $files[$name]).Hash
-            $null = [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $files[$name], $name, [IO.Compression.CompressionLevel]::Optimal)
+            $entry = [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $files[$name], $name, [IO.Compression.CompressionLevel]::Optimal)
+            $entry.LastWriteTime = $releaseStamp
         }
         $expected[$catalogEntry] = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($catalogBytes))
-        $stream = $zip.CreateEntry($catalogEntry).Open()
+        $entry = $zip.CreateEntry($catalogEntry)
+        $entry.LastWriteTime = $releaseStamp
+        $stream = $entry.Open()
         try { $stream.Write($catalogBytes, 0, $catalogBytes.Length) } finally { $stream.Dispose() }
     } finally { $zip.Dispose() }
 
@@ -50,5 +60,6 @@ try {
     } finally { $zip.Dispose() }
     'Verified {0} entries. SHA-256 {1}' -f $expected.Count, (Get-FileHash -LiteralPath $archive).Hash.ToLowerInvariant()
 } finally {
+    $env:SOURCE_DATE_EPOCH = $previousEpoch
     Pop-Location
 }

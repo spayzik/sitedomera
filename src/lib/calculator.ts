@@ -1,4 +1,5 @@
 import type { Product } from '../data/products.ts'
+import { MAX_QTY } from './cart.ts'
 
 export function sheetArea(product: Product | null): number {
   if (!product || !['panel', 'flexible_stone'].includes(product.kind)) return 0
@@ -83,4 +84,14 @@ export function openingsArea(walls: readonly WallDimensions[], extraArea: string
   const area = decimal(extraArea) + walls.reduce((sum, opening) =>
     sum + decimal(opening.length) * decimal(opening.height), 0)
   return area <= 10_000 ? area : null
+}
+
+export function calculateLinearPieces(product: Product | null, length: string, count: string): number | null {
+  if (!product || (product.kind !== 'slat' && product.kind !== 'profile') || product.unit !== 'шт') return null
+  if (!validMeasure(length) || !/^\d+$/.test(count.trim())) return null
+  const meters = decimal(length)
+  const quantity = decimal(count)
+  if (meters <= 0 || meters > product.dimensions.lengthMm / 1000 || quantity < 1 || quantity > MAX_QTY) return null
+  // Plan each visible run as a single unjoined piece and leave offcuts unallocated.
+  return quantity
 }

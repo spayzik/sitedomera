@@ -27,6 +27,20 @@ export interface Inventory {
 export const STOCK_MAX_AGE_MS = 45 * 60_000
 const MAX_CLOCK_SKEW_MS = 2 * 60_000
 
+export function stagingInventoryUrl(value: string | undefined, productionHostname: string): string | null {
+  if (!value) return null
+  try {
+    const endpoint = new URL(value)
+    const hostname = endpoint.hostname.replace(/\.$/, '')
+    if (endpoint.protocol !== 'https:' || endpoint.pathname !== '/generated/inventory.json' ||
+        endpoint.username || endpoint.password || endpoint.search || endpoint.hash ||
+        hostname === productionHostname || hostname.endsWith('.' + productionHostname)) return null
+    return endpoint.href
+  } catch {
+    return null
+  }
+}
+
 function record(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
 }

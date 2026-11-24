@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { calculatePanels, calculateProjectPanels, openingsArea, sheetArea, sheetPricePerSquareMeter } from '../src/lib/calculator.ts'
+import { calculateLinearPieces, calculatePanels, calculateProjectPanels, openingsArea, sheetArea, sheetPricePerSquareMeter } from '../src/lib/calculator.ts'
 import { products } from '../src/data/products.ts'
 const material = products.find(p => p.sku === 'C807601-36')
 
@@ -80,4 +80,15 @@ test('separate windows and doors reduce the sheet quote without silently accepti
   assert.equal(calculateProjectPanels([wall], openingsArea(cutouts, '0,5'), '10', material).sheets, 3)
   assert.equal(calculateProjectPanels([wall], '0', '10', material).sheets, 4)
   assert.equal(calculateProjectPanels([wall], openingsArea([{ length: '1', height: '' }], '0'), '10', material).valid, false)
+})
+
+test('measured rail and profile runs use real stock length and selling unit', () => {
+  const rail = products.find(p => p.kind === 'slat')
+  const profile = products.find(p => p.kind === 'profile')
+  assert.equal(calculateLinearPieces(rail, '2,8', '4'), 4)
+  assert.equal(calculateLinearPieces(profile, '3', '2'), 2)
+  assert.equal(calculateLinearPieces(profile, '3,01', '2'), null)
+  assert.equal(calculateLinearPieces(material, '2.8', '2'), null)
+  for (const count of ['0', '2.5', '10000', '1e2']) assert.equal(calculateLinearPieces(profile, '2', count), null)
+  for (const run of ['', '0', 'NaN', '0x10']) assert.equal(calculateLinearPieces(profile, run, '2'), null)
 })

@@ -22,6 +22,14 @@ function productThickness(product: (typeof products)[number]) {
   return product.kind === 'flexible_stone' ? undefined : product.thicknessMm
 }
 
+export function publicCatalogQuery(value: string): string {
+  const query = normalizeSearch(value)
+  if (!query) return ''
+  const sku = compactSku(value)
+  return products.some(product => normalizeSearch(product.name).includes(query) ||
+    (product.sku && compactSku(product.sku).includes(sku))) ? value.normalize('NFC').trim().replace(/\s+/g, ' ') : ''
+}
+
 export function catalogFilterOptions(category: Category) {
   const thicknesses = new Set(inCategory(category).flatMap(product => {
     const value = productThickness(product)
@@ -49,7 +57,7 @@ export function writeCatalogFilters(previous: URLSearchParams, filters: CatalogF
   const params = new URLSearchParams(previous)
   const values = {
     category: fixedCategory || filters.category === 'all' ? '' : filters.category,
-    q: filters.query,
+    q: publicCatalogQuery(filters.query),
     sort: filters.sort,
     stock: filters.stock,
     thickness: filters.thickness,

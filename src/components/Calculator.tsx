@@ -2,16 +2,17 @@ import { StoreSelect } from './StoreSelect'
 import { contactLinks } from '../lib/contactLinks'
 import { SocialContacts } from './SocialContacts'
 import { LeadAction } from './LeadProvider'
+import { LinearMaterialFields, type LinearPlan } from './LinearMaterialFields'
 import { SheetUnitPrice } from './SheetUnitPrice'
 import { StockAvailability } from './StockAvailability'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
-import { sheetProducts, CONTACTS, formatDimensions, type Product } from '../data/products'
+import { linearProducts, sheetProducts, CONTACTS, formatDimensions, type Product } from '../data/products'
 import { useCart } from '../context/CartContext'
 import { Counter } from './Counter'
 import { ArrowRight, Plus, X } from 'lucide-react'
 import { buildTelegramDraftUrl, formatCalculatorTelegramMessage } from '../lib/telegramLink'
-import { calculateProjectPanels, calculateWallLayout, calculatorWall, openingsArea, sheetArea, type WallDimensions } from '../lib/calculator'
+import { calculateLinearPieces, calculateProjectPanels, calculateWallLayout, calculatorWall, openingsArea, sheetArea, type WallDimensions } from '../lib/calculator'
 import { trackAnalyticsGoal } from '../lib/analytics'
 import type { LeadCalculation } from '../lib/leadIntents'
 
@@ -24,12 +25,16 @@ function whatsappCalculatorDraft(message: string) {
   return url.href
 }
 
+const quantityLabel = (product: Product, quantity: number) => quantity + (sheetArea(product) ? ' лист.' : ' шт.')
+
 type MaterialEstimate = { panel: Product | null; sheets: number; valid: boolean; calculation: LeadCalculation | null }
 
 export function Calculator({ standalone = false, base = './' }: { standalone?: boolean; base?: string } = {}) {
   const { add, items } = useCart()
   const [groups, setGroups] = useState([0])
   const nextGroup = useRef(1)
+  const [linearPlans, setLinearPlans] = useState<LinearPlan[]>([])
+  const nextLinearPlan = useRef(0)
   const [estimates, setEstimates] = useState<Record<number, MaterialEstimate>>({})
   const report = useCallback((id: number, estimate: MaterialEstimate) => {
     setEstimates(previous => ({ ...previous, [id]: estimate }))
@@ -40,35 +45,53 @@ export function Calculator({ standalone = false, base = './' }: { standalone?: b
   }
 
   const lines = new Map<string, { product: Product; quantity: number }>()
-  const complete = groups.every(id => {
+  const accessoryLines = new Map<string, { product: Product; quantity: number }>()
+  const sheetComplete = groups.every(id => {
     const result = estimates[id]
     return result?.panel && result.valid && result.sheets > 0
   })
-  if (complete) {
+  const linearComplete = linearPlans.every(plan => {
+    const product = linearProducts.find(item => item.id === plan.productId)
+    const quantity = calculateLinearPieces(product ?? null, plan.length, plan.runs)
+    if (!product || quantity === null) return false
+    accessoryLines.set(product.id, { product, quantity: (accessoryLines.get(product.id)?.quantity ?? 0) + quantity })
+    return true
+  })
+  const accessoriesOnly = linearPlans.length > 0 && groups.length === 1 && !estimates[groups[0]]?.panel
+  const complete = linearComplete && (sheetComplete || accessoriesOnly)
+  if (complete && sheetComplete) {
     for (const id of groups) {
       const { panel, sheets } = estimates[id]
       if (!panel) continue
       lines.set(panel.id, { product: panel, quantity: (lines.get(panel.id)?.quantity ?? 0) + sheets })
     }
   }
-  const order = [...lines.values()]
-  const calculation = complete ? groups.flatMap(id => {
+  const accessories = complete ? [...accessoryLines.values()] : []
+  const order = [...lines.values(), ...accessories]
+  const calculation = complete && sheetComplete ? groups.flatMap(id => {
     const estimate = estimates[id].calculation
     return estimate ? [estimate] : []
   }) : []
   const total = order.reduce((sum, line) => sum + line.product.priceRub * line.quantity, 0)
   const draftLines = order.map(({ product, quantity }) =>
     product.name + (product.sku && product.sku !== product.name ? ' · ' + product.sku : '') +
-      ' · ' + quantity + ' лист. · ' + (product.priceRub * quantity).toLocaleString('ru-RU') + ' ₽')
+      ' · ' + quantityLabel(product, quantity) + ' · ' + (product.priceRub * quantity).toLocaleString('ru-RU') + ' ₽')
   const summary = order.length > 0 ? draftLines.join('\n') + '\nИтого: ' +
     total.toLocaleString('ru-RU') + ' ₽' : ''
-  const combinedDraft = summary ? 'Здравствуйте! Хочу обсудить расчёт материалов ДЕКОРАЙ.\n\n' + summary : ''
+  const cuts = complete ? linearPlans.map(plan => {
+    const product = linearProducts.find(item => item.id === plan.productId)
+    return product?.name + ': ' + plan.runs + ' × ' + plan.length + ' м'
+  }).join('; ') : ''
+  const combinedDraft = summary ? 'Здравствуйте! Хочу обсудить расчёт материалов ДЕКОРАЙ.\n\n' + summary +
+    (cuts ? '\n\nОтрезки по плану: ' + cuts : '') : ''
+  const accessoryItems = accessories.map(({ product, quantity }) => ({ id: product.id, qty: quantity }))
   const started = useRef(false)
   const reportStart = () => {
     if (started.current) return
     started.current = true
     trackAnalyticsGoal('calculator_start')
   }
+  const validLineQuantities = order.every(({ quantity }) => quantity <= MAX_QTY)
   const fits = order.every(({ product, quantity }) =>
     quantity + (items.find(item => item.product.id === product.id)?.qty ?? 0) <= MAX_QTY)
 
@@ -92,22 +115,40 @@ export function Calculator({ standalone = false, base = './' }: { standalone?: b
           const id = nextGroup.current++
           setGroups(previous => [...previous, id])
         }}><Plus size={16} aria-hidden="true" /> Добавить другой материал</button>
-        {groups.length > 1 && <section className="calc-project-total">
+        {linearPlans.length > 0 && <section className="calc-project-total">
+          <h2>Рейки и профили по вашему плану</h2>
+          <p>Укажите длину и количество одинаковых отрезков. Считаем одну целую деталь на отрезок, без повторного использования обрезков. Совместимость и стыки нужно сверить перед заказом.</p>
+          {linearPlans.map((plan, index) => <LinearMaterialFields key={plan.id} plan={plan} index={index + 1}
+            onChange={value => {
+              reportStart()
+              setLinearPlans(previous => previous.map(row => row.id === plan.id ? { ...row, ...value } : row))
+            }}
+            onRemove={() => setLinearPlans(previous => previous.filter(row => row.id !== plan.id))} />)}
+        </section>}
+        <button type="button" className="secondary-action" disabled={linearPlans.length >= 10} onClick={() => {
+          const id = nextLinearPlan.current++
+          setLinearPlans(previous => [...previous, { id, productId: '', length: '', runs: '1' }])
+        }}><Plus size={16} aria-hidden="true" /> Добавить рейку или профиль</button>
+        {(groups.length > 1 || linearPlans.length > 0) && <section className="calc-project-total">
           <h2>Итого по материалам</h2>
           {complete ? <>
             {order.map(({ product, quantity }) => <div key={product.id} className="calc-row">
-              <span>{product.name} · {quantity} лист.</span><strong>{(product.priceRub * quantity).toLocaleString('ru-RU')} ₽</strong>
+              <span>{product.name} · {quantityLabel(product, quantity)}</span><strong>{(product.priceRub * quantity).toLocaleString('ru-RU')} ₽</strong>
             </div>)}
             <div className="calc-row total"><span>Стоимость материалов</span><strong>{total.toLocaleString('ru-RU')} ₽</strong></div>
-          </> : <p>Выберите материал и укажите размеры для каждой группы.</p>}
+          </> : <p>Выберите материалы и заполните размеры и количество для каждой добавленной группы.</p>}
           {!fits && <p role="status">С учётом подборки превышен лимит {MAX_QTY.toLocaleString('ru-RU')} единиц одного товара.</p>}
           <button type="button" className="btn btn-primary interactive" disabled={!complete || !fits}
             onClick={() => { if (complete && fits) order.forEach(({ product, quantity }) => add(product, quantity)) }}>
             Добавить все материалы в подборку <ArrowRight size={16} aria-hidden="true" />
           </button>
-          {calculation.length === groups.length && <div className="calc-followup">
-            <LeadAction intent="calculation" className="secondary-action" context="Сводный расчёт по нескольким материалам"
-              details={{ calculation }}>Отправить весь расчёт в заявку</LeadAction>
+          {complete && validLineQuantities && order.length > 0 && <div className="calc-followup">
+            {linearPlans.length > 0 && <p>Клей и работы в стоимость не включены. Расход клея зависит от основания и инструкции к материалу.</p>}
+            <LeadAction intent="calculation" className="secondary-action"
+              context={cuts ? 'Отрезки по плану: ' + cuts : 'Сводный расчёт по нескольким материалам'}
+              details={{ ...(calculation.length ? { calculation } : {}), ...(accessoryItems.length ? { items: accessoryItems } : {}) }}>
+              Отправить весь расчёт в заявку
+            </LeadAction>
             <SocialContacts placement="product" base={base} drafts={{
               telegram: buildTelegramDraftUrl(CONTACTS.telegram, combinedDraft),
               whatsapp: whatsappCalculatorDraft(combinedDraft),

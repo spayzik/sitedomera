@@ -320,3 +320,15 @@ test('confirmed individual description takes priority over safe category fallbac
   assert.equal(productDescription({ categoryId: 'profiles', description: 'Соединительный — бронза' }), 'Соединительный — бронза')
   assert.match(productDescription({ categoryId: 'fabric', description: '  ' }), /тканевой фактурой/)
 })
+
+
+test('catalog keeps shareable SKUs and filters but removes arbitrary search input from URLs', async () => {
+  const { catalogResults, parseCatalogFilters, writeCatalogFilters } = await import('../src/lib/catalogFilters.ts')
+  const safe = parseCatalogFilters(new URLSearchParams('q=A9001&sort=price-asc'))
+  assert.equal(writeCatalogFilters(new URLSearchParams(), safe).get('q'), 'A9001')
+  assert.equal(catalogResults(safe).some(product => product.sku === 'A9001'), true)
+  const original = new URLSearchParams('q=person%40example.invalid&sort=price-asc&stock=unknown')
+  const filters = parseCatalogFilters(original)
+  assert.deepEqual(catalogResults(filters), [])
+  assert.equal(writeCatalogFilters(original, filters).toString(), 'sort=price-asc&stock=unknown')
+})

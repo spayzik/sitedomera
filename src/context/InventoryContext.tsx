@@ -1,12 +1,17 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { products } from '../data/products'
-import { parseInventory } from '../lib/inventory'
+import { CONTACTS, products } from '../data/products'
+import { parseInventory, stagingInventoryUrl } from '../lib/inventory'
 import { InventoryContext, initialInventoryState, type StockState } from './inventoryState'
 
 const REFRESH_MS = 2 * 60_000
 const defaultSnapshotUrl = import.meta.env.BASE_URL + 'generated/inventory.json'
 
+const remotePreviewUrl = import.meta.env.VITE_DEKORAY_PREVIEW === '1'
+  ? stagingInventoryUrl(import.meta.env.VITE_DEKORAY_STAGING_STOCK_URL, CONTACTS.hostname)
+  : null
+
 export function InventoryProvider({ children, snapshotUrl = defaultSnapshotUrl }: { children: ReactNode; snapshotUrl?: string }) {
+  const endpoint = remotePreviewUrl ?? snapshotUrl
   const [state, setState] = useState(initialInventoryState)
   const [expired, setExpired] = useState(false)
 
@@ -21,8 +26,8 @@ export function InventoryProvider({ children, snapshotUrl = defaultSnapshotUrl }
       const timeout = window.setTimeout(() => request.abort(), 10_000)
       let unavailable: StockState['unavailable'] = 'api_unavailable'
       try {
-        const response = await fetch(snapshotUrl, {
-          cache: 'no-store', credentials: 'same-origin', redirect: 'error',
+        const response = await fetch(endpoint, {
+          cache: 'no-store', credentials: remotePreviewUrl ? 'omit' : 'same-origin', redirect: 'error',
           signal: request.signal,
         })
         if (!response.ok) throw new Error('Inventory unavailable')
@@ -48,7 +53,7 @@ export function InventoryProvider({ children, snapshotUrl = defaultSnapshotUrl }
       window.clearInterval(interval)
       document.removeEventListener('visibilitychange', refresh)
     }
-  }, [snapshotUrl])
+  }, [endpoint])
 
   const expiresAt = state.inventory?.expiresAt
   useEffect(() => {

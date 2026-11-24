@@ -449,8 +449,18 @@
   .page-crumbs > * + *::before { margin-right: .55rem; }
   .product-page .page-crumbs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; padding-block: .2rem; }
   .product-page .page-crumbs > * { flex: 0 0 auto; white-space: nowrap; }
+  .showroom-page h1 {
+    font-size: clamp(1.9rem, 8.8vw, 2.45rem);
+    min-block-size: 2lh;
+  }
+  .showroom-page .lead { min-block-size: 4lh; }
+  .showroom-page .showroom-commerce-manager h3 { font-size: 1.45rem; }
   .reading-layout, .material-layout { gap: 1.1rem; }
   .installation-service-process, .journal-list { margin-top: var(--section-gap); }
+}
+
+@media (max-width: 370px) {
+  .showroom-page .showroom-commerce-manager p { min-block-size: 4lh; }
 }
 
 .calc-project-groups { display: grid; gap: clamp(1.25rem,3vw,2.5rem); }

@@ -5,13 +5,13 @@ import { test } from 'node:test'
 
 const counter = 114347066
 const source = await readFile(new URL('../src/lib/analytics.ts', import.meta.url), 'utf8')
-const js = stripTypeScriptTypes(source.replace(
-  'import.meta.env.VITE_YM_ID',
-  JSON.stringify(String(counter)),
-).replace(/import\.meta\.env\.VITE_[A-Z_]+/g, 'undefined'))
-const moduleUrl = 'data:text/javascript;base64,' + Buffer.from(js).toString('base64')
+function moduleUrlFor(env) {
+  const js = stripTypeScriptTypes(source.replace(/import\.meta\.env\.(VITE_[A-Z_]+)/g,
+    (_, key) => JSON.stringify(env[key]) ?? 'undefined'))
+  return 'data:text/javascript;base64,' + Buffer.from(js).toString('base64')
+}
 
-async function browserHarness(t) {
+async function browserHarness(t, env = { VITE_YM_ID: String(counter) }) {
   const scriptNodes = []
   const calls = []
   const storage = new Map()
@@ -30,6 +30,7 @@ async function browserHarness(t) {
       const url = new URL(href, origin)
       this.protocol = url.protocol
       this.hostname = url.hostname
+      this.origin = url.origin
     }
     closest() { return this }
   }
@@ -37,6 +38,8 @@ async function browserHarness(t) {
     window: browser,
     document: {
       referrer: 'https://search.example/?q=private',
+      getElementById: () => null,
+      querySelector: () => null,
       createElement: () => ({}),
       head: { appendChild: (node) => scriptNodes.push(node) },
     },
@@ -55,7 +58,7 @@ async function browserHarness(t) {
       else delete globalThis[key]
     })
   }
-  const analytics = await import(moduleUrl + '#' + encodeURIComponent(t.name))
+  const analytics = await import(moduleUrlFor(env) + '#' + encodeURIComponent(t.name))
   function finishScript() {
     calls.push(...browser.ym.a)
     browser.ym = (...args) => calls.push(args)
@@ -75,6 +78,8 @@ async function browserHarness(t) {
 test('consent controls initialization, SPA hits and fixed goal identifiers', async (t) => {
   const { analytics, browser, calls, finishScript, origin, reloads, scriptNodes, TestLink } = await browserHarness(t)
   assert.equal(analytics.readAnalyticsConsent(), 'unknown')
+  analytics.startAnalytics('unknown')
+  analytics.startAnalytics('rejected')
   analytics.trackAnalyticsPage()
   analytics.trackAnalyticsGoal('lead_submit')
   assert.equal(scriptNodes.length, 0)
@@ -84,8 +89,8 @@ test('consent controls initialization, SPA hits and fixed goal identifiers', asy
   assert.equal(analytics.readAnalyticsConsent(), 'accepted')
   browser.location.pathname = '/catalog/'
   browser.location.search = '?phone=private&utm_source=yandex&utm_medium=cpc&utm_campaign=123&utm_term=private'
-  analytics.startAnalytics()
-  analytics.startAnalytics()
+  analytics.startAnalytics('accepted')
+  analytics.startAnalytics('accepted')
   analytics.trackAnalyticsGoal('lead_submit')
   assert.equal(scriptNodes.length, 1)
   assert.equal(scriptNodes[0].src, 'https://mc.yandex.ru/metrika/tag.js')
@@ -104,6 +109,7 @@ test('consent controls initialization, SPA hits and fixed goal identifiers', asy
   browser.location.pathname = '/politika-konfidencialnosti/'
   analytics.trackAnalyticsPage()
   assert.deepEqual(calls[3], [counter, 'hit', origin + '/politika-konfidencialnosti/', { referer: origin + '/catalog/' }])
+  analytics.trackAnalyticsLink({ target: new TestLink('https://t.me/example?text=private'), defaultPrevented: true })
   analytics.trackAnalyticsLink({ target: new TestLink('https://t.me/example?text=private') })
   analytics.trackAnalyticsLink({ target: new TestLink('tel:+70000000001') })
   analytics.trackAnalyticsLink({ target: new TestLink('https://t.me.example.org/') })
@@ -112,8 +118,10 @@ test('consent controls initialization, SPA hits and fixed goal identifiers', asy
   assert.deepEqual(calls.slice(4), [
     [counter, 'reachGoal', 'telegram_click'],
     [counter, 'reachGoal', 'external_click'],
+    [counter, 'extLink', 'https://t.me/'],
     [counter, 'reachGoal', 'phone_click'],
     [counter, 'reachGoal', 'external_click'],
+    [counter, 'extLink', 'https://t.me.example.org/'],
     [counter, 'reachGoal', 'lead_submit'],
   ])
   analytics.trackAnalyticsCart('add', { id: 'approved-sku', priceRub: 7000 }, 2)
@@ -134,7 +142,7 @@ test('consent controls initialization, SPA hits and fixed goal identifiers', asy
 test('withdrawal while the counter is loading clears queued initialization', async (t) => {
   const { analytics, browser, calls, finishScript } = await browserHarness(t)
   analytics.saveAnalyticsConsent('accepted')
-  analytics.startAnalytics()
+  analytics.startAnalytics('accepted')
   assert.equal(browser.ym.a.length, 1)
   analytics.saveAnalyticsConsent('rejected')
   analytics.stopAnalytics()
@@ -147,7 +155,7 @@ test('withdrawal in another tab stops a ready counter and storage clear needs a 
   const consentChanges = []
   const unobserve = analytics.observeAnalyticsConsent((consent) => {
     consentChanges.push(consent)
-    if (consent === 'accepted') analytics.startAnalytics()
+    if (consent === 'accepted') analytics.startAnalytics('accepted')
   })
   const key = 'domera-analytics-consent-v1'
   storageEvent(key, 'accepted')
@@ -178,7 +186,7 @@ test('withdrawal in another tab cancels a pending counter exactly once', async (
   const { analytics, browser, calls, finishScript, reloads, storageEvent } = await browserHarness(t)
   const key = 'domera-analytics-consent-v1'
   analytics.saveAnalyticsConsent('accepted')
-  analytics.startAnalytics()
+  analytics.startAnalytics('accepted')
   analytics.observeAnalyticsConsent(() => {})
   storageEvent(key, 'rejected')
   storageEvent(null, null)
@@ -186,4 +194,38 @@ test('withdrawal in another tab cancels a pending counter exactly once', async (
   assert.deepEqual(reloads, [true])
   assert.equal(browser['disableYaCounter' + counter], true)
   assert.deepEqual(calls, [])
+})
+
+
+test('SSG detail page reports one product view and one ecommerce detail without search input', async (t) => {
+  const { analytics, browser, calls, finishScript, origin } = await browserHarness(t)
+  browser.location.pathname = '/catalog/tkan/a9001/'
+  browser.location.search = '?q=person%40example.invalid'
+  document.querySelector = () => ({ dataset: { analyticsProduct: 'A9001', analyticsPrice: '7000' } })
+  analytics.startAnalytics('accepted')
+  finishScript()
+  analytics.trackAnalyticsPage()
+  assert.deepEqual(calls.slice(1), [
+    [counter, 'hit', origin + '/catalog/tkan/a9001/', { referer: 'https://search.example/' }],
+    [counter, 'reachGoal', 'product_view'],
+  ])
+  assert.deepEqual(browser.dataLayer, [{ ecommerce: { currencyCode: 'RUB', detail: { products: [{ id: 'A9001', price: 7000 }] } } }])
+})
+
+test('preview rejects the production counter even with alternative decimal encoding', async (t) => {
+  const { analytics, scriptNodes } = await browserHarness(t, { VITE_DEKORAY_PREVIEW: '1', VITE_YM_STAGING_ID: '0' + counter })
+  assert.equal(analytics.isAnalyticsConfigured(), false)
+  analytics.startAnalytics('accepted')
+  assert.equal(scriptNodes.length, 0)
+})
+
+test('production configuration sends no requests from GitHub Pages or a custom 404', async (t) => {
+  const { analytics, browser, scriptNodes } = await browserHarness(t)
+  const hostname = browser.location.hostname
+  browser.location.hostname = 'spayzik.github.io'
+  analytics.startAnalytics('accepted')
+  browser.location.hostname = hostname
+  document.getElementById = () => ({ dataset: { path: '/404/' } })
+  analytics.startAnalytics('accepted')
+  assert.equal(scriptNodes.length, 0)
 })

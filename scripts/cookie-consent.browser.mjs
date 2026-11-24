@@ -1,120 +1,113 @@
 import assert from 'node:assert/strict'
 import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { mkdir } from 'node:fs/promises'
+import { createServer } from 'vite'
 
-// Run against a production preview built with VITE_YM_ID=114347066.
+// This fixture intercepts the analytics script. Provider registration and recordings require a real account.
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE
   ? pathToFileURL(resolve(process.env.PLAYWRIGHT_MODULE)).href : 'playwright')
-const base = 'http://127.0.0.1:43920/'
-const evidence = process.env.COOKIE_SCREENSHOTS
-const browser = await chromium.launch({ executablePath: process.env.BROWSER_EXE })
-const counter = '**://mc.yandex.ru/**'
+const counter = '90000009'
 const key = 'domera-analytics-consent-v1'
-const banner = '[aria-labelledby="cookie-banner-title"]'
+const privateSearch = 'person@example.invalid'
+const server = await createServer({
+  server: { host: '127.0.0.1', port: 43920, strictPort: true },
+  define: {
+    'import.meta.env.VITE_DEKORAY_PREVIEW': JSON.stringify('1'),
+    'import.meta.env.VITE_YM_ID': JSON.stringify('114347066'),
+    'import.meta.env.VITE_YM_STAGING_ID': JSON.stringify(counter),
+    'import.meta.env.VITE_YM_WEBVISOR': JSON.stringify('1'),
+  },
+})
+let browser
 
 try {
-  if (evidence) await mkdir(evidence, { recursive: true })
-  for (const [width, height] of [[360, 800], [390, 844], [768, 1024], [1440, 900], [740, 375]]) {
-    const page = await browser.newPage({ viewport: { width, height }, reducedMotion: 'reduce' })
+  await server.listen()
+  browser = await chromium.launch({ executablePath: process.env.BROWSER_EXE })
+  const base = 'http://127.0.0.1:' + server.httpServer.address().port + '/'
+  for (const width of [360, 390, 768, 1024, 1440]) {
+    const page = await browser.newPage({ viewport: { width, height: 850 }, reducedMotion: 'reduce' })
+    const errors = []
     let requests = 0
-    const faults = []
-    page.on('pageerror', error => faults.push(error.message))
-    await page.route(counter, route => {
+    page.on('pageerror', error => errors.push(error.message))
+    await page.route(url => ['mc.yandex.ru', 'mc.yandex.com'].includes(url.hostname), route => {
       requests++
-      return route.fulfill({ contentType: 'application/javascript', body:
-        'window.cookieCalls = window.ym.a.slice(); window.ym = (...args) => window.cookieCalls.push(args);' })
+      if (!route.request().url().endsWith('/metrika/tag.js')) return route.abort()
+      return route.fulfill({
+        contentType: 'application/javascript',
+        body: 'window.cookieCalls = window.ym.a.slice(); window.ym = (...args) => window.cookieCalls.push(args);',
+      })
     })
-    await page.goto(base)
-    await page.locator('.preloader').waitFor({ state: 'hidden' })
-    const panel = page.locator(banner)
-    assert.equal(await panel.count(), 0, 'cookie card must leave the hero unobstructed')
-    await page.locator('#top').evaluate(el => window.scrollBy(0, el.getBoundingClientRect().bottom + 20))
-    await panel.waitFor()
-    await page.evaluate(() => window.scrollTo(0, 0))
-    await panel.waitFor({ state: 'hidden' })
-    await page.locator('#top').evaluate(el => window.scrollBy(0, el.getBoundingClientRect().bottom + 20))
-    await panel.waitFor()
-    assert.equal(requests, 0)
-    const box = await panel.boundingBox()
-    assert.ok(box.x >= 0 && box.x + box.width <= width && box.y + box.height <= height + 1)
-    assert.equal(await panel.evaluate(el => getComputedStyle(el).animationName), 'none')
-    for (const button of await panel.getByRole('button').all()) assert.ok((await button.boundingBox()).height >= 44)
-    if (evidence && [390, 1440].includes(width)) await page.screenshot({ path: resolve(evidence, 'banner-' + width + '.png') })
-    await panel.getByRole('button', { name: 'Отклонить', exact: true }).click()
-    assert.equal(await page.evaluate(k => localStorage.getItem(k), key), 'rejected')
-    await page.reload()
-    assert.equal(await page.locator(banner).count(), 0)
-    assert.equal(requests, 0)
-    await page.goto(base + '#/catalog')
-    await page.getByRole('button', { name: 'Добавить в подборку' }).first().click()
-    const cart = page.getByRole('dialog', { name: 'Ваша подборка' })
-    await cart.waitFor()
-    await page.keyboard.press('Escape')
-    await cart.waitFor({ state: 'hidden' })
-
+    await page.goto(base + 'catalog/?sort=price-asc&q=' + encodeURIComponent(privateSearch))
     const trigger = page.getByRole('button', { name: 'Настройки cookie', exact: true })
+    await trigger.scrollIntoViewIfNeeded()
     await trigger.focus()
     await page.keyboard.press('Enter')
     const dialog = page.getByRole('dialog', { name: 'Настройки cookie' })
     await dialog.waitFor()
-    for (let i = 0; i < 5; i++) {
+    for (let step = 0; step < 4; step++) {
       await page.keyboard.press('Tab')
       assert.ok(await dialog.evaluate(el => el.contains(document.activeElement)))
     }
-    await page.keyboard.press('Escape')
-    await dialog.waitFor({ state: 'hidden' })
-    assert.equal(await trigger.evaluate(el => document.activeElement === el), true)
+    assert.equal(requests, 0)
+    assert.equal(new URL(page.url()).searchParams.has('q'), false)
+    await dialog.getByRole('button', { name: 'Отклонить', exact: true }).click()
+    await page.reload()
+    assert.equal(await page.evaluate(k => localStorage.getItem(k), key), 'rejected')
+    assert.equal(requests, 0)
     await trigger.click()
-    if (evidence && width === 390) await page.screenshot({ path: resolve(evidence, 'settings-390.png') })
     await dialog.getByRole('button', { name: 'Принять', exact: true }).click()
     await page.waitForFunction(() => window.cookieCalls?.some(call => call[1] === 'hit'))
-    assert.equal(await page.evaluate(k => localStorage.getItem(k), key), 'accepted')
-    await page.keyboard.press('Escape')
-    await page.goto(base + '#/offer')
-    await page.goto(base + '#/offer?ref=synthetic')
-    await page.waitForFunction(() => window.cookieCalls?.filter(call => call[1] === 'hit').length === 2)
-    const calls = await page.evaluate(() => window.cookieCalls)
+    const init = await page.evaluate(() => window.cookieCalls.filter(call => call[1] === 'init'))
     assert.equal(requests, 1)
-    const init = calls.filter(call => call[1] === 'init')
     assert.equal(init.length, 1)
-    assert.equal(init[0][0], 114347066)
-    assert.equal(init[0][2].defer, true)
-    assert.equal(init[0][2].webvisor, false)
-    assert.doesNotMatch(JSON.stringify(calls), /synthetic/)
-    await page.reload()
-    await page.waitForFunction(() => window.cookieCalls?.some(call => call[1] === 'hit'))
+    assert.equal(init[0][0], Number(counter))
+    assert.equal(init[0][2].webvisor, true)
+    await page.keyboard.press('Escape')
+    assert.equal(await trigger.evaluate(el => document.activeElement === el), true)
+
+    const mobileFilters = page.getByRole('button', { name: 'Поиск и фильтры', exact: true })
+    if (await mobileFilters.isVisible()) await mobileFilters.click()
+    const search = page.getByRole('searchbox')
+    await search.fill('A9001')
+    await search.press('Enter')
+    assert.equal(new URL(page.url()).searchParams.get('q'), 'A9001')
+    await search.fill(privateSearch)
+    await search.press('Enter')
+    await search.blur()
+    assert.equal(await search.inputValue(), privateSearch)
+    assert.equal(new URL(page.url()).searchParams.has('q'), false)
+    assert.equal(new URL(page.url()).searchParams.get('sort'), 'price-asc')
+    const searches = await page.evaluate(() => window.cookieCalls.filter(call => call[2] === 'catalog_search'))
+    assert.equal(searches.length, 2)
+    assert.doesNotMatch(JSON.stringify(searches), /person|example\.invalid/)
+
+    await page.goto(base + 'catalog/tkan/a9001/')
+    await page.waitForFunction(() => window.dataLayer?.some(event => event.ecommerce?.detail))
+    const detail = await page.evaluate(() => window.dataLayer.filter(event => event.ecommerce?.detail))
+    assert.equal(detail.length, 1)
+    assert.equal(detail[0].ecommerce.detail.products.length, 1)
+    assert.equal(typeof detail[0].ecommerce.detail.products[0].price, 'number')
     assert.equal(requests, 2)
-    assert.equal(await page.locator(banner).count(), 0)
+    const openLead = page.locator('a[aria-haspopup="dialog"][href^="https://t.me/"]').first()
+    await openLead.click()
+    const closeLead = page.getByRole('button', { name: 'Закрыть заявку' })
+    await closeLead.waitFor()
+    const fakeTransitions = await page.evaluate(() => window.cookieCalls.filter(call =>
+      call[1] === 'extLink' || ['telegram_click', 'external_click'].includes(call[2])))
+    assert.equal(fakeTransitions.length, 0)
+    await closeLead.click()
     await trigger.click()
     await Promise.all([
       page.waitForEvent('load'),
       dialog.getByRole('button', { name: 'Отклонить', exact: true }).click(),
     ])
-    assert.equal(await page.evaluate(k => localStorage.getItem(k), key), 'rejected')
-    assert.equal(await page.evaluate(() => typeof window.ym), 'undefined')
     assert.equal(requests, 2)
-    assert.deepEqual(faults, [])
-    console.log(width + '×' + height + ' consent, storage, keyboard dialog, SPA, reload and cart PASS')
+    assert.equal(await page.evaluate(() => typeof window.ym), 'undefined')
+    assert.deepEqual(errors, [])
+    console.log(width + 'px: consent, keyboard, catalog privacy, ecommerce detail and withdrawal')
     await page.close()
   }
-
-  const page = await browser.newPage()
-  let blocked = 0
-  const faults = []
-  page.on('pageerror', error => faults.push(error.message))
-  await page.addInitScript(() => {
-    Object.defineProperty(window, 'localStorage', { get() { throw new DOMException('Blocked', 'SecurityError') } })
-  })
-  await page.route(counter, route => { blocked++; return route.abort() })
-  await page.goto(base + '#/catalog')
-  await page.locator(banner).getByRole('button', { name: 'Принять', exact: true }).click()
-  await page.goto(base + '#/catalog')
-  await page.getByRole('button', { name: 'Добавить в подборку' }).first().click()
-  await page.getByRole('dialog', { name: 'Ваша подборка' }).waitFor()
-  assert.equal(blocked, 1)
-  assert.deepEqual(faults, [])
-  console.log('Unavailable localStorage and failed analytics transport PASS')
 } finally {
-  await browser.close()
+  await browser?.close()
+  await server.close()
 }

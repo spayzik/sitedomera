@@ -31,3 +31,17 @@ RewriteRule ^ https://xn--80ahdrdyo.xn--p1ai%{REQUEST_URI} [R=301,L,NE]
 # RewriteRule ^ https://xn--80ahdrdyo.xn--p1ai%{REQUEST_URI} [R=308,L,NE]
 
 RewriteRule ^api/lead$ api/lead.php [END]
+
+# These headers do not restrict the approved external analytics or map embeds.
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "strict-origin"
+    Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+
+    <FilesMatch "[a-zA-Z0-9_-]+-[a-zA-Z0-9_-]{8}\.(css|js)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+    <FilesMatch "(\.html$|^(?:robots\.txt|sitemap\.xml|yml\.xml|inventory\.json|avito-reviews\.json)$)">
+        Header set Cache-Control "no-cache"
+    </FilesMatch>
+</IfModule>

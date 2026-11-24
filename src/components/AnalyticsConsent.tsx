@@ -21,7 +21,7 @@ export function PrivacyProvider({ children }: { children: ReactNode }) {
   useEffect(() => setConsent(readAnalyticsConsent()), [])
 
   useEffect(() => {
-    if (consent === 'accepted') startAnalytics()
+    startAnalytics(consent)
   }, [consent])
 
   useEffect(() => {

@@ -107,7 +107,7 @@ export function ProductPage({ product, base }: { product: Product; base: string 
     data.textContent = JSON.stringify(schema)
   }, [availability.status])
 
-  return <div className="container page-section product-page">
+  return <div className="container page-section product-page" data-analytics-product={product.id} data-analytics-price={product.priceRub}>
     <nav className="page-crumbs" aria-label="Хлебные крошки">
       <a href={base}>ДЕКОРАЙ</a><a href={base + 'catalog/'}>Каталог</a>
       <a href={base + categoryPath(category.id).slice(1)}>{category.name}</a><span aria-current="page">{product.name}</span>

@@ -11,15 +11,18 @@ type AnalyticsGoal = typeof goals[number]
 const consentKey = 'domera-analytics-consent-v1'
 const scriptUrl = 'https://mc.yandex.ru/metrika/tag.js'
 const preview = import.meta.env.VITE_DEKORAY_PREVIEW === '1'
-const productionCounter = import.meta.env.VITE_YM_ID
-const stagingCounter = import.meta.env.VITE_YM_STAGING_ID
-const configuredId = preview
-  ? stagingCounter === productionCounter || stagingCounter === '114347066' ? undefined : stagingCounter
+function parseCounterId(value: unknown): number | null {
+  if (typeof value !== 'string' || !/^\d+$/.test(value)) return null
+  const id = Number(value)
+  return Number.isSafeInteger(id) && id > 0 ? id : null
+}
+
+const productionCounter = parseCounterId(import.meta.env.VITE_YM_ID)
+const stagingCounter = parseCounterId(import.meta.env.VITE_YM_STAGING_ID)
+const counterId = preview
+  ? stagingCounter === productionCounter || stagingCounter === 114347066 ? null : stagingCounter
   : productionCounter
 const webvisor = import.meta.env.VITE_YM_WEBVISOR === '1'
-const counterId = typeof configuredId === 'string' && /^\d+$/.test(configuredId) && Number.isSafeInteger(Number(configuredId)) && Number(configuredId) > 0
-  ? Number(configuredId)
-  : null
 
 type MetrikaWindow = Window & { ym?: (...args: unknown[]) => void; dataLayer?: unknown[] }
 
@@ -94,8 +97,10 @@ function referringOrigin(): string {
   }
 }
 
-export function startAnalytics(): void {
-  if (counterId === null || scriptState !== 'idle') return
+export function startAnalytics(consent: AnalyticsConsent): void {
+  if (consent !== 'accepted' || counterId === null || scriptState !== 'idle' ||
+    (!preview && window.location.hostname.endsWith('.github.io')) ||
+    document.getElementById('root')?.dataset.path === '/404/') return
   allowed = true
   const metrikaWindow = window as MetrikaWindow
   if (typeof metrikaWindow.ym !== 'function') {
@@ -143,7 +148,12 @@ export function trackAnalyticsPage(): void {
   } catch { return }
   lastHitUrl = url
   const catalogPath = new URL(url).pathname.match(/(?:^|\/)catalog(?:\/([^/]+))?(?:\/([^/]+))?\/?$/)
-  if (catalogPath) trackAnalyticsGoal(catalogPath[2] ? 'product_view' : 'catalog_view')
+  if (catalogPath?.[2]) {
+    const product = document.querySelector<HTMLElement>('[data-analytics-product]')?.dataset
+    if (product?.analyticsProduct) {
+      trackAnalyticsProductView({ id: product.analyticsProduct, priceRub: Number(product.analyticsPrice) })
+    }
+  } else if (catalogPath) trackAnalyticsGoal('catalog_view')
 }
 
 export function trackAnalyticsGoal(goal: AnalyticsGoal): void {
@@ -153,24 +163,39 @@ export function trackAnalyticsGoal(goal: AnalyticsGoal): void {
 }
 
 export function trackAnalyticsLink(event: MouseEvent): void {
-  if (!(event.target instanceof Element)) return
+  if (event.defaultPrevented || !(event.target instanceof Element)) return
   const link = event.target.closest<HTMLAnchorElement>('a[href]')
   if (!link) return
   if (link.protocol === 'tel:') trackAnalyticsGoal('phone_click')
-  if (link.protocol !== 'https:') return
+  if (link.protocol !== 'https:' || link.hostname === window.location.hostname) return
   if (link.hostname === 't.me') trackAnalyticsGoal('telegram_click')
   if (link.hostname === 'wa.me' || link.hostname === 'api.whatsapp.com') trackAnalyticsGoal('whatsapp_click')
   if (link.hostname === 'max.ru' || link.hostname === 'web.max.ru') trackAnalyticsGoal('max_click')
-  if (link.hostname !== window.location.hostname) trackAnalyticsGoal('external_click')
+  trackAnalyticsGoal('external_click')
+  if (!allowed || scriptState !== 'ready' || counterId === null) return
+  // The report groups destinations by public origin without draft messages or account paths.
+  try { (window as MetrikaWindow).ym?.(counterId, 'extLink', link.origin + '/') } catch { /* Optional. */ }
 }
 
-export function trackAnalyticsCart(action: 'add' | 'remove', product: { id: string; priceRub: number }, quantity: number): void {
-  if (!allowed || scriptState !== 'ready' || counterId === null || quantity < 1) return
-  trackAnalyticsGoal(action === 'add' ? 'cart_add' : 'cart_remove')
+type AnalyticsProduct = { id: string; priceRub: number }
+
+function trackEcommerce(action: 'detail' | 'add' | 'remove', product: AnalyticsProduct, quantity?: number): void {
+  if (!allowed || scriptState !== 'ready' || counterId === null ||
+    !/^[a-z0-9_-]{1,100}$/i.test(product.id) || !Number.isFinite(product.priceRub) || product.priceRub < 0) return
+  const item = { id: product.id, price: product.priceRub, ...(quantity === undefined ? {} : { quantity }) }
   const dataLayer = (window as MetrikaWindow).dataLayer
-  dataLayer?.push({
-    ecommerce: { currencyCode: 'RUB', [action]: { products: [{ id: product.id, price: product.priceRub, quantity }] } },
-  })
+  dataLayer?.push({ ecommerce: { currencyCode: 'RUB', [action]: { products: [item] } } })
+}
+
+export function trackAnalyticsProductView(product: AnalyticsProduct): void {
+  trackAnalyticsGoal('product_view')
+  trackEcommerce('detail', product)
+}
+
+export function trackAnalyticsCart(action: 'add' | 'remove', product: AnalyticsProduct, quantity: number): void {
+  if (!Number.isSafeInteger(quantity) || quantity < 1) return
+  trackAnalyticsGoal(action === 'add' ? 'cart_add' : 'cart_remove')
+  trackEcommerce(action, product, quantity)
 }
 
 export function stopAnalytics(): void {

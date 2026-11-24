@@ -36,3 +36,26 @@
 - MOYSKLAD_HOLD для заявок сохраняется. Непроведённый customerorder из изолированного теста не содержит полей резерва и движения. Правила живого аккаунта могут отдельно резервировать товары при создании заказа. До сверки сценариев кабинета нельзя включать создание заявки в МойСклад. [Шаблоны сценариев заказа](https://support.moysklad.ru/hc/ru/продажи/шаблоны_сценариев_для_заказов_покупателя)
 - npm run test:inventory запускает адресные тесты и сценарий HTTP заявки: 18 листов, выбор 5, заявка, остаток 18, затем отдельное изменение провайдера до 13. Данные синтетические и существуют только в тестах.
 - Для действующей витрины подтверждена ручная загрузка статики на REG.RU. Токен в проверенной среде отсутствует, склад и право чтения не подтверждены, runtime и доставка снимка пока не доказаны. Не запускать production scheduler до закрытия этих пунктов.
+
+## Автоматическое обновление изолированного preview
+
+Скрипт `node scripts/refresh-preview-stock.mjs /путь/к/inventory-preview.json` делает только GET публичного HTTPS-снимка без credentials. Он проверяет все позиции, единицы и время снимка, отклоняет просрочку, подмену полей и откат к более старой версии. Новый JSON записывается атомарно с исходным временем. При сбое остаётся последний валидный файл, который перестаёт показывать остатки после исходных 45 минут.
+
+Для GitHub Pages без отдельного сервера запускайте скрипт перед staging-сборкой и передавайте файл через `DEKORAY_BUILD_STOCK_SNAPSHOT`. Контроль срока в браузере сохраняется после публикации.
+
+Для постоянно обновляемого staging используйте его собственный HTTPS-хост с точной публичной выдачей `/generated/inventory.json`. Установите проверенный исходник и Node.js 24 в приватной директории. Запускайте скрипт каждые 15 минут без перекрытий. Например, строка cron для аккаунта staging, если `flock` и `node` доступны по этим путям:
+
+    */15 * * * * /usr/bin/flock -n /srv/dekoray-staging/state/inventory.lock /usr/bin/node /srv/dekoray-staging/source/scripts/refresh-preview-stock.mjs /srv/dekoray-staging/state/inventory-preview.json
+
+В веб-сервере направьте только этот маршрут на обновляемый файл. Для Nginx в подтверждённом HTTPS vhost staging:
+
+    location = /generated/inventory.json {
+      alias /srv/dekoray-staging/state/inventory-preview.json;
+      default_type application/json;
+      add_header Cache-Control "no-store" always;
+      add_header Access-Control-Allow-Origin "https://spayzik.github.io" always;
+      add_header X-Content-Type-Options "nosniff" always;
+      limit_except GET { deny all; }
+    }
+
+Укажите `VITE_DEKORAY_STAGING_STOCK_URL=https://<staging-host>/generated/inventory.json` при staging-сборке. Этот URL используется только в preview; fetch не отправляет credentials. Проверьте HTTP 200 и CORS, затем два последовательных свежих значения `updatedAt` при работающем задании. Если задача перестала обновляться, по достижении 45 минут preview должен показывать «Наличие уточняется». Не применяйте cron и этот vhost к production.

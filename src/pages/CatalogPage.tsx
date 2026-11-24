@@ -11,7 +11,7 @@ import { CatalogFacts } from '../components/CatalogFacts'
 import { ProductModal } from '../components/ProductModal'
 import { CatalogCard } from '../components/CatalogCard'
 import { CatalogFilterControls } from '../components/CatalogFilterControls'
-import { catalogResults, parseCatalogFilters, writeCatalogFilters, type CatalogFilters } from '../lib/catalogFilters'
+import { catalogResults, parseCatalogFilters, publicCatalogQuery, writeCatalogFilters, type CatalogFilters } from '../lib/catalogFilters'
 
 // The generic catalog route shares its data shape with the home and article indexes.
 type CatalogView = Extract<SeoPage, { kind: 'category' | 'selection' }> | (SeoPage & { kind: 'home' | 'catalog' | 'articles' })
@@ -25,7 +25,15 @@ export function CatalogPage({ page, base }: { page: CatalogView; base: string })
   const [selected, setSelected] = useState<Product | null>(null)
 
   useEffect(() => {
-    const sync = () => setFilters(parseCatalogFilters(new URLSearchParams(location.search), category))
+    const sync = () => {
+      const url = new URL(location.href)
+      const incomingQuery = url.searchParams.get('q')
+      if (incomingQuery && !publicCatalogQuery(incomingQuery)) {
+        url.searchParams.delete('q')
+        history.replaceState(history.state, '', url)
+      }
+      setFilters(parseCatalogFilters(url.searchParams, category))
+    }
     sync()
     window.addEventListener('popstate', sync)
     return () => window.removeEventListener('popstate', sync)
@@ -33,12 +41,13 @@ export function CatalogPage({ page, base }: { page: CatalogView; base: string })
 
   function changeFilters(patch: Partial<CatalogFilters>) {
     const url = new URL(location.href)
-    url.search = writeCatalogFilters(url.searchParams, { ...filters, ...patch }, category).toString()
+    const next = { ...filters, ...patch }
+    url.search = writeCatalogFilters(url.searchParams, next, category).toString()
     if (url.href !== location.href) {
       if (patch.query !== undefined && Object.keys(patch).length === 1) history.replaceState(null, '', url)
       else history.pushState(null, '', url)
     }
-    setFilters(parseCatalogFilters(url.searchParams, category))
+    setFilters({ ...parseCatalogFilters(url.searchParams, category), query: next.query })
   }
 
   const now = Date.now()

@@ -116,9 +116,10 @@ export function renderSitemap() {
 }
 
 export function renderYml(now = new Date()) {
+  // A static feed cannot attest to current stock or online purchase availability.
   const xml = value => escape(value)
   const categories = collections.map((category, index) => `<category id="${index + 1}">${xml(category.name)}</category>`).join('')
-  const offers = products.map(product => `<offer id="${createHash('sha256').update(product.id).digest('hex').slice(0, 20)}">
+  const offers = products.map(product => `<offer id="${createHash('sha256').update(product.id).digest('hex').slice(0, 20)}" available="false">
     <name>${xml(product.name)}</name><url>${xml(canonicalUrl(productPath(product)))}</url>
     <price>${product.priceRub}</price><currencyId>RUR</currencyId><categoryId>${collections.findIndex(category => category.id === product.categoryId) + 1}</categoryId>
     <picture>${xml(canonicalUrl('/' + product.image))}</picture><description>${xml(productDescription(product))}</description>

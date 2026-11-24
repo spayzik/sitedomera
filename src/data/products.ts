@@ -57,6 +57,7 @@ export function productDetails(p: Product): [string, string][] {
 }
 
 export const sheetProducts = products.filter(p => (p.kind === 'panel' || p.kind === 'flexible_stone') && p.dimensions.widthMm !== undefined)
+export const linearProducts = products.filter(p => p.kind === 'slat' || p.kind === 'profile')
 const panels = products.filter(p => p.kind === 'panel')
 const range = (values: number[]) => ({ min: Math.min(...values), max: Math.max(...values) })
 export const catalogSummary = {

@@ -17,8 +17,12 @@ export const receipt = 'a106c786-6007-402c-90a3-20e9c181de7a'
 export const sentinel = 'fixture-value-never-logged'
 export const intakeAgentId = '7cdd0000-09ac-4500-ada2-f88240c7e22e'
 const consent = '<meta name="dekoray-consent-version" content="qa-php-only">'
+const previewOrigin = 'https://spayzik.github.io'
 
-export async function fixture({ webroot, staging } = {}) {
+export async function fixture({ webroot, staging, localBrowserOrigin } = {}) {
+  if (localBrowserOrigin && (!staging || !/^http:\/\/127\.0\.0\.1:[1-9][0-9]{3,4}$/.test(localBrowserOrigin))) {
+    throw new Error('Local browser origin must be a loopback staging origin')
+  }
   if (staging && (!/^[A-Za-z0-9_-]{32,128}$/.test(staging.access) || !Number.isInteger(staging.port) ||
       staging.port < 0 || staging.port > 65535 || webroot)) throw new Error('Invalid staging fixture configuration')
   const directory = await mkdtemp(join(tmpdir(), 'dekoray-php-lead-'))
@@ -80,7 +84,7 @@ export async function fixture({ webroot, staging } = {}) {
   await new Promise(resolve => portProbe.close(resolve))
   const origin = 'http://127.0.0.1:' + port
   const config = {
-    origin: staging ? 'https://spayzik.github.io' : origin, organizationId, intakeStateId, intakeAgentId, token: sentinel, enableGeneralLeads: true,
+    origin: staging ? (localBrowserOrigin ?? previewOrigin) : origin, organizationId, intakeStateId, intakeAgentId, token: sentinel, enableGeneralLeads: true,
     hashKey: '8'.repeat(64), consentPath: '/legal/lead-consent.html', consentVersion: 'qa-php-only',
     consentSha256: createHash('sha256').update(consent).digest('hex'),
     ledgerPath: join(directory, 'leads.sqlite'), catalog: { [id]: { id: mapped, type: 'product', priceMinor: 800000 } },

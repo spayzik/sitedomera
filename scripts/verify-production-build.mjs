@@ -185,7 +185,8 @@ async function verify() {
   }
   const feed = await readFile(await requireFile('yml.xml'), 'utf8')
   assert.equal([...feed.matchAll(/<offer id="/g)].length, products.length, 'Feed must match the published catalog')
-  assert(!/\bavailable=/.test(feed), 'Feed includes unverified inventory')
+  assert.equal([...feed.matchAll(/<offer id="[a-f0-9]{20}" available="false">/g)].length, products.length,
+    'Every static offer must explicitly disable unverified availability')
   const missingPage = await readFile(await requireFile('404.html'), 'utf8')
   assert(missingPage.includes('name="robots" content="' + excludedMeta + '"'), '404 must not be indexed')
   for (const { from, to } of legacyRedirects) {

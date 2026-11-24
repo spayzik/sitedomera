@@ -123,10 +123,10 @@ test('privacy and seven substantive article routes remain available without JS',
 test('price feed uses stable ids and verified product facts without inventing stock or business terms', () => {
   const feed = renderYml(new Date('2026-11-20T12:30:00.000Z'))
   assert.match(feed, /<yml_catalog date="2026-11-20 12:30">/)
-  const offers = [...feed.matchAll(/<offer id="([a-f0-9]{20})">/g)].map(match => match[1])
+  const offers = [...feed.matchAll(/<offer id="([a-f0-9]{20})" available="false">/g)].map(match => match[1])
   assert.equal(offers.length, products.length)
   assert.equal(new Set(offers).size, offers.length)
-  assert(!/\bavailable=|<delivery|<pickup|<oldprice>/.test(feed))
+  assert(!/available="true"|<delivery|<pickup|<oldprice>/.test(feed))
   assert.match(feed, /<price>7000<\/price><currencyId>RUR<\/currencyId>/)
   assert.match(feed, /<vendorCode>A9001<\/vendorCode>/)
 })
@@ -156,6 +156,7 @@ test('editorial landings contain the presented catalog products without JavaScri
     ['/catalog/bezhevye/', ['Ясень песочный', 'Лён кремовый', 'Песочный', 'Венецианская, песок']],
     ['/catalog/dlya-tv-zony/', ['Орех дымчатый', '8425-P', 'Рейка, фактура ткань', 'Рейка, металлик']],
     ['/catalog/dlya-spalni/', ['Рогожка белая', 'Лён кремовый', 'Лён светло-серый', 'Песочный']],
+    ['/catalog/1220x3000/', ['Ясень серый', 'Рогожка белая', 'A9001']],
   ]) {
     const route = seoPages.find(page => page.path === path)
     assert.ok(route)
