@@ -34,12 +34,18 @@ try {
     $catalogBytes = [Text.Encoding]::UTF8.GetBytes($catalog)
     $catalogEntry = 'private-runtime/catalog-contract.json'
     $expected = @{}
-    $zip = [IO.Compression.ZipFile]::Open($archive, [IO.Compression.ZipArchiveMode]::Create)
+    $pendingArchive = $archive + '.' + [Guid]::NewGuid().ToString('N') + '.pending'
+    $zip = [IO.Compression.ZipFile]::Open($pendingArchive, [IO.Compression.ZipArchiveMode]::Create)
     try {
         foreach ($name in $files.Keys) {
             $expected[$name] = (Get-FileHash -LiteralPath $files[$name]).Hash
-            $entry = [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $files[$name], $name, [IO.Compression.CompressionLevel]::Optimal)
+            $entry = $zip.CreateEntry($name, [IO.Compression.CompressionLevel]::Optimal)
             $entry.LastWriteTime = $releaseStamp
+            $source = [IO.File]::OpenRead($files[$name])
+            try {
+                $stream = $entry.Open()
+                try { $source.CopyTo($stream) } finally { $stream.Dispose() }
+            } finally { $source.Dispose() }
         }
         $expected[$catalogEntry] = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($catalogBytes))
         $entry = $zip.CreateEntry($catalogEntry)
@@ -48,7 +54,7 @@ try {
         try { $stream.Write($catalogBytes, 0, $catalogBytes.Length) } finally { $stream.Dispose() }
     } finally { $zip.Dispose() }
 
-    $zip = [IO.Compression.ZipFile]::OpenRead($archive)
+    $zip = [IO.Compression.ZipFile]::OpenRead($pendingArchive)
     try {
         if ($zip.Entries.Count -ne $expected.Count) { throw 'Archive file count mismatch' }
         foreach ($entry in $zip.Entries) {
@@ -58,8 +64,10 @@ try {
             if ($expected[$entry.FullName] -ne $hash) { throw ('Archive digest mismatch ' + $entry.FullName) }
         }
     } finally { $zip.Dispose() }
+    [IO.File]::Move($pendingArchive, $archive)
     'Verified {0} entries. SHA-256 {1}' -f $expected.Count, (Get-FileHash -LiteralPath $archive).Hash.ToLowerInvariant()
 } finally {
+    if ($pendingArchive -and [IO.File]::Exists($pendingArchive)) { [IO.File]::Delete($pendingArchive) }
     $env:SOURCE_DATE_EPOCH = $previousEpoch
     Pop-Location
 }
