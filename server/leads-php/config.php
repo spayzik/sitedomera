@@ -29,7 +29,7 @@ function readObject(string $path, int $limit = 131_072): array
 
 function loadConfig(string $private, string $webroot): array
 {
-    foreach (['curl', 'pdo_sqlite', 'mbstring', 'intl', 'dom'] as $extension) {
+    foreach (['curl', 'pdo_sqlite', 'mbstring', 'intl', 'dom', 'openssl'] as $extension) {
         if (PHP_VERSION_ID < 80300 || !extension_loaded($extension)) {
             throw new RuntimeException('hosting_verification_pending');
         }
@@ -57,6 +57,7 @@ function loadConfig(string $private, string $webroot): array
     }
     $regexFields = [
         'token' => '/^[!-~]{20,300}$/D', 'organizationId' => UUID, 'intakeStateId' => UUID,
+        'intakeAgentId' => UUID,
         'consentVersion' => VERSION, 'consentPath' => DOCUMENT_PATH,
         'hashKey' => '/^[a-f0-9]{64}$/iD', 'consentSha256' => '/^[a-f0-9]{64}$/iD',
     ];
@@ -75,6 +76,7 @@ function loadConfig(string $private, string $webroot): array
     $catalog = [];
     $claimed = [];
     $known = readObject(__DIR__ . '/catalog-contract.json');
+    $catalogFacts = array_map(static fn (object $item): array => (array) $item, $known);
     $map = $raw['catalog'] ?? new \stdClass();
     if (!$map instanceof \stdClass) {
         throw new RuntimeException('catalog_mapping_invalid');
@@ -94,7 +96,7 @@ function loadConfig(string $private, string $webroot): array
         $claimed[$crmId] = true;
     }
     return $config + [
-        'origin' => SITE_ORIGIN, 'catalog' => $catalog, 'enableGeneralLeads' => true,
+        'origin' => SITE_ORIGIN, 'catalog' => $catalog, 'catalogFacts' => $catalogFacts, 'enableGeneralLeads' => true,
         'retentionDays' => $days, 'ledgerPath' => $ledger,
         'enabled' => ($raw['enabled'] ?? false) === true && ($raw['crmSafetyVerified'] ?? false) === true,
     ];

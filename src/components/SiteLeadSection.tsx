@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { SocialContacts } from './SocialContacts'
 import { LeadForm } from './LeadForm'
-import { leadEndpoint, leadFormPreview, type LeadAttempt } from '../lib/leadClient'
+import { leadEndpoint, type LeadAttempt } from '../lib/leadClient'
 import { useLeadService } from '../lib/leadState'
 
 export function SiteLeadSection({ base }: { base: string }) {
@@ -18,11 +18,8 @@ export function SiteLeadSection({ base }: { base: string }) {
           <p>Поможем подобрать фактуру, уточнить наличие и рассчитать материалы.</p>
           <SocialContacts base={base} placement="product" />
         </div>
-        {leadFormPreview
-          ? <LeadForm fields={fields} attempt={attempt} />
-          : consultation && terms && leadEndpoint
-            ? <LeadForm endpoint={leadEndpoint} terms={terms} fields={fields} attempt={attempt} />
-            : null}
+        {consultation && terms && leadEndpoint &&
+          <LeadForm endpoint={leadEndpoint} terms={terms} fields={fields} attempt={attempt} />}
       </div>
     </div>
   </section>

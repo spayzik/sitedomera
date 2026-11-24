@@ -66,12 +66,21 @@ export function calculateWallLayout(walls: readonly WallDimensions[], reserve: s
   return roundUpSheets(pieces * (100 + decimal(reserve)), 100)
 }
 
-export function calculateProjectPanels(walls: readonly WallDimensions[], openings: string, reserve: string, product: Product | null) {
-  const inputs = [...walls.flatMap(wall => [wall.length, wall.height]), openings, reserve]
+export function calculateProjectPanels(walls: readonly WallDimensions[], openings: string | number | null, reserve: string, product: Product | null) {
+  const inputs = [...walls.flatMap(wall => [wall.length, wall.height]), reserve]
+  const openingsValue = typeof openings === 'string' && validMeasure(openings) ? decimal(openings) : openings
   const valid = walls.length > 0 && walls.length <= 20 && sheetArea(product) > 0 &&
     inputs.every(validMeasure) &&
-    decimal(reserve) <= 100
-  const area = valid ? Math.max(0, walls.reduce((sum, wall) => sum + decimal(wall.length) * decimal(wall.height), 0) - decimal(openings)) : 0
+    decimal(reserve) <= 100 && typeof openingsValue === 'number' && Number.isFinite(openingsValue) && openingsValue >= 0 && openingsValue <= 10_000
+  const area = valid ? Math.max(0, walls.reduce((sum, wall) => sum + decimal(wall.length) * decimal(wall.height), 0) - openingsValue) : 0
   const estimatedArea = valid ? area * (1 + decimal(reserve) / 100) : 0
   return { valid, area, estimatedArea, sheets: valid ? roundUpSheets(estimatedArea, sheetArea(product)) : 0 }
+}
+
+export function openingsArea(walls: readonly WallDimensions[], extraArea: string): number | null {
+  if (!validMeasure(extraArea) || walls.length > 20 ||
+      walls.some(opening => !validMeasure(opening.length) || !validMeasure(opening.height))) return null
+  const area = decimal(extraArea) + walls.reduce((sum, opening) =>
+    sum + decimal(opening.length) * decimal(opening.height), 0)
+  return area <= 10_000 ? area : null
 }

@@ -16,6 +16,12 @@ final class MoySklad
         'selection' => 'Подбор материалов',
         'calculation' => 'Расчёт материалов',
         'samples' => 'Запрос образцов',
+        'order' => 'Запрос заказа',
+        'installation' => 'Монтаж и замер',
+        'delivery' => 'Уточнение доставки',
+        'wholesale' => 'Оптовые условия',
+        'designer' => 'Условия для дизайнеров',
+        'feedback' => 'Обратная связь',
     ];
 
     private readonly Closure $transport;
@@ -33,11 +39,10 @@ final class MoySklad
     /** The ledger's key and consent timestamp are stable across attempts. */
     public function submit(array $lead, array $operation): string
     {
-        $counterpartyId = $this->identifyCounterparty($lead);
         $orderSyncId = syncId($this->config['hashKey'], 'customerorder', $operation['key']);
         $order = [
             'organization' => self::reference('organization', $this->config['organizationId']),
-            'agent' => self::reference('counterparty', $counterpartyId),
+            'agent' => self::reference('counterparty', $this->config['intakeAgentId']),
             'state' => self::reference('state', $this->config['intakeStateId'], 'customerorder/metadata/states'),
             'syncId' => $orderSyncId,
             'applicable' => false,
@@ -72,6 +77,13 @@ final class MoySklad
         if (!self::isEntity($organization, 'organization') || $organization->id !== $organizationId
             || ($organization->archived ?? false) === true) {
             throw self::unavailable();
+        }
+
+        $agentId = $this->config['intakeAgentId'];
+        $agent = $this->request('counterparty/' . $agentId);
+        if (!self::isEntity($agent, 'counterparty') || $agent->id !== $agentId ||
+            ($agent->archived ?? false) === true) {
+            throw new LeadError(503, 'intake_agent_invalid');
         }
 
         $metadata = $this->request('customerorder/metadata');
@@ -116,7 +128,7 @@ final class MoySklad
             }
             $seen[$mapped['id']] = true;
         }
-        return ['organization' => 'visible', 'intakeState' => 'visible', 'mappedProducts' => count($seen),
+        return ['organization' => 'visible', 'intakeState' => 'visible', 'intakeAgent' => 'visible', 'mappedProducts' => count($seen),
             'verifiedUnitReferences' => count($units)];
     }
 
@@ -145,38 +157,6 @@ final class MoySklad
         ];
     }
 
-    private function identifyCounterparty(array $lead): string
-    {
-        $query = http_build_query(['filter' => 'phone=' . $lead['phone'], 'limit' => 2], '', '&', PHP_QUERY_RFC3986);
-        $matches = $this->request('counterparty?' . $query);
-        $rows = $this->rows($matches, 'rows');
-        if (count($rows) > 1 || ($matches->meta->size ?? 0) > 1) {
-            throw new LeadError(503, 'counterparty_review_required');
-        }
-        if ($rows !== []) {
-            if (!self::isEntity($rows[0], 'counterparty') || ($rows[0]->archived ?? false) === true) {
-                throw self::unavailable();
-            }
-            return $rows[0]->id;
-        }
-
-        $id = syncId($this->config['hashKey'], 'counterparty', $lead['phone']);
-        $counterparty = [
-            'name' => $lead['name'],
-            'companyType' => 'individual',
-            'phone' => $lead['phone'],
-            'syncId' => $id,
-        ];
-        if ($lead['email'] !== '') {
-            $counterparty['email'] = $lead['email'];
-        }
-        $created = $this->request('counterparty', $counterparty);
-        if (!self::isEntity($created, 'counterparty') || ($created->syncId ?? null) !== $id) {
-            throw self::unavailable();
-        }
-        return $created->id;
-    }
-
     private function description(array $lead, int $consentAt): string
     {
         $lines = ['Запрос с сайта ДЕКОРАЙ. Наличие, цены и условия уточняются менеджером.'];
@@ -185,6 +165,22 @@ final class MoySklad
         }
         if (($lead['context'] ?? '') !== '') {
             $lines[] = 'Контекст клиента: ' . $lead['context'];
+        }
+        foreach (($lead['intent'] ?? null) === null ? [] : $lead['items'] as $item) {
+            $lines[] = 'Материал: ' . $this->itemLabel($item['id']) . ' — ' . $item['qty'];
+        }
+        $total = 0;
+        foreach ($lead['calculation'] ?? [] as $group) {
+            $walls = array_map(static fn (array $wall): string => $wall['length'] . ' × ' . $wall['height'], $group['walls']);
+            $total += $group['qty'] * $group['priceMinor'];
+            $lines[] = 'Расчёт: ' . $this->itemLabel($group['id']) . ' — ' .
+                $group['qty'] . ' × ' . self::rubles($group['priceMinor']) .
+                '; стены (м): ' . implode(', ', $walls) . '; проёмы: ' . $group['openings'] .
+                ' м²; запас: ' . $group['reserve'] . '%; метод: ' .
+                ($group['method'] === 'vertical' ? 'вертикальная раскладка' : 'по площади');
+        }
+        if ($total > 0) {
+            $lines[] = 'Предварительная стоимость материалов: ' . self::rubles($total);
         }
         $lines[] = 'Имя для связи: ' . $lead['name'];
         $lines[] = 'Телефон: ' . $lead['phone'];
@@ -197,6 +193,16 @@ final class MoySklad
         $timestamp = gmdate('Y-m-d\TH:i:s', intdiv($consentAt, 1000)) . sprintf('.%03dZ', $consentAt % 1000);
         $lines[] = 'Согласие: ' . $lead['version'] . ', ' . $timestamp;
         return implode("\n", $lines);
+    }
+
+    private function itemLabel(string $id): string
+    {
+        return $this->config['catalogFacts'][$id]['sku'] ?? $id;
+    }
+
+    private static function rubles(int $minor): string
+    {
+        return number_format($minor / 100, 2, ',', '') . ' ₽';
     }
 
     private function request(string $path, ?array $body = null): stdClass

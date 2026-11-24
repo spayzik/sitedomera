@@ -276,11 +276,14 @@ test('customer descriptions cover all categories without inventing material fact
 
 test('carousel presentation retains nine real category links and owner supplied editorial images', async () => {
   const { categoryPresentation } = await import('../src/lib/categoryPresentation.ts')
-  const { parseCatalogHash } = await import('../src/lib/catalogNavigation.ts')
   const { default: sharp } = await import('sharp')
   assert.deepEqual(categoryPresentation.map(c => c.id), catalog.collections.map(c => c.id))
+  assert.deepEqual(categoryPresentation.map(c => c.href), [
+    '/catalog/derevo/', '/catalog/tkan/', '/catalog/metall/', '/catalog/bambuk-pod-kamen/',
+    '/catalog/soft-tach/', '/catalog/gibkiy-kamen/', '/catalog/shtukaturka/',
+    '/catalog/reyki/', '/catalog/profili/',
+  ])
   for (const category of categoryPresentation) {
-    assert.equal(parseCatalogHash(category.href).categoryId, category.id)
     assert.equal(category.count, catalog.collections.find(c => c.id === category.id).count)
     assert.ok(existsSync(new URL('../public/' + category.image, import.meta.url)))
     assert.ok(category.shortDescription.length > 30 && category.shortDescription.length < 160)

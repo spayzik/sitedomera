@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { LeadAction } from './LeadProvider'
 import { MessageCircle, X, Send } from 'lucide-react'
 import { faq, CONTACTS, products, collections, priceSummary } from '../data/products'
 
@@ -81,7 +82,7 @@ export function ChatBot() {
   return (
     <div className={`chatbot ${open ? 'open' : ''}`}>
       {open && (
-        <div className="chat-panel" id="domera-chat-panel">
+        <div className="chat-panel ym-hide-content" id="domera-chat-panel">
           <div className="chat-head">
             <div>
               <strong>Помощник ДЕКОРАЙ</strong>
@@ -100,6 +101,7 @@ export function ChatBot() {
             <div ref={endRef} />
           </div>
           <div className="chat-quick">
+            <LeadAction intent="feedback" context="Обратная связь из помощника сайта">Связаться с менеджером</LeadAction>
             {quick.map((q) => (
               <button key={q} type="button" onClick={() => send(q)}>
                 {q}
@@ -114,6 +116,7 @@ export function ChatBot() {
             }}
           >
             <input
+              className="ym-disable-keys"
               aria-label="Вопрос для локального автоответа"
               maxLength={1000}
               value={input}

@@ -1,10 +1,10 @@
 import { createContext, useContext } from 'react'
 import type { LeadTerms } from './leadClient'
-import type { LeadIntent } from './leadIntents'
+import type { LeadDetails, LeadIntent } from './leadIntents'
 
 type LeadService = {
   terms: LeadTerms | null
-  open: (intent: LeadIntent, context?: string) => void
+  open: (intent: LeadIntent, context?: string, details?: LeadDetails) => void
 }
 
 export const LeadContext = createContext<LeadService | null>(null)

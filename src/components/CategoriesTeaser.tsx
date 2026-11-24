@@ -3,7 +3,7 @@ import { useReducedMotion } from 'framer-motion'
 import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { categoryPresentation } from '../lib/categoryPresentation'
 
-export function CategoriesTeaser() {
+export function CategoriesTeaser({ base = './' }: { base?: string }) {
   const track = useRef<HTMLDivElement>(null)
   const gesture = useRef({ x: 0, y: 0, moved: false })
   const [active, setActive] = useState<string | null>(null)
@@ -56,7 +56,7 @@ export function CategoriesTeaser() {
         if (!event.currentTarget.contains(event.relatedTarget)) setActive(null)
       }}>
         {categoryPresentation.map(category => (
-          <a key={category.id} href={category.href}
+          <a key={category.id} href={base + category.href.slice(1)}
             aria-label={`Открыть категорию: ${category.name}`}
             className={`cat-panel${category.id === 'profiles' ? ' is-profile' : ''}${active === category.id ? ' is-active' : ''}`}
             onPointerEnter={event => { if (event.pointerType === 'mouse') setActive(category.id) }}
@@ -72,7 +72,7 @@ export function CategoriesTeaser() {
             }}
             onPointerCancel={() => { gesture.current.moved = true }}
             onClick={event => { if (gesture.current.moved && event.detail !== 0) { event.preventDefault(); gesture.current.moved = false } }}>
-            <img className="cat-panel-img" src={category.image} alt="" loading="lazy" decoding="async"
+            <img className="cat-panel-img" src={base + category.image} alt="" loading="lazy" decoding="async"
               style={{ objectPosition: category.imagePosition }} />
             <div className="cat-panel-shade" />
             <div className="cat-panel-content">

@@ -49,7 +49,11 @@ export function CatalogPage({ page, base }: { page: CatalogView; base: string })
 
   const catalogHero = 'catalog/hero/hero-catalog.webp'
   const categoryHero = category ? 'catalog/hero/collection-' + category + '.webp' : catalogHero
-  const mobileHero = category && ['fabric', 'profiles'].includes(category) ? 'catalog/categories/carousel-2026-' + category + '.webp' : null
+  const mobileHero = category
+    ? ['fabric', 'profiles'].includes(category)
+      ? 'catalog/categories/carousel-2026-' + category + '.webp'
+      : 'catalog/hero/collection-' + category + '-mobile.webp'
+    : null
 
   return <>
     <section className={page.kind === 'catalog' ? 'catalog-page-hero catalog-page-hero-index' : 'catalog-page-hero'} id="catalog">
@@ -73,6 +77,11 @@ export function CatalogPage({ page, base }: { page: CatalogView; base: string })
     </section>
     <section className="catalog-page-body" id="products" aria-label="Материалы и цены">
       <div className="container">
+        <nav className="page-crumbs" aria-label="Хлебные крошки">
+          <a href={base}>ДЕКОРАЙ</a>
+          {page.kind !== 'catalog' && <a href={base + 'catalog/'}>Каталог</a>}
+          <span aria-current="page">{page.heading}</span>
+        </nav>
         <nav className="filters-arch catalog-route-tabs" aria-label="Категории материалов">
           {[{ path: '/catalog/', label: 'Все материалы' }, ...collections.map(item => ({
             path: categoryPath(item.id), label: item.name,
@@ -99,7 +108,7 @@ export function CatalogPage({ page, base }: { page: CatalogView; base: string })
           <p>По вашему запросу ничего не найдено.</p>
           <button className="btn btn-white interactive" onClick={reset}>Сбросить фильтры</button>
         </div>}
-        {page.kind === 'catalog' && <nav className="page-links" aria-label="Подборки по толщине">
+        {page.kind === 'catalog' && <nav className="page-links" aria-label="Подборки материалов">
           {seoPages.filter(item => item.kind === 'selection').map(item =>
             <a key={item.path} href={base + item.path.slice(1)}>{item.heading}</a>)}
         </nav>}

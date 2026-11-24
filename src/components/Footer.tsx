@@ -49,7 +49,7 @@ export function Footer({ base = './' }: { base?: string }) {
           <div className="footer-legal">
             <a href={base + 'privacy/'}>Политика конфиденциальности</a>
             <CookieSettingsLink />
-            <a href={base + "#/offer"}>Условия приобретения</a>
+            <a href={base + "usloviya-priobreteniya/"}>Условия приобретения</a>
           </div>
         </div>
       </div>

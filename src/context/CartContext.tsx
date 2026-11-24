@@ -10,7 +10,7 @@ import { products } from '../data/products'
 import type { Product } from '../data/products'
 import { loadCartState, cartSnapshot, cartTotal, MAX_QTY } from '../lib/cart'
 import type { CartItem } from '../lib/cart'
-import { trackAnalyticsGoal } from '../lib/analytics'
+import { trackAnalyticsCart, trackAnalyticsGoal } from '../lib/analytics'
 export type { CartItem } from '../lib/cart'
 
 interface CartCtx {
@@ -61,6 +61,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
+    if (open) trackAnalyticsGoal('cart_view')
+  }, [open])
+
+  useEffect(() => {
     persist(items)
     try {
       if (migrationNotice) localStorage.setItem(NOTICE_KEY, 'pending')
@@ -72,9 +76,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const add = (p: Product, qty = 1) => {
       const product = byId.get(p.id)
       if (!product || !Number.isSafeInteger(qty) || qty < 1) return
-      if ((items.find((item) => item.product.id === product.id)?.qty ?? 0) < MAX_QTY) {
-        trackAnalyticsGoal('cart_add')
-      }
+      const current = items.find(item => item.product.id === product.id)?.qty ?? 0
+      trackAnalyticsCart('add', product, Math.min(qty, MAX_QTY - current))
       setItems((prev) => {
         const i = prev.findIndex((x) => x.product.id === product.id)
         if (i >= 0) {
@@ -86,18 +89,28 @@ export function CartProvider({ children }: { children: ReactNode }) {
       })
       setOpen(true)
     }
-    const remove = (id: string) =>
-      setItems((prev) => prev.filter((x) => x.product.id !== id))
+    const remove = (id: string) => {
+      const item = items.find(entry => entry.product.id === id)
+      if (item) trackAnalyticsCart('remove', item.product, item.qty)
+      setItems(prev => prev.filter(entry => entry.product.id !== id))
+    }
     const setQty = (id: string, qty: number) => {
       if (!Number.isSafeInteger(qty)) return
       const boundedQty = Math.max(0, Math.min(MAX_QTY, qty))
+      const item = items.find(entry => entry.product.id === id)
+      if (item && item.qty !== boundedQty) {
+        trackAnalyticsCart(boundedQty > item.qty ? 'add' : 'remove', item.product, Math.abs(boundedQty - item.qty))
+      }
       setItems((prev) =>
         prev
           .map((x) => (x.product.id === id ? { ...x, qty: boundedQty } : x))
           .filter((x) => x.qty > 0),
       )
     }
-    const clear = () => setItems([])
+    const clear = () => {
+      for (const item of items) trackAnalyticsCart('remove', item.product, item.qty)
+      setItems([])
+    }
     const count = items.reduce((s, x) => s + x.qty, 0)
     const total = cartTotal(items)
     return { items, count, total, add, remove, setQty, clear, open, setOpen, migrationNotice, dismissMigrationNotice: () => setMigrationNotice(false) }

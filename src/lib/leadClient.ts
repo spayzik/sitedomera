@@ -14,10 +14,14 @@ function configuredEndpoint(value: unknown) {
   } catch { return null }
 }
 
-export const leadFormPreview = import.meta.env.VITE_DEKORAY_PREVIEW === '1'
-export const leadEndpoint = leadFormPreview ? null : configuredEndpoint(import.meta.env.VITE_DEKORAY_LEAD_API)
+const preview = import.meta.env.VITE_DEKORAY_PREVIEW === '1'
+const stagingEndpoint = configuredEndpoint(import.meta.env.VITE_DEKORAY_STAGING_LEAD_API)
+export const leadEndpoint = preview
+  ? stagingEndpoint?.startsWith('https://') ? stagingEndpoint : null
+  : configuredEndpoint(import.meta.env.VITE_DEKORAY_LEAD_API)
 
 export type LeadTerms = {
+  mode: 'production' | 'staging'
   consentPath: string
   consentVersion: string
   cart: boolean
@@ -37,14 +41,17 @@ export async function fetchLeadTerms(endpoint: string, controller: AbortControll
     if (!response.ok || !jsonType(response)) return null
     const json = await response.json()
     if (json?.status !== 'ready' || typeof json.consentPath !== 'string' || !documentPath.test(json.consentPath) ||
-        typeof json.consentVersion !== 'string' || !consentVersion.test(json.consentVersion)) return null
-    const policy = await fetch(json.consentPath, options)
+        typeof json.consentVersion !== 'string' || !consentVersion.test(json.consentVersion) ||
+        (preview ? json.mode !== 'staging' : json.mode === 'staging')) return null
+    const policyUrl = new URL(json.consentPath, new URL(endpoint, window.location.origin))
+    const policy = await fetch(policyUrl, options)
     if (!policy.ok || !/^text\/html\b/i.test(policy.headers.get('Content-Type') ?? '')) return null
     const page = new DOMParser().parseFromString(await policy.text(), 'text/html')
     const versions = page.querySelectorAll('meta[name="dekoray-consent-version"]')
     if (versions.length !== 1 || versions[0].getAttribute('content') !== json.consentVersion) return null
     return {
-      consentPath: json.consentPath,
+      mode: preview ? 'staging' : 'production',
+      consentPath: policyUrl.href,
       consentVersion: json.consentVersion,
       cart: json.cart === undefined || json.cart === true,
       intents: Array.isArray(json.intents) ? json.intents.filter(isLeadIntent) : [],
@@ -56,12 +63,14 @@ export async function fetchLeadTerms(endpoint: string, controller: AbortControll
   }
 }
 
-export async function postLead(endpoint: string, attempt: LeadAttempt, controller: AbortController) {
+export async function postLead(endpoint: string, attempt: LeadAttempt, controller: AbortController, access?: string) {
   const timer = window.setTimeout(() => controller.abort(), 18_000)
   try {
     const response = await fetch(endpoint, {
       ...safeOptions, method: 'POST', signal: controller.signal,
-      headers: { 'Content-Type': 'application/json', 'Idempotency-Key': attempt.key },
+      headers: { 'Content-Type': 'application/json', 'Idempotency-Key': attempt.key,
+        ...(access ? { 'X-Dekoray-Test-Access': access } : {}),
+      },
       body: attempt.body,
     })
     const json = jsonType(response) ? await response.json() : null
@@ -75,4 +84,22 @@ export async function postLead(endpoint: string, attempt: LeadAttempt, controlle
   } finally {
     window.clearTimeout(timer)
   }
+}
+
+const observedReceipts = new Set<string>()
+const receiptStorageKey = 'dekoray-observed-lead-receipts'
+
+export async function trackLeadReceipt({ requestId }: LeadReceipt): Promise<boolean> {
+  if (observedReceipts.has(requestId)) return false
+  observedReceipts.add(requestId)
+  try {
+    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(requestId))
+    const fingerprint = [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, '0')).join('')
+    const previous = (sessionStorage.getItem(receiptStorageKey) ?? '').split(',').filter(Boolean)
+    if (previous.includes(fingerprint)) return false
+    sessionStorage.setItem(receiptStorageKey, [...previous, fingerprint].slice(-128).join(','))
+  } catch {
+    // The in-memory guard also works in browsers that disable session storage.
+  }
+  return true
 }

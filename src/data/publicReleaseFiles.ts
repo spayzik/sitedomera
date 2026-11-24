@@ -12,6 +12,13 @@ export const publicReleaseFiles = new Set([
   ...['living', 'bedroom', 'dining', 'metal', 'fabric'].map(id => 'catalog/rooms/interior-' + id + '-480.webp'),
   'catalog/rooms/concept-wood.webp', 'catalog/rooms/concept-wood-small.webp',
   ...collections.map(({ id }) => 'catalog/hero/collection-' + id + '.webp'),
+  'catalog/hero/collection-bamboo_stone-mobile.webp',
+  'catalog/hero/collection-flexible_stone-mobile.webp',
+  'catalog/hero/collection-metal-mobile.webp',
+  'catalog/hero/collection-plaster-mobile.webp',
+  'catalog/hero/collection-slats-mobile.webp',
+  'catalog/hero/collection-soft-mobile.webp',
+  'catalog/hero/collection-wood-mobile.webp',
   ...collections.map(({ id }) => 'catalog/categories/carousel-2026-' + id + '.webp'),
   ...products.map(({ image }) => image),
 ])

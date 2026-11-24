@@ -8,7 +8,7 @@ const source = await readFile(new URL('../src/lib/analytics.ts', import.meta.url
 const js = stripTypeScriptTypes(source.replace(
   'import.meta.env.VITE_YM_ID',
   JSON.stringify(String(counter)),
-))
+).replace(/import\.meta\.env\.VITE_[A-Z_]+/g, 'undefined'))
 const moduleUrl = 'data:text/javascript;base64,' + Buffer.from(js).toString('base64')
 
 async function browserHarness(t) {
@@ -19,7 +19,7 @@ async function browserHarness(t) {
   const reloads = []
   const origin = 'https://xn--80ahdrdyo.xn--p1ai'
   const browser = {
-    location: { origin, hash: '', reload: () => reloads.push(true) },
+    location: { origin, hostname: new URL(origin).hostname, pathname: '/', search: '', hash: '', reload: () => reloads.push(true) },
     addEventListener: (name, onEvent) => listeners.set(name, onEvent),
     removeEventListener: (name, onEvent) => {
       if (listeners.get(name) === onEvent) listeners.delete(name)
@@ -36,6 +36,7 @@ async function browserHarness(t) {
   const mocks = {
     window: browser,
     document: {
+      referrer: 'https://search.example/?q=private',
       createElement: () => ({}),
       head: { appendChild: (node) => scriptNodes.push(node) },
     },
@@ -81,7 +82,8 @@ test('consent controls initialization, SPA hits and fixed goal identifiers', asy
 
   analytics.saveAnalyticsConsent('accepted')
   assert.equal(analytics.readAnalyticsConsent(), 'accepted')
-  browser.location.hash = '#/catalog?phone=private'
+  browser.location.pathname = '/catalog/'
+  browser.location.search = '?phone=private&utm_source=yandex&utm_medium=cpc&utm_campaign=123&utm_term=private'
   analytics.startAnalytics()
   analytics.startAnalytics()
   analytics.trackAnalyticsGoal('lead_submit')
@@ -89,18 +91,19 @@ test('consent controls initialization, SPA hits and fixed goal identifiers', asy
   assert.equal(scriptNodes[0].src, 'https://mc.yandex.ru/metrika/tag.js')
   finishScript()
   assert.deepEqual(calls[0], [counter, 'init', {
-    defer: true, trackLinks: false, accurateTrackBounce: false, clickmap: false, webvisor: false,
+    defer: true, trackLinks: false, accurateTrackBounce: true, clickmap: true, webvisor: false,
+    ecommerce: 'dataLayer', disableYtm: true,
     trackHash: false,
   }])
   assert.deepEqual(calls.slice(1), [
-    [counter, 'hit', origin + '/#/catalog', { referer: '' }],
+    [counter, 'hit', origin + '/catalog/?utm_source=yandex&utm_medium=cpc&utm_campaign=123', { referer: 'https://search.example/' }],
     [counter, 'reachGoal', 'catalog_view'],
   ])
   analytics.trackAnalyticsPage()
   assert.equal(calls.length, 3)
-  browser.location.hash = '#/privacy'
+  browser.location.pathname = '/politika-konfidencialnosti/'
   analytics.trackAnalyticsPage()
-  assert.deepEqual(calls[3], [counter, 'hit', origin + '/#/privacy', { referer: origin + '/#/catalog' }])
+  assert.deepEqual(calls[3], [counter, 'hit', origin + '/politika-konfidencialnosti/', { referer: origin + '/catalog/' }])
   analytics.trackAnalyticsLink({ target: new TestLink('https://t.me/example?text=private') })
   analytics.trackAnalyticsLink({ target: new TestLink('tel:+70000000001') })
   analytics.trackAnalyticsLink({ target: new TestLink('https://t.me.example.org/') })
@@ -108,9 +111,14 @@ test('consent controls initialization, SPA hits and fixed goal identifiers', asy
   analytics.trackAnalyticsGoal('lead_submit')
   assert.deepEqual(calls.slice(4), [
     [counter, 'reachGoal', 'telegram_click'],
+    [counter, 'reachGoal', 'external_click'],
     [counter, 'reachGoal', 'phone_click'],
+    [counter, 'reachGoal', 'external_click'],
     [counter, 'reachGoal', 'lead_submit'],
   ])
+  analytics.trackAnalyticsCart('add', { id: 'approved-sku', priceRub: 7000 }, 2)
+  assert.deepEqual(browser.dataLayer, [{ ecommerce: { currencyCode: 'RUB', add: { products: [{ id: 'approved-sku', price: 7000, quantity: 2 }] } } }])
+  assert.doesNotMatch(JSON.stringify(calls), /private/)
   analytics.saveAnalyticsConsent('rejected')
   analytics.stopAnalytics()
   assert.equal(analytics.readAnalyticsConsent(), 'rejected')

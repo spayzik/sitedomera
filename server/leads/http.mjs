@@ -1,8 +1,7 @@
 import { createServer } from 'node:http'
 import { isIP } from 'node:net'
-import { MAX_BODY_BYTES, UUID, LeadError, validateLead } from './validation.mjs'
+import { LEGACY_LEAD_INTENTS, MAX_BODY_BYTES, UUID, LeadError, validateLead } from './validation.mjs'
 import { digest } from './ledger.mjs'
-import { leadIntents } from '../../src/lib/leadIntents.ts'
 
 const apiPath = '/api/lead'
 
@@ -70,7 +69,7 @@ export function createLeadServer({ config, ledger, moysklad, log = () => {} }) {
       if (request.method === 'GET') {
         return reply(200, {
           status: 'ready', consentPath: config.consentPath, consentVersion: config.consentVersion,
-          ...(config.enableGeneralLeads ? { cart: config.catalog.size > 0, intents: Object.keys(leadIntents) } : {}),
+          ...(config.enableGeneralLeads ? { cart: config.catalog.size > 0, intents: LEGACY_LEAD_INTENTS } : {}),
         })
       }
       if (request.method !== 'POST') return reply(405, { error: 'method_not_allowed' })

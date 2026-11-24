@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { calculatePanels, calculateProjectPanels, sheetArea, sheetPricePerSquareMeter } from '../src/lib/calculator.ts'
+import { calculatePanels, calculateProjectPanels, openingsArea, sheetArea, sheetPricePerSquareMeter } from '../src/lib/calculator.ts'
 import { products } from '../src/data/products.ts'
 const material = products.find(p => p.sku === 'C807601-36')
 
@@ -71,4 +71,13 @@ test('straight vertical panel layout counts each wall and does not assume cutout
   assert.equal(calculateWallLayout(walls, '101', material), null)
   assert.equal(calculateWallLayout([{ length: '', height: '3' }], '10', material), null)
   assert.equal(calculateWallLayout(walls, '10', products.find(p => p.kind === 'slat')), null)
+})
+
+test('separate windows and doors reduce the sheet quote without silently accepting a partial cutout', () => {
+  const wall = { length: '4', height: '3' }
+  const cutouts = [{ length: '1', height: '1' }, { length: '1', height: '2' }]
+  assert.equal(openingsArea(cutouts, '0,5'), 3.5)
+  assert.equal(calculateProjectPanels([wall], openingsArea(cutouts, '0,5'), '10', material).sheets, 3)
+  assert.equal(calculateProjectPanels([wall], '0', '10', material).sheets, 4)
+  assert.equal(calculateProjectPanels([wall], openingsArea([{ length: '1', height: '' }], '0'), '10', material).valid, false)
 })

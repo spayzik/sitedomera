@@ -12,7 +12,15 @@ const path = root.dataset.path ?? (import.meta.env.DEV ? window.location.pathnam
 function migrateLegacyRoute() {
   if (path !== '/') return false
   const { hash, search } = window.location
-  if (hash === '#/privacy') { window.location.replace(base + 'privacy/'); return true }
+  const [legacyPath, legacyQuery] = hash.split('?')
+  const migrated = legacyPath === '#/privacy' ? 'privacy/' :
+    legacyPath === '#/offer' ? 'usloviya-priobreteniya/' : undefined
+  if (migrated) {
+    const query = new URLSearchParams(search)
+    for (const [key, value] of new URLSearchParams(legacyQuery)) query.set(key, value)
+    window.location.replace(base + migrated + (query.size ? '?' + query : ''))
+    return true
+  }
   if (!/^#\/catalog(?:\?|$)/.test(hash)) return false
   const product = legacyProductPath(hash)
   const { categoryId } = parseCatalogHash(hash)

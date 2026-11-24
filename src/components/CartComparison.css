@@ -1,0 +1,45 @@
+.cart-compare {
+  margin-block: 1rem;
+  padding: 0.85rem;
+  border: 1px solid var(--line);
+}
+
+.cart-compare summary {
+  cursor: pointer;
+  min-height: 44px;
+  align-content: center;
+  font-weight: 600;
+}
+
+.cart-compare-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-block: 0.75rem;
+}
+
+.cart-compare-controls label {
+  display: block;
+  margin-block-end: 0.3rem;
+}
+
+.cart-compare table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.cart-compare th,
+.cart-compare td {
+  border-bottom: 1px solid var(--line);
+  padding: 0.45rem 0.3rem;
+  text-align: start;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.cart-compare :is(th, td):first-child {
+  width: 23%;
+  color: var(--muted);
+}

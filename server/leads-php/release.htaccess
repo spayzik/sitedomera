@@ -3,6 +3,20 @@ ErrorDocument 404 /404.html
 
 RewriteEngine On
 
+# Permanent redirects for published aliases. In static preview, equivalent HTML
+# redirects are generated from legacyRedirects in src/data/seoRoutes.ts.
+RewriteRule ^stati(?:/index\.html)?/?$ https://xn--80ahdrdyo.xn--p1ai/news/ [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/news/$1/index.html -f
+RewriteRule ^stati/([a-z0-9-]+)(?:/index\.html)?/?$ https://xn--80ahdrdyo.xn--p1ai/news/$1/ [R=301,L]
+RewriteRule ^catalog/wood(?:/index\.html)?/?$ https://xn--80ahdrdyo.xn--p1ai/catalog/derevo/ [R=301,L]
+RewriteRule ^dostavka-i-oplata(?:/index\.html)?/?$ https://xn--80ahdrdyo.xn--p1ai/dostavka/ [R=301,L]
+RewriteRule ^offer(?:/index\.html)?/?$ https://xn--80ahdrdyo.xn--p1ai/usloviya-priobreteniya/ [R=301,L]
+
+# Directory routes normalize to a terminal slash without relying on an
+# origin-generated Location scheme behind the REG.RU TLS proxy.
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^((?:[a-z0-9-]+/)*[a-z0-9-]+)$ https://xn--80ahdrdyo.xn--p1ai/$1/ [R=301,L]
+
 RewriteCond %{THE_REQUEST} "\s/+((?:[a-z0-9-]+/)*)index\.html(?:[?\s])"
 RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^((?:[a-z0-9-]+/)*)index\.html$ https://xn--80ahdrdyo.xn--p1ai/$1 [R=301,L]
@@ -10,10 +24,10 @@ RewriteRule ^((?:[a-z0-9-]+/)*)index\.html$ https://xn--80ahdrdyo.xn--p1ai/$1 [R
 RewriteCond %{HTTP_HOST} ^www\.xn--80ahdrdyo\.xn--p1ai(?::[0-9]+)?$ [NC]
 RewriteRule ^ https://xn--80ahdrdyo.xn--p1ai%{REQUEST_URI} [R=301,L,NE]
 
-# Enable this configuration only after verifying Apache HTTPS=on for external HTTPS.
-# Use ispmanager for the scheme redirect if the reverse proxy terminates TLS.
-RewriteCond %{HTTP_HOST} ^xn--80ahdrdyo\.xn--p1ai(?::[0-9]+)?$ [NC]
-RewriteCond %{HTTPS} !=on
-RewriteRule ^ https://xn--80ahdrdyo.xn--p1ai%{REQUEST_URI} [R=308,L,NE]
+# At TLS termination use the ispmanager HTTPS redirect. Activate the two
+# Apache directives below only when external HTTPS is observed as HTTPS=on at Apache.
+# RewriteCond %{HTTP_HOST} ^xn--80ahdrdyo\.xn--p1ai(?::[0-9]+)?$ [NC]
+# RewriteCond %{HTTPS} !=on
+# RewriteRule ^ https://xn--80ahdrdyo.xn--p1ai%{REQUEST_URI} [R=308,L,NE]
 
 RewriteRule ^api/lead$ api/lead.php [END]

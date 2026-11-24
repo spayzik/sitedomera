@@ -19,6 +19,36 @@ export const leadIntents = {
     subject: 'Запрос образцов',
     message: 'Здравствуйте! Хочу уточнить, какие образцы ДЕКОРАЙ можно посмотреть в шоуруме.',
   },
+  order: {
+    title: 'Запросить заказ',
+    subject: 'Заявка на заказ',
+    message: 'Здравствуйте! Хочу заказать материалы ДЕКОРАЙ и уточнить наличие.',
+  },
+  installation: {
+    title: 'Уточнить монтаж и замер',
+    subject: 'Монтаж и замер',
+    message: 'Здравствуйте! Хочу обсудить замер и монтаж панелей ДЕКОРАЙ.',
+  },
+  delivery: {
+    title: 'Уточнить доставку',
+    subject: 'Доставка материалов',
+    message: 'Здравствуйте! Хочу уточнить доставку материалов ДЕКОРАЙ.',
+  },
+  wholesale: {
+    title: 'Узнать оптовые условия',
+    subject: 'Оптовые условия',
+    message: 'Здравствуйте! Хочу обсудить оптовую поставку материалов ДЕКОРАЙ.',
+  },
+  designer: {
+    title: 'Узнать условия для дизайнеров',
+    subject: 'Условия для дизайнеров',
+    message: 'Здравствуйте! Хочу обсудить условия работы с дизайнерами.',
+  },
+  feedback: {
+    title: 'Связаться с менеджером',
+    subject: 'Обратная связь',
+    message: 'Здравствуйте! Хочу связаться с менеджером ДЕКОРАЙ.',
+  },
 } as const
 
 export type LeadIntent = keyof typeof leadIntents
@@ -28,3 +58,18 @@ export function isLeadIntent(value: unknown): value is LeadIntent {
 }
 
 export const leadContextLimit = 500
+
+export type LeadItem = { id: string; qty: number }
+
+export type LeadCalculation = {
+  id: string
+  walls: readonly { length: number; height: number }[]
+  openings: number
+  reserve: number
+  method: 'area' | 'vertical'
+}
+
+export type LeadDetails = {
+  items?: readonly LeadItem[]
+  calculation?: readonly LeadCalculation[]
+}

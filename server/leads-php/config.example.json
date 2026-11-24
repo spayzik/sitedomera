@@ -4,6 +4,7 @@
   "token": "",
   "organizationId": "",
   "intakeStateId": "",
+  "intakeAgentId": "",
   "consentVersion": "",
   "consentPath": "/legal/lead-consent.html",
   "consentSha256": "",

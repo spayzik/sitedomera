@@ -24,15 +24,15 @@ export function InstallationPage({ page, base }: {
         <h1>{page.heading}</h1>
         <p className="lead">Наши мастера приедут на объект, снимут размеры и проверят стены. До начала монтажа согласуем, где будут стыки, чем оформить углы и сколько будет стоить работа.</p>
         <div className="page-links">
-          <LeadAction className="btn btn-primary interactive" intent="consultation" context={context}>
+          <LeadAction className="btn btn-primary interactive" intent="installation" context={context}>
             Договориться о замере <ArrowUpRight size={16} aria-hidden="true" />
           </LeadAction>
         </div>
         <div className="installation-contact">
           <span>Связаться</span>
           <SocialContacts base={base} placement="product" hidePhone drafts={{
-            telegram: inquiryTelegramLink('consultation', context),
-            whatsapp: inquiryWhatsAppLink('consultation', context),
+            telegram: inquiryTelegramLink('installation', context),
+            whatsapp: inquiryWhatsAppLink('installation', context),
           }} />
           <a className="secondary-action" href={'tel:' + CONTACTS.phoneRaw}><Phone size={15} aria-hidden="true" /> Позвонить</a>
         </div>

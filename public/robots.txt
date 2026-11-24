@@ -1,4 +1,18 @@
 User-agent: *
 Allow: /
+Disallow: /api/
+Disallow: /*?sort=
+Disallow: /*&sort=
+Disallow: /*?q=
+Disallow: /*&q=
+
+User-agent: Yandex
+Allow: /
+Disallow: /api/
+Disallow: /*?sort=
+Disallow: /*&sort=
+Disallow: /*?q=
+Disallow: /*&q=
+Clean-param: utm_source&utm_medium&utm_campaign&utm_content&utm_term&yclid /
 
 Sitemap: https://xn--80ahdrdyo.xn--p1ai/sitemap.xml

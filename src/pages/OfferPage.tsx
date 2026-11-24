@@ -27,11 +27,13 @@ const sections = [
   },
 ]
 
-export function OfferPage() {
+export function OfferPage({ base }: { base: string }) {
   return (
     <section className="section legal" id="offer">
       <div className="container">
-        <p className="eyebrow">Документы</p>
+        <nav className="page-crumbs" aria-label="Хлебные крошки">
+          <a href={base}>ДЕКОРАЙ</a><span aria-current="page">Условия приобретения</span>
+        </nav>
         <h1 style={{ fontSize: 'clamp(2.5rem, 6vw, 4.5rem)', fontFamily: 'var(--font-display)' }}>
           Условия<br/>приобретения
         </h1>

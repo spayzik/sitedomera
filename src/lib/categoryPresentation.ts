@@ -1,5 +1,5 @@
 import { collections, type CollectionId } from '../data/products.ts'
-import { updateCatalogHash } from './catalogNavigation.ts'
+import { categoryPath } from '../data/seoPaths.ts'
 
 const categoryCopy: Record<CollectionId, string> = {
   wood: 'Древесные фактуры и спокойные оттенки для выразительной отделки интерьера.',
@@ -18,7 +18,7 @@ export const categoryPresentation = collections.map(collection => {
   return {
     ...collection,
     shortDescription: categoryCopy[collection.id],
-    href: updateCatalogHash('#/catalog', { category: collection.id }),
+    href: categoryPath(collection.id),
     image: `catalog/categories/carousel-2026-${collection.id}.webp`,
     imagePosition: collection.id === 'profiles' ? 'right bottom' : 'center',
   }

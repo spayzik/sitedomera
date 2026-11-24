@@ -1,9 +1,10 @@
-import { isLeadIntent, leadContextLimit } from '../../src/lib/leadIntents.ts'
+import { leadContextLimit } from '../../src/lib/leadIntents.ts'
 
 export const UUID = /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i
 export const VERSION = /^[a-z0-9][a-z0-9._-]{0,63}$/i
 export const DOCUMENT_PATH = /^\/(?:[a-z0-9_-]+\/)*[a-z0-9_-]+\.html$/i
 export const MAX_BODY_BYTES = 16 * 1024
+export const LEGACY_LEAD_INTENTS = ['consultation', 'selection', 'calculation', 'samples']
 const unsupportedControls = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/u
 
 export class LeadError extends Error {
@@ -38,7 +39,7 @@ export function validateLead(raw, config) {
       typeof raw.email !== 'string') {
     throw new LeadError(422, 'invalid_request')
   }
-  if (isInquiry ? config.enableGeneralLeads !== true || !isLeadIntent(raw.intent) ||
+  if (isInquiry ? config.enableGeneralLeads !== true || !LEGACY_LEAD_INTENTS.includes(raw.intent) ||
       (raw.context !== undefined && typeof raw.context !== 'string') :
       !Array.isArray(raw.items) || raw.items.length < 1 || raw.items.length > 45) {
     throw new LeadError(422, 'invalid_request')

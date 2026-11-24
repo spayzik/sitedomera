@@ -1,13 +1,12 @@
 import { motion } from 'framer-motion'
 import { CONTACTS, catalogSummary, formatRange } from '../data/products'
-import { Counter } from './Counter'
 import { EditorialReveal } from './EditorialReveal'
 
 const stats = [
-  { to: catalogSummary.productCount, suffix: '', text: null as string | null, label: 'позиций в каталоге' },
-  { to: catalogSummary.categoryCount, suffix: '', text: null, label: 'категорий материалов' },
-  { to: null as number | null, suffix: '', text: formatRange(catalogSummary.panelThickness), label: 'толщина панелей, мм' },
-  { to: null as number | null, suffix: '', text: formatRange(catalogSummary.panelWeight), label: 'вес панелей, кг' },
+  { value: catalogSummary.productCount, label: 'позиций в каталоге' },
+  { value: catalogSummary.categoryCount, label: 'категорий материалов' },
+  { value: formatRange(catalogSummary.panelThickness), label: 'толщина панелей, мм' },
+  { value: formatRange(catalogSummary.panelWeight), label: 'вес панелей, кг' },
 ]
 
 export function Manifest() {
@@ -42,20 +41,11 @@ export function Manifest() {
         </div>
 
         <div className="manifest-stats">
-          {stats.map((s, i) => (
-            <motion.div
-              key={s.label}
-              className="manifest-stat"
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-40px' }}
-              transition={{ duration: 0.6, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <span className="manifest-stat-num">
-                {s.to != null ? <Counter to={s.to} suffix={s.suffix} /> : s.text}
-              </span>
-              <span className="manifest-stat-label">{s.label}</span>
-            </motion.div>
+          {stats.map(({ label, value }) => (
+            <div key={label} className="manifest-stat">
+              <span className="manifest-stat-num">{value}</span>
+              <span className="manifest-stat-label">{label}</span>
+            </div>
           ))}
         </div>
       </div>

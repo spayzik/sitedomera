@@ -155,8 +155,9 @@ export function ProductPage({ product, base }: { product: Product; base: string 
         <StockAvailability productId={product.id} />
         <div className="page-links material-actions">
           <button className="btn btn-primary interactive" type="button" onClick={() => add(product)}>Добавить в подборку</button>
-          <LeadAction className="secondary-action" intent="consultation" context={context}>Задать вопрос <ArrowUpRight size={15} aria-hidden="true" /></LeadAction>
-          <LeadAction className="secondary-action" intent="samples" context={context}><Layers size={15} aria-hidden="true" /> Запросить образец</LeadAction>
+          <LeadAction className="secondary-action" intent="consultation" context={context} details={{ items: [{ id: product.id, qty: 1 }] }}>Задать вопрос <ArrowUpRight size={15} aria-hidden="true" /></LeadAction>
+          <LeadAction className="secondary-action" intent="samples" context={context} details={{ items: [{ id: product.id, qty: 1 }] }}><Layers size={15} aria-hidden="true" /> Запросить образец</LeadAction>
+          <LeadAction className="secondary-action" intent="order" context={context} details={{ items: [{ id: product.id, qty: 1 }] }}>Запросить заказ</LeadAction>
           {sheetArea(product) > 0 && <a className="secondary-action" href={base + 'kalkulyator/?material=' + encodeURIComponent(product.id)}><CalculatorIcon size={15} aria-hidden="true" /> Рассчитать для моей стены</a>}
         </div>
         <div className="material-specs"><h2>Характеристики</h2>

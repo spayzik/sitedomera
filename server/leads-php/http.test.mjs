@@ -6,7 +6,7 @@ import { copyFile, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promi
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
-import { fixture, id, mapped, receipt, sentinel, organizationId, intakeStateId } from './test/fixture.mjs'
+import { fixture, id, mapped, receipt, sentinel, organizationId, intakeStateId, intakeAgentId } from './test/fixture.mjs'
 import { validateLead as validateNode } from '../leads/validation.mjs'
 import { digest as digestNode, syncId as nodeSyncId } from '../leads/ledger.mjs'
 
@@ -29,7 +29,7 @@ async function check(response, status, body) {
 function php(code, ...arguments_) {
   const extensions = process.env.DEKORAY_PHP_EXT
     ? ['-n','-d','extension_dir=' + process.env.DEKORAY_PHP_EXT,
-      ...['curl','intl','mbstring','pdo_sqlite'].flatMap(ext => ['-d','extension=' + ext])]
+      ...['curl','intl','mbstring','pdo_sqlite', 'openssl'].flatMap(ext => ['-d','extension=' + ext])]
     : []
   return execFileSync(process.env.DEKORAY_PHP_BIN || 'php', [...extensions, '-r', code, ...arguments_],
     {encoding:'utf8', windowsHide:true, stdio:['ignore','pipe','pipe']})
@@ -40,13 +40,13 @@ test('shared contract: PHP and Node normalize the same verified cart and derive 
   t.after(() => app.close())
   await check(await fetch(app.origin + '/api/lead'), 200, {
     status:'ready', consentPath:app.config.consentPath, consentVersion:app.config.consentVersion,
-    cart:true, intents:['consultation','selection','calculation','samples'],
+    cart:true, intents:['consultation','selection','calculation','samples','order','installation','delivery','wholesale','designer','feedback'],
   })
   const key = randomUUID()
   await check(await post(app, selection, key), 201, {status:'accepted',requestId:receipt})
   const normalized = validateNode(selection, {...app.config, catalog:new Map(Object.entries(app.config.catalog))})
   const context = {
-    organizationId:app.config.organizationId, intakeStateId:app.config.intakeStateId,
+    organizationId:app.config.organizationId, intakeStateId:app.config.intakeStateId, intakeAgentId,
     items:[app.config.catalog[id]],
   }
   const database = new DatabaseSync(app.config.ledgerPath, {readOnly:true})
@@ -54,6 +54,7 @@ test('shared contract: PHP and Node normalize the same verified cart and derive 
   database.close()
   assert.equal(row.fingerprint, digestNode(app.config.hashKey, 'payload', JSON.stringify([normalized,context])))
   assert.equal(app.attempts[0].syncId, nodeSyncId(app.config.hashKey,'customerorder',digestNode(app.config.hashKey,'ledger-id',key)))
+  assert.equal(new URL(app.attempts[0].agent.meta.href).pathname.split('/').at(-1),intakeAgentId)
   assert.deepEqual(app.attempts[0].positions.map(item => [item.quantity, item.price, new URL(item.assortment.meta.href).pathname.split('/').at(-1)]),
     [[5, 800000, mapped]])
   await app.restart()
@@ -134,7 +135,7 @@ test('production entry rejects alternate direct paths, host or cleartext and req
   await writeFile(consentFile,legal)
   await writeFile(join(privateRoot,'catalog-contract.json'),JSON.stringify({[id]:{unit:'лист',priceMinor:800000}}))
   const config = {
-    enabled:true, crmSafetyVerified:false, token:sentinel, organizationId,intakeStateId,
+    enabled:true, crmSafetyVerified:false, token:sentinel, organizationId,intakeStateId,intakeAgentId,
     consentVersion:'qa-php-only',consentPath,consentSha256:createHash('sha256').update(legal).digest('hex'),
     hashKey:'8'.repeat(64),retentionDays:90,catalog:{},
   }
@@ -192,6 +193,7 @@ test('MoySklad preflight uses only GET, follows the verified variant parent unit
         if ($method !== "GET" || $body !== null) throw new RuntimeException("not read-only");
         $data = match ($url) {
           "$base/organization/$org" => $entity($org,"organization"),
+          "$base/counterparty/$parent" => $entity($parent,"counterparty"),
           "$base/customerorder/metadata" => ["states"=>[$entity($state,"state")]],
           "$base/variant/$variant" => $entity($variant,"variant") + ["product"=>$entity($parent,"product")],
           "$base/product/$parent" => $entity($parent,"product") + ["uom"=>$entity($uom,"uom")],
@@ -200,13 +202,99 @@ test('MoySklad preflight uses only GET, follows the verified variant parent unit
         };
         return ["status"=>200,"body"=>json_encode($data)];
     };
-    $config=["organizationId"=>$org,"intakeStateId"=>$state,"catalog"=>[["id"=>$variant,"type"=>"variant","uomId"=>$uom]]];
+    $config=["organizationId"=>$org,"intakeStateId"=>$state,"intakeAgentId"=>$parent,"catalog"=>[["id"=>$variant,"type"=>"variant","uomId"=>$uom]]];
     $verified=(new Dekoray\\Leads\\MoySklad($config,$transport))->preflight();
     $config["catalog"][0]["uomId"]=$state;
     try { (new Dekoray\\Leads\\MoySklad($config,$transport))->preflight(); }
     catch(Dekoray\\Leads\\LeadError $error) { $verified["mismatch"]=$error->errorCode; }
     echo json_encode($verified);`
   assert.deepEqual(JSON.parse(php(code)),{
-    organization:'visible',intakeState:'visible',mappedProducts:1,verifiedUnitReferences:1,mismatch:'mapped_unit_invalid',
+    organization:'visible',intakeState:'visible',intakeAgent:'visible',mappedProducts:1,verifiedUnitReferences:1,mismatch:'mapped_unit_invalid',
   })
+})
+
+test('typed quote requests preserve sample IDs and recalculate prices and sheets server-side', async t => {
+  const app = await fixture()
+  t.after(() => app.close())
+  const item = {id,qty:2}
+  const request = {...contact,intent:'calculation',calculation:[
+    {id,walls:[{length:4,height:2.7}],openings:1,reserve:10,method:'area'},
+    {id,walls:[{length:1.22,height:3}],openings:0,reserve:0,method:'vertical'},
+  ]}
+  await check(await post(app, {...request, calculation:[{...request.calculation[0],priceMinor:1}]}),422,{error:'invalid_calculation'})
+  await check(await post(app, {...request, calculation:[{...request.calculation[1],openings:1}]}),422,{error:'invalid_calculation'})
+  await check(await post(app, request),201,{status:'accepted',requestId:receipt})
+  assert.match(app.attempts.at(-1).description, /A9001.*3 × 8000,00 ₽/u)
+  assert.match(app.attempts.at(-1).description, /A9001.*1 × 8000,00 ₽/u)
+  assert.match(app.attempts.at(-1).description, /32000,00 ₽/u)
+  assert.equal(app.attempts.at(-1).positions, undefined)
+  await check(await post(app, {...contact,intent:'samples',items:[item]}),201,{status:'accepted',requestId:receipt})
+  assert.match(app.attempts.at(-1).description, /A9001.*2/u)
+  assert.equal(app.attempts.at(-1).positions, undefined)
+  await check(await post(app, {...contact,intent:'order',items:[item]}),201,{status:'accepted',requestId:receipt})
+  assert.equal(app.attempts.at(-1).positions, undefined)
+  assert.match(app.attempts.at(-1).description, /A9001.*2/u)
+})
+
+test('protected staging allows only authorized synthetic submissions from the exact preview origin and stores one delivery', async t => {
+  const access = 'A'.repeat(48)
+  const app = await fixture({staging:{access,port:0}})
+  t.after(() => app.close())
+  const origin = 'https://spayzik.github.io'
+  const headers = {Origin:origin,'Sec-Fetch-Site':'cross-site','X-Dekoray-Test-Access':access}
+  const synthetic = {...consultation,name:'Тест Декорай',phone:'+12025550101',email:'dekoray@example.test'}
+  const preflight = await fetch(app.origin + '/api/lead', {method:'OPTIONS',headers:{
+    Origin:origin,'Access-Control-Request-Method':'POST','Access-Control-Request-Headers':'content-type,idempotency-key,x-dekoray-test-access',
+  }})
+  assert.equal(preflight.status,204)
+  assert.equal(preflight.headers.get('Access-Control-Allow-Origin'),origin)
+  assert.match(preflight.headers.get('Access-Control-Allow-Headers'),/X-Dekoray-Test-Access/i)
+  const ready = await fetch(app.origin + '/api/lead', {headers:{Origin:origin}})
+  assert.equal((await ready.json()).mode, 'staging')
+  assert.match(ready.headers.get('X-Robots-Tag'),/noindex/)
+  const consent = await fetch(app.origin + app.config.consentPath,{headers:{Origin:origin}})
+  assert.equal(consent.status,200)
+  assert.equal(consent.headers.get('Access-Control-Allow-Origin'),origin)
+  await check(await post(app, synthetic, undefined, {...headers, Origin:'https://spayzik.github.io.evil.invalid'}),403,{error:'origin_denied'})
+  await check(await post(app, synthetic, undefined, {...headers,'X-Dekoray-Test-Access':''}),403,{error:'test_access_required'})
+  await check(await post(app, consultation, undefined, headers),422,{error:'synthetic_contact_required'})
+  const key = randomUUID()
+  const result = await post(app, synthetic, key, headers)
+  assert.equal(result.status,201)
+  const accepted = await result.json()
+  assert.equal(accepted.status,'accepted')
+  assert.match(accepted.requestId,/^[a-f0-9-]{36}$/)
+  await check(await post(app, synthetic, key, headers),200,accepted)
+  assert.equal(app.sealedDeliveryCount(),1)
+  assert.equal(app.attempts.length,1)
+  assert.doesNotMatch(app.attempts[0].description,/Контекст клиента|Комментарий/)
+})
+
+test('temporary provider failure persists an encrypted pending payload and a worker delivers it after PHP restart', async t => {
+  const app = await fixture()
+  t.after(() => app.close())
+  const key = randomUUID()
+  app.failNext(503)
+  await check(await post(app, consultation,key),503,{error:'temporarily_unavailable'})
+  const db = new DatabaseSync(app.config.ledgerPath)
+  const pending = db.prepare('SELECT payload, next_at, attempts FROM pending_delivery').get()
+  assert(pending.payload.length > 0)
+  assert.equal(pending.attempts, 1)
+  assert(pending.next_at > Date.now())
+  assert.equal(db.prepare('SELECT receipt_id FROM operations').get().receipt_id, null)
+  for (const datum of [contact.name,contact.phone,contact.email,contact.comment,sentinel,key]) {
+    assert(!(await readFile(app.config.ledgerPath)).includes(Buffer.from(datum)))
+  }
+  db.prepare('UPDATE pending_delivery SET next_at = 0').run()
+  await app.restart()
+  const retried = await app.retryPending()
+  assert.equal(retried.status,200)
+  assert.deepEqual(await retried.json(),{accepted:1, deferred:0, held:0, expired:0})
+  assert.equal(app.attempts.length,2)
+  assert.equal(app.orders.size,1)
+  assert.equal(app.attempts[0].syncId,app.attempts[1].syncId)
+  assert.equal(db.prepare('SELECT count(*) AS count FROM pending_delivery').get().count,0)
+  db.close()
+  await check(await post(app, consultation,key),200,{status:'accepted',requestId:receipt})
+  assert.equal(app.attempts.length,2)
 })

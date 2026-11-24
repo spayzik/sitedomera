@@ -4,8 +4,9 @@ import { CONTACTS, collections, products } from '../src/data/products.ts'
 import { SEO, metadataForRoute } from '../src/data/seo.ts'
 import { readFileSync } from 'node:fs'
 import { domainToASCII } from 'node:url'
-import { legacyNewsRedirects, canonicalUrl, categoryPath, productPath, seoAssetPrefix, seoPageFile, seoPages } from '../src/data/seoRoutes.ts'
-import { renderSitemap, renderYml } from './seo-static.mjs'
+import { legacyRedirects, canonicalUrl, categoryPath, productPath, seoAssetPrefix, seoPageFile, seoPages } from '../src/data/seoRoutes.ts'
+import { previewRobots, renderSitemap, renderYml } from './seo-static.mjs'
+import { indexNowKey, indexNowPayload } from './indexnow.mjs'
 
 test('launch uses the owner-provided brand and IDN hostname', () => {
   assert.equal(CONTACTS.brand, 'ДЕКОРАЙ')
@@ -65,6 +66,9 @@ test('one React storefront emits native content for all direct routes', () => {
     assert.match(html, /class="footer"/)
   }
   assert.match(htmlFor('/'), /Каталог<\/dt><dd>45 позиций · 9 категорий<\/dd>/)
+  assert.match(htmlFor('/'), /manifest-stat-num">45<\/span><span class="manifest-stat-label">позиций в каталоге/)
+  assert.match(htmlFor('/'), /manifest-stat-num">9<\/span><span class="manifest-stat-label">категорий материалов/)
+  assert.match(htmlFor('/usloviya-priobreteniya/'), /<h1[^>]*>/)
   const catalog = htmlFor('/catalog/')
   assert.match(catalog, /Коллекций и серий<\/dt><dd>9<\/dd>/)
   assert.equal((catalog.match(/data-catalog-product=/g) ?? []).length, 45)
@@ -98,11 +102,20 @@ test('privacy and seven substantive article routes remain available without JS',
   assert.equal(articles.length, 7)
   assert(articles.every(page => page.path.startsWith('/news/')))
   assert.match(htmlFor('/news/'), /<h1>Статьи<\/h1>/)
-  for (const { from, to } of legacyNewsRedirects) {
+  const root = htmlFor('/')
+  const preview = root.includes('name="robots" content="' + previewRobots + '"')
+  if (preview) assert(!root.includes('rel="canonical"'))
+  else assert(root.includes('rel="canonical" href="' + canonicalUrl('/') + '"'))
+  for (const { from, to } of legacyRedirects) {
     const redirect = htmlFor(from)
     assert(redirect.includes('0;url=' + seoAssetPrefix(from) + to.slice(1)))
-    assert(redirect.includes(canonicalUrl(to)))
-    assert.match(redirect, /noindex, follow/)
+    if (preview) {
+      assert(redirect.includes(previewRobots))
+      assert(!redirect.includes('rel="canonical"'))
+    } else {
+      assert(redirect.includes(canonicalUrl(to)))
+      assert.match(redirect, /noindex, follow/)
+    }
   }
   assert(articles.every(page => page.copy.blocks.length >= 3 && htmlFor(page.path).includes('"@type":"Article"')))
 })
@@ -135,4 +148,32 @@ test('selection pages and contact routes keep verified data and shared component
     assert(html.includes('tel:' + CONTACTS.phoneRaw))
   }
   assert(htmlFor('/otzyvy/').includes('maps-reviews-widget/' + CONTACTS.mapOrganizationId))
+})
+
+test('editorial landings contain the presented catalog products without JavaScript', () => {
+  for (const [path, expectedNames] of [
+    ['/catalog/serye/', ['Ясень серый', 'Серая ёлка', 'Лён светло-серый']],
+    ['/catalog/bezhevye/', ['Ясень песочный', 'Лён кремовый', 'Песочный', 'Венецианская, песок']],
+    ['/catalog/dlya-tv-zony/', ['Орех дымчатый', '8425-P', 'Рейка, фактура ткань', 'Рейка, металлик']],
+    ['/catalog/dlya-spalni/', ['Рогожка белая', 'Лён кремовый', 'Лён светло-серый', 'Песочный']],
+  ]) {
+    const route = seoPages.find(page => page.path === path)
+    assert.ok(route)
+    assert.deepEqual(route.items.map(item => item.name), expectedNames)
+    assert.equal((htmlFor(path).match(/data-catalog-product=/g) ?? []).length, expectedNames.length)
+    assert.match(htmlFor(path), /aria-label="Хлебные крошки"/)
+  }
+})
+
+test('IndexNow accepts production canonical paths only and excludes preview ownership files', () => {
+  assert.equal(indexNowKey({ VITE_DEKORAY_PREVIEW: '1', DEKORAY_INDEXNOW_KEY: 'synthetic-only' }), undefined)
+  assert.equal(indexNowKey({}), undefined)
+  assert.throws(() => indexNowKey({ DEKORAY_INDEXNOW_KEY: '../something' }))
+  const key = indexNowKey({ DEKORAY_INDEXNOW_KEY: 'synthetic-only' })
+  assert.deepEqual(indexNowPayload(key, ['/catalog/', '/catalog/']), {
+    host: CONTACTS.hostname, key, urlList: [canonicalUrl('/catalog/')],
+  })
+  for (const path of ['/catalog/?sort=price-desc', '/#/offer', 'https://spayzik.github.io/dekoray-preview/', '/stati/']) {
+    assert.throws(() => indexNowPayload(key, [path]))
+  }
 })

@@ -65,7 +65,7 @@ export function CatalogCard({ product, category, base = "./", detailsHref, onDet
             <a className="commerce-card-secondary interactive"
               href={base + 'kalkulyator/?material=' + encodeURIComponent(product.id)}>Рассчитать</a>
           ) : stock.status !== 'in_stock' && (
-            <LeadAction className="commerce-card-secondary interactive" intent="consultation"
+            <LeadAction className="commerce-card-secondary interactive" intent="consultation" details={{ items: [{ id: product.id, qty: 1 }] }}
               context={`${product.name}${sku ? ' · Артикул ' + sku : ''} · ${dimensions}`}>{inquiry}</LeadAction>
           )}
         </div>

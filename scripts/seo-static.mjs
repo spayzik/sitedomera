@@ -9,7 +9,7 @@ export const escape = value => String(value).replace(/[&<>"']/g, character => ({
 
 const pageFor = path => seoPages.find(page => page.path === path)
 const ogCover = 'catalog/og-cover.jpg'
-const categoryImage = id => 'catalog/categories/carousel-2026-' + id + '.webp'
+const categoryImage = id => 'catalog/hero/collection-' + id + '.webp'
 function crumbs(page) {
   if (page.kind === 'category' || page.kind === 'selection') return [['/', CONTACTS.brand], ['/catalog/', 'Каталог'], [page.path, page.heading]]
   if (page.kind === 'product') {
@@ -65,6 +65,15 @@ function schema(page) {
   return JSON.stringify({ '@context': 'https://schema.org', '@graph': graph }).replaceAll('<', '\\u003c')
 }
 
+export const previewRobots = 'noindex, nofollow, noarchive'
+
+export function previewDocument(document) {
+  return document
+    .replace(/<meta name="robots"[^>]*>/gi, '')
+    .replace(/<link rel="canonical"[^>]*>/gi, '')
+    .replace(/<\/head>/i, '<meta name="robots" content="' + previewRobots + '"></head>')
+}
+
 export const jsonLd = page => '<script type="application/ld+json">' + schema(page) + '</script>'
 
 export function renderRoot(path, base, ui) {
@@ -91,12 +100,12 @@ export function renderSeoPage(page, base, assets, ui) {
     jsonLd(page) + '</head><body>' + renderRoot(page.path, base, ui) + script + '</body></html>'
 }
 
-export function renderNewsRedirect(from, to) {
+export function renderLegacyRedirect(from, to) {
   const destination = escape(seoAssetPrefix(from) + to.slice(1))
   return '<!doctype html><html lang="ru"><head><meta charset="utf-8">' +
     '<meta name="robots" content="noindex, follow"><meta http-equiv="refresh" content="0;url=' + destination + '">' +
     '<link rel="canonical" href="' + escape(canonicalUrl(to)) + '"><title>Страница переехала</title>' +
-    '</head><body><a href="' + destination + '">Открыть статьи</a></body></html>'
+    '</head><body><a href="' + destination + '">Открыть страницу</a></body></html>'
 }
 
 export function renderSitemap() {

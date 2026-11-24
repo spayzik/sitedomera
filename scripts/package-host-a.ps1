@@ -5,13 +5,9 @@ $archive = [IO.Path]::GetFullPath($OutputPath)
 if (Test-Path -LiteralPath $archive) { throw 'Release archive already exists' }
 
 Push-Location -LiteralPath (Split-Path -Parent $PSScriptRoot)
-$previousLeadApi = $env:VITE_DEKORAY_LEAD_API
 try {
-    $env:VITE_DEKORAY_LEAD_API = '/api/lead'
-    npm run build
-    if ($LASTEXITCODE) { throw 'Static release build failed' }
-    npm run verify:production
-    if ($LASTEXITCODE) { throw 'Static release verifier failed' }
+    node scripts/build-profile.mjs production
+    if ($LASTEXITCODE) { throw 'Production build failed verification' }
     $dist = (Resolve-Path 'dist').Path
     $files = [ordered]@{}
     foreach ($file in (Get-ChildItem -LiteralPath $dist -Recurse -File -Force | Sort-Object FullName)) {
@@ -21,12 +17,12 @@ try {
 
     $php = (Resolve-Path 'server/leads-php').Path
     $files['api-entry/lead.php'] = Join-Path $php 'entry.php'
-    foreach ($name in @('bootstrap.php','config.php','config.example.json','http.php','ledger.php','moysklad.php','preflight.php','validation.php')) {
+    foreach ($name in @('bootstrap.php','config.php','config.example.json','http.php','ledger.php','moysklad.php','preflight.php','retry.php','validation.php')) {
         $files['private-runtime/' + $name] = Join-Path $php $name
     }
     $files['host-settings/apache.htaccess'] = Join-Path $php 'release.htaccess'
     $files['host-settings/php.ini.snippet'] = Join-Path $php 'release-php.ini'
-    $catalog = node --input-type=module -e "import {products} from './src/data/products.ts'; process.stdout.write(JSON.stringify(Object.fromEntries(products.map(p=>[p.id,{sku:p.sku ?? null,unit:p.unit,priceMinor:p.priceRub*100}]))))"
+    $catalog = node --input-type=module -e "import {products} from './src/data/products.ts'; process.stdout.write(JSON.stringify(Object.fromEntries(products.map(p=>[p.id,{sku:p.sku ?? null,unit:p.unit,priceMinor:p.priceRub*100,kind:p.kind,widthMm:p.dimensions.widthMm ?? null,lengthMm:p.dimensions.lengthMm}]))))"
     if ($LASTEXITCODE -or !$catalog) { throw 'Cannot generate private catalogue contract' }
     $catalogBytes = [Text.Encoding]::UTF8.GetBytes($catalog)
     $catalogEntry = 'private-runtime/catalog-contract.json'
@@ -54,6 +50,5 @@ try {
     } finally { $zip.Dispose() }
     'Verified {0} entries. SHA-256 {1}' -f $expected.Count, (Get-FileHash -LiteralPath $archive).Hash.ToLowerInvariant()
 } finally {
-    $env:VITE_DEKORAY_LEAD_API = $previousLeadApi
     Pop-Location
 }

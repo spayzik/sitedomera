@@ -52,6 +52,8 @@ function serveLead(array $config, Ledger $ledger, MoySklad $crm, callable $log):
         if (($_SERVER['REQUEST_URI'] ?? '') !== '/api/lead') {
             throw new LeadError(404, 'not_found');
         }
+        $testAccess = $config['testAccess'] ?? null;
+        $staging = is_string($testAccess);
         $origin = $_SERVER['HTTP_ORIGIN'] ?? null;
         if ($origin !== null && $origin !== $config['origin']) {
             throw new LeadError(403, 'origin_denied');
@@ -60,7 +62,7 @@ function serveLead(array $config, Ledger $ledger, MoySklad $crm, callable $log):
         if ($origin === $config['origin']) {
             header('Access-Control-Allow-Origin: ' . $origin);
             header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-            header('Access-Control-Allow-Headers: Content-Type, Idempotency-Key');
+            header('Access-Control-Allow-Headers: Content-Type, Idempotency-Key' . ($staging ? ', X-Dekoray-Test-Access' : ''));
         }
         if ($method === 'OPTIONS') {
             if ($origin === null) {
@@ -71,7 +73,7 @@ function serveLead(array $config, Ledger $ledger, MoySklad $crm, callable $log):
         }
         if ($method === 'GET') {
             reply(200, ['status' => 'ready', 'consentPath' => $config['consentPath'], 'consentVersion' => $config['consentVersion'],
-                'cart' => $config['catalog'] !== [], 'intents' => LEAD_INTENTS]);
+                'cart' => $config['catalog'] !== [], 'intents' => LEAD_INTENTS] + ($staging ? ['mode' => 'staging'] : []));
             return;
         }
         if ($method !== 'POST') {
@@ -79,7 +81,7 @@ function serveLead(array $config, Ledger $ledger, MoySklad $crm, callable $log):
             throw new LeadError(405, 'method_not_allowed');
         }
         if ($origin !== $config['origin'] ||
-            (isset($_SERVER['HTTP_SEC_FETCH_SITE']) && $_SERVER['HTTP_SEC_FETCH_SITE'] !== 'same-origin')) {
+            (!$staging && isset($_SERVER['HTTP_SEC_FETCH_SITE']) && $_SERVER['HTTP_SEC_FETCH_SITE'] !== 'same-origin')) {
             throw new LeadError(403, 'origin_denied');
         }
         if (!preg_match('~^application/json(?:\s*;.*)?$~iD', $_SERVER['CONTENT_TYPE'] ?? '')) {
@@ -87,17 +89,27 @@ function serveLead(array $config, Ledger $ledger, MoySklad $crm, callable $log):
         }
         $ip = $_SERVER['REMOTE_ADDR'] ?? '';
         $ledger->consumeRate(filter_var($ip, FILTER_VALIDATE_IP) ? $ip : 'unknown');
+        if ($staging && !hash_equals($testAccess, $_SERVER['HTTP_X_DEKORAY_TEST_ACCESS'] ?? '')) {
+            throw new LeadError(403, 'test_access_required');
+        }
         $key = $_SERVER['HTTP_IDEMPOTENCY_KEY'] ?? '';
         if (!preg_match(UUID, $key)) {
             throw new LeadError(400, 'idempotency_key_required');
         }
         $lead = validateLead(readLeadBody(), $config);
-        $context = [
-            'organizationId' => $config['organizationId'], 'intakeStateId' => $config['intakeStateId'],
-            'items' => array_map(static fn (array $item): array => $config['catalog'][$item['id']], $lead['items']),
-        ];
-        $fingerprint = digest($config['hashKey'], 'payload', json_encode([$lead, $context], JSON_FLAGS));
-        $operation = $ledger->reserve($key, $fingerprint, $config['consentVersion']);
+        if ($staging) {
+            if ($lead['name'] !== 'Тест Декорай' || $lead['phone'] !== '+12025550101' ||
+                !in_array($lead['email'], ['', 'dekoray@example.test'], true)) {
+                throw new LeadError(422, 'synthetic_contact_required');
+            }
+            // Free text is never delivered or persisted by the staging receiver.
+            $lead['comment'] = '';
+            if (isset($lead['context'])) {
+                $lead['context'] = '';
+            }
+        }
+        $fingerprint = leadFingerprint($lead, $config);
+        $operation = $ledger->reserve($key, $fingerprint, $config['consentVersion'], $lead);
         if ($operation['receiptId'] !== null) {
             reply(200, ['status' => 'accepted', 'requestId' => $operation['receiptId']]);
             return;
@@ -124,4 +136,53 @@ function serveLead(array $config, Ledger $ledger, MoySklad $crm, callable $log):
         $log($error instanceof LeadError ? $error->errorCode : 'request_failed');
         reply(503, ['error' => 'temporarily_unavailable']);
     }
+}
+
+
+function leadFingerprint(array $lead, array $config): string
+{
+    $context = [
+        'organizationId' => $config['organizationId'], 'intakeStateId' => $config['intakeStateId'],
+        'intakeAgentId' => $config['intakeAgentId'],
+        'items' => array_map(static fn (array $item): ?array => $config['catalog'][$item['id']] ?? null, $lead['items']),
+    ];
+    if (isset($lead['calculation'])) {
+        $context['calculationCatalog'] = array_map(
+            static fn (array $group): ?array => $config['catalogFacts'][$group['id']] ?? null, $lead['calculation']);
+    }
+    return digest($config['hashKey'], 'payload', json_encode([$lead, $context], JSON_FLAGS));
+}
+
+function retryPendingLeads(array $config, Ledger $ledger, MoySklad $crm, callable $log): array
+{
+    $result = ['accepted' => 0, 'deferred' => 0, 'held' => 0, 'expired' => $ledger->expirePending()];
+    for ($index = 0; $index < 5; $index++) {
+        $operation = $ledger->claimPending();
+        if (!$operation) {
+            break;
+        }
+        try {
+            $lead = $ledger->openPending($operation);
+            if ($operation['version'] !== $config['consentVersion'] ||
+                !hash_equals($operation['fingerprint'], leadFingerprint($lead, $config))) {
+                throw new LeadError(503, 'pending_context_changed');
+            }
+        } catch (Throwable) {
+            $result['held']++;
+            $ledger->release($operation, true);
+            $log('pending_delivery_held');
+            continue;
+        }
+        try {
+            $requestId = $crm->submit($lead, $operation);
+            $ledger->finish($operation, $requestId);
+            $result['accepted']++;
+            $log('pending_delivery_accepted');
+        } catch (Throwable) {
+            $state = $ledger->release($operation) ? 'held' : 'deferred';
+            $result[$state]++;
+            $log('pending_delivery_' . $state);
+        }
+    }
+    return $result;
 }

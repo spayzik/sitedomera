@@ -136,7 +136,7 @@ export function ProductModal({
                   <span>ДОБАВИТЬ В ПОДБОРКУ</span>
                   <span style={{ fontSize: '1.25rem', lineHeight: 1 }}>+</span>
                 </button>
-                <LeadAction intent="samples" context={selected.name + (selected.sku ? ' · Артикул ' + selected.sku : '') + ' · 1 образец'} className="gocek-telegram-link">Запросить образец</LeadAction>
+                <LeadAction intent="samples" details={{ items: [{ id: selected.id, qty: 1 }] }} context={selected.name + (selected.sku ? ' · Артикул ' + selected.sku : '') + ' · 1 образец'} className="gocek-telegram-link">Запросить образец</LeadAction>
                 <a className="gocek-telegram-link" href={base + productPath(selected).slice(1)}>Страница материала</a>
                 {telegramDraftUrl && <div className="gocek-contact">
                   <p>Связаться с менеджером</p>

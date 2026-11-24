@@ -11,6 +11,7 @@ import { useRef } from 'react'
 import { CartLeadForm, type LeadAttempt } from './CartLeadForm'
 import { LeadAction } from './LeadProvider'
 import { contactLinks } from '../lib/contactLinks'
+import { CartComparison } from './CartComparison'
 
 export function CartDrawer({ assetBase = import.meta.env.BASE_URL }: { assetBase?: string }) {
   const { open, setOpen, items, total, setQty, remove, migrationNotice, dismissMigrationNotice } = useCart()
@@ -93,6 +94,7 @@ export function CartDrawer({ assetBase = import.meta.env.BASE_URL }: { assetBase
                   </div>
                 </motion.div>
               ))}
+              {items.length > 1 && <CartComparison items={items} />}
               <CartLeadForm items={items} attempt={leadAttempt} />
             </div>
 

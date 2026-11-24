@@ -1,6 +1,6 @@
 import { ArrowUpRight } from 'lucide-react'
 import { products, formatRange, formatDimensions, type ProductKind, type CollectionId } from '../data/products'
-import { updateCatalogHash } from '../lib/catalogNavigation'
+import { categoryPath } from '../data/seoPaths'
 
 const materials: { kind: ProductKind; category: CollectionId | 'all'; title: string; description: string }[] = [
   { kind: 'panel', category: 'all', title: 'Панели', description: 'Для отделки стен. В коллекции есть фактуры дерева, ткани и штукатурки.' },
@@ -9,7 +9,7 @@ const materials: { kind: ProductKind; category: CollectionId | 'all'; title: str
   { kind: 'profile', category: 'profiles', title: 'Профили', description: 'Для оформления стыков, углов и краёв облицовки.' },
 ]
 
-export function Compare() {
+export function Compare({ base = './' }: { base?: string }) {
   return (
     <section className="section compare" id="compare">
       <div className="container">
@@ -32,7 +32,7 @@ export function Compare() {
                   <div><dt>Формат</dt><dd>{sizes.join(' · ')}</dd></div>
                   <div><dt>Цена за {units.join(' или ')}</dt><dd>{price} ₽</dd></div>
                 </dl>
-                <a className="material-link interactive" href={updateCatalogHash('#/catalog', { category })}>
+                <a className="material-link interactive" href={base + (category === 'all' ? 'catalog/' : categoryPath(category).slice(1))}>
                   {category === 'all' ? 'Открыть каталог' : 'Смотреть в каталоге'} <ArrowUpRight size={16} aria-hidden="true" />
                 </a>
               </article>

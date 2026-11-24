@@ -85,7 +85,7 @@ const commercial = [
       { heading: 'Оплата и документы', text: 'До оплаты попросите менеджера подтвердить сумму с учётом комплектации и доставки, доступный способ оплаты и комплект документов. Для счёта уточните, оформляется ли заказ на физическое лицо или организацию.' },
       { heading: 'Подготовьтесь к получению', text: 'Сообщите, где можно разгрузить заказ и какова длина проходов и лифта. Лист 3000 мм требует заранее проверить маршрут заноса. Уточните порядок проверки упаковки и комплектации при получении.' },
     ],
-    links: [{ path: '/showroom/', label: 'Шоурум и склад' }, { path: '/#/offer', label: 'Условия приобретения' }],
+    links: [{ path: '/showroom/', label: 'Шоурум и склад' }, { path: '/usloviya-priobreteniya/', label: 'Условия приобретения' }],
   }),
   copyPage('info', '/showroom/', 'Шоурум стеновых панелей в Москве', `Посмотрите фактуры и отметьте выбранные материалы в шоуруме ДЕКОРАЙ. ${CONTACTS.address}. ${CONTACTS.hours}.`, {
     blocks: [
@@ -247,6 +247,9 @@ const productPages: SeoPage[] = products.map(product => {
   }
 })
 
+// The editor selects only published catalog items for these visual suggestions.
+const selectProducts = (ids: readonly string[]) => products.filter(product => ids.includes(product.id))
+
 const selections = ([
   {
     kind: 'selection', path: '/catalog/5-mm/', heading: 'Бамбуковые стеновые панели 5 мм',
@@ -274,7 +277,63 @@ const selections = ([
       links: [{ path: '/catalog/metall/', label: 'Под металл' }, { path: '/catalog/bambuk-pod-kamen/', label: 'Под камень' }, { path: '/montazh/', label: 'Подготовка к монтажу' }],
     },
   },
-] satisfies (SeoPage & { kind: 'selection' })[]).filter(page => page.items.length >= 3)
+  {
+    kind: 'selection', path: '/catalog/serye/', heading: 'Серые стеновые панели',
+    title: withBrand('Серые стеновые панели с фактурой дерева и ткани'),
+    description: 'Сравните три серых декора ДЕКОРАЙ: ясень, ёлку и светло-серый лён. Посмотрите рисунок, форматы и цены, затем уточните наличие образцов.',
+    lastmod: '2026-11-24',
+    items: selectProducts(['pdf2026-p06-r1c1', 'pdf2026-p06-r2c1', 'pdf2026-p09-r2c1']),
+    copy: {
+      blocks: [
+        { heading: 'Как выбрать рисунок', text: 'Три серых декора отличаются прежде всего направлением и масштабом фактуры. У ясеня рисунок древесный, у ёлки он диагональный, а у льна напоминает переплетение нитей. Сравните образцы рядом с уже выбранным полом.' },
+        { heading: 'Проверьте тон на стене', text: 'Приложите образец вертикально и посмотрите на него у окна и под комнатным светильником. Сопоставьте с мебелью, наличниками и тканью, которая будет рядом.' },
+      ],
+      links: [{ path: '/catalog/derevo/', label: 'Древесные фактуры' }, { path: '/catalog/tkan/', label: 'Тканевые фактуры' }, { path: '/obraztsy/', label: 'Уточнить наличие образцов' }],
+    },
+  },
+  {
+    kind: 'selection', path: '/catalog/bezhevye/', heading: 'Песочные и кремовые стеновые панели',
+    title: withBrand('Песочные и кремовые стеновые панели'),
+    description: 'Подборка светлых тёплых фактур ДЕКОРАЙ: песочный ясень, кремовый лён, песочный софт-тач и декоративная штукатурка. Размеры и цены.',
+    lastmod: '2026-11-24',
+    items: selectProducts(['pdf2026-p06-r1c2', 'pdf2026-p09-r1c2', 'pdf2026-p17-r1c1', 'pdf2026-p21-r1c1']),
+    copy: {
+      blocks: [
+        { heading: 'От древесного рисунка до спокойного фона', text: 'Песочный ясень задаёт направление, а кремовый лён добавляет мелкий рисунок. Для спокойного фона сравните песочный софт-тач с венецианской фактурой «песок»: на стене разница заметнее при боковом свете.' },
+        { heading: 'Возьмите в шоурум соседние материалы', text: 'Положите рядом образцы пола, столешницы или ткани. При смене освещения два близких оттенка могут восприниматься по-разному. Перед выбором сравните поверхности в той же ориентации, что в проекте.' },
+      ],
+      links: [{ path: '/catalog/soft-tach/', label: 'Панели софт-тач' }, { path: '/catalog/shtukaturka/', label: 'Фактура штукатурки' }, { path: '/showroom/', label: 'Посмотреть образцы в шоуруме' }],
+    },
+  },
+  {
+    kind: 'selection', path: '/catalog/dlya-tv-zony/', heading: 'Панели и рейки для ТВ-зоны',
+    title: withBrand('Панели и рейки для оформления ТВ-зоны'),
+    description: 'Панели с древесной и каменной фактурой и декоративные рейки для идей ТВ-зоны. Сравните форматы, цены и рисунок перед расчётом.',
+    lastmod: '2026-11-24',
+    items: selectProducts(['pdf2026-p06-r1c3', 'pdf2026-p15-r1c1', 'pdf2026-p23-r1c1', 'pdf2026-p23-r1c2']),
+    copy: {
+      blocks: [
+        { heading: 'Определите границы отделки', text: 'Отметьте расположение экрана и тумбы. Спокойный рисунок удобно сравнить на большом центральном участке, а рейки примерить сбоку. До заказа проверьте, как стык будет выглядеть относительно края экрана.' },
+        { heading: 'Оставьте доступ к проводам', text: 'Передайте монтажнику схему розеток, кабельных выходов и крепления телевизора. Способ крепления оборудования зависит от основания. Рассчитывайте панели и рейки отдельно по размерам каждой зоны.' },
+      ],
+      links: [{ path: '/catalog/reyki/', label: 'Каталог реек' }, { path: '/news/tv-zona-paneli-i-reyki/', label: 'Руководство по планированию ТВ-зоны' }, { path: '/kalkulyator/', label: 'Рассчитать листы' }],
+    },
+  },
+  {
+    kind: 'selection', path: '/catalog/dlya-spalni/', heading: 'Стеновые панели для спальни',
+    title: withBrand('Стеновые панели для спальни и изголовья'),
+    description: 'Подборка фактур для оформления зоны изголовья: белая рогожка, светло-серый и кремовый лён, песочный софт-тач. Каталог с ценами и размерами.',
+    lastmod: '2026-11-24',
+    items: selectProducts(['pdf2026-p09-r1c1', 'pdf2026-p09-r1c2', 'pdf2026-p09-r2c1', 'pdf2026-p17-r1c1']),
+    copy: {
+      blocks: [
+        { heading: 'Сравните фактуру с изголовьем', text: 'Проверьте масштаб рисунка рогожки и льна рядом с обивкой кровати. Если обивка уже выраженно фактурная, приложите к ней образец песочного софт-тач и сравните общий ритм стены при прикроватном освещении.' },
+        { heading: 'Разметьте отделку до заказа', text: 'Сравните варианты на всю стену и только по ширине спального места. Отметьте края, розетки и светильники на эскизе. Для итоговой комплектации передайте менеджеру размеры стены и схему примыканий.' },
+      ],
+      links: [{ path: '/catalog/tkan/', label: 'Панели под ткань' }, { path: '/news/kak-vybrat-fakturu/', label: 'Как выбрать фактуру' }, { path: '/obraztsy/', label: 'Уточнить наличие образцов' }],
+    },
+  },
+] satisfies (SeoPage & { kind: 'selection'; lastmod?: string })[]).filter(page => page.items.length >= 3)
 
 const revisionDate = '2026-11-20'
 const w4ContentRevision = '2026-11-21'
@@ -290,6 +349,7 @@ const pages: readonly (SeoPage & { lastmod?: string })[] = [
   ...selections,
   ...productPages,
   ...commercial,
+  { kind: 'info', path: '/usloviya-priobreteniya/', heading: 'Условия приобретения', ...SEO.offer, copy: { blocks: [] }, lastmod: '2026-11-24' },
   { kind: 'info', path: '/privacy/', heading: 'Политика конфиденциальности', ...SEO.privacy, copy: privacyCopy },
   { kind: 'articles', path: '/news/', heading: 'Статьи', title: 'Статьи', description: 'Как выбрать фактуру, рассчитать материалы и продумать отделку для дома или коммерческого пространства.' },
   ...articles,
@@ -303,6 +363,13 @@ export const seoPages = pages.map(page => ({
 export const legacyNewsRedirects = seoPages
   .filter(page => page.kind === 'articles' || page.kind === 'article')
   .map(({ path }) => ({ from: path.replace(/^\/news\//, '/stati/'), to: path }))
+
+export const legacyRedirects = [
+  ...legacyNewsRedirects,
+  { from: '/catalog/wood/', to: categoryPath('wood') },
+  { from: '/dostavka-i-oplata/', to: '/dostavka/' },
+  { from: '/offer/', to: '/usloviya-priobreteniya/' },
+]
 
 export const seoPageFile = (path: string) => path.slice(1) + 'index.html'
 export const seoAssetPrefix = (path: string) => '../'.repeat(path.split('/').filter(Boolean).length) || './'

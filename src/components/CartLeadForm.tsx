@@ -23,7 +23,10 @@ export function CartLeadForm({ items, attempt }: Props) {
   }, [standalone])
 
   const terms = service ? service.terms : localTerms
-  if (!leadEndpoint || !terms?.cart || items.length === 0) return null
+  const order = terms?.intents.includes('order')
+  if (!leadEndpoint || !terms || (!order && !terms.cart) || items.length === 0) return null
   const snapshot = cartSnapshot(items).sort((a, b) => a.id.localeCompare(b.id, 'en'))
-  return <LeadForm endpoint={leadEndpoint} terms={terms} fields={{ items: snapshot }} attempt={attempt} />
+  return <LeadForm key={snapshot.map(({id, qty}) => id + ':' + qty).join(',')} endpoint={leadEndpoint} terms={terms}
+    fields={order ? { intent: 'order', context: 'Запрос на покупку из подборки', items: snapshot } : { items: snapshot }}
+    attempt={attempt} />
 }

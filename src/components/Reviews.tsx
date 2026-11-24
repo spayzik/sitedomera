@@ -2,7 +2,7 @@ import { StoreSelect } from './StoreSelect'
 import { useEffect, useRef, useState } from 'react'
 import { ArrowUpRight, Images, Maximize2, Star, X } from 'lucide-react'
 import { avitoProfile } from '../lib/avitoProfile'
-import { featuredAvitoReviews, loadAvitoSnapshot, type AvitoSnapshot, type AvitoReview } from '../lib/avitoReviews'
+import { loadAvitoSnapshot, type AvitoSnapshot, type AvitoReview } from '../lib/avitoReviews'
 import type { AvitoReviewPhoto } from '../lib/avitoReviewDetails'
 
 const dateFormatter = new Intl.DateTimeFormat('ru-RU', { dateStyle: 'long', timeZone: 'Europe/Moscow' })
@@ -61,7 +61,7 @@ export function Reviews({ assetBase, compact = false }: { assetBase?: string; co
     if (openedPhoto && dialog && !dialog.open) dialog.showModal()
   }, [openedPhoto])
 
-  const featured = snapshot ? featuredAvitoReviews(snapshot.reviews) : []
+  const featured = snapshot?.reviews ?? []
   featured.sort((a, b) => (sort === 'rating' ? b.rating - a.rating : 0) || b.createdAt.localeCompare(a.createdAt))
   const gallery = [...new Map(featured.flatMap(review => (review.photos ?? []).map(photo => [photo.imageUrl, photo] as const))).values()].slice(0, 5)
   const visible = expanded ? featured : featured.slice(0, initialCount)

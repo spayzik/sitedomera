@@ -1,3 +1,4 @@
+import { LeadAction } from './LeadProvider'
 import { StoreSelect } from './StoreSelect'
 import { useEffect, useReducer, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -75,7 +76,9 @@ export function Quiz() {
                     <button className="btn btn-white interactive" onClick={restart}>Пройти заново <RotateCcw size={16} /></button>
                   </div>
                   <div className="quiz-contact">
-                    <p>Ответы остаются в браузере. В Telegram попадёт только выбранный материал; сообщение вы отправите сами.</p>
+                    <p>Ответы остаются в браузере. По запросу передадим менеджеру выбранный материал.</p>
+                    {product && <LeadAction intent="selection" className="btn btn-outline interactive"
+                      context={product.name} details={{ items: [{ id: product.id, qty: 1 }] }}>Спросить о материале</LeadAction>}
                     {draft && <a className="btn btn-outline interactive" href={draft} target="_blank" rel="noreferrer">Обсудить материал в Telegram <ArrowRight size={16} /></a>}
                   </div>
                 </div>

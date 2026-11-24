@@ -11,12 +11,20 @@ import { useCart } from '../context/CartContext'
 import { Counter } from './Counter'
 import { ArrowRight, Plus, X } from 'lucide-react'
 import { buildTelegramDraftUrl, formatCalculatorTelegramMessage } from '../lib/telegramLink'
-import { calculateProjectPanels, calculateWallLayout, calculatorWall, sheetArea, type WallDimensions } from '../lib/calculator'
+import { calculateProjectPanels, calculateWallLayout, calculatorWall, openingsArea, sheetArea, type WallDimensions } from '../lib/calculator'
 import { trackAnalyticsGoal } from '../lib/analytics'
+import type { LeadCalculation } from '../lib/leadIntents'
 
 import { MAX_QTY } from '../lib/cart'
 
-type MaterialEstimate = { panel: Product | null; sheets: number; valid: boolean }
+function whatsappCalculatorDraft(message: string) {
+  if (!contactLinks.whatsapp) return undefined
+  const url = new URL(contactLinks.whatsapp)
+  url.searchParams.set('text', message)
+  return url.href
+}
+
+type MaterialEstimate = { panel: Product | null; sheets: number; valid: boolean; calculation: LeadCalculation | null }
 
 export function Calculator({ standalone = false, base = './' }: { standalone?: boolean; base?: string } = {}) {
   const { add, items } = useCart()
@@ -44,9 +52,25 @@ export function Calculator({ standalone = false, base = './' }: { standalone?: b
     }
   }
   const order = [...lines.values()]
+  const calculation = complete ? groups.flatMap(id => {
+    const estimate = estimates[id].calculation
+    return estimate ? [estimate] : []
+  }) : []
+  const total = order.reduce((sum, line) => sum + line.product.priceRub * line.quantity, 0)
+  const draftLines = order.map(({ product, quantity }) =>
+    product.name + (product.sku && product.sku !== product.name ? ' · ' + product.sku : '') +
+      ' · ' + quantity + ' лист. · ' + (product.priceRub * quantity).toLocaleString('ru-RU') + ' ₽')
+  const summary = order.length > 0 ? draftLines.join('\n') + '\nИтого: ' +
+    total.toLocaleString('ru-RU') + ' ₽' : ''
+  const combinedDraft = summary ? 'Здравствуйте! Хочу обсудить расчёт материалов ДЕКОРАЙ.\n\n' + summary : ''
+  const started = useRef(false)
+  const reportStart = () => {
+    if (started.current) return
+    started.current = true
+    trackAnalyticsGoal('calculator_start')
+  }
   const fits = order.every(({ product, quantity }) =>
     quantity + (items.find(item => item.product.id === product.id)?.qty ?? 0) <= MAX_QTY)
-  const total = order.reduce((sum, line) => sum + line.product.priceRub * line.quantity, 0)
 
   return <section className="section calculator" id="calculator">
     <div className="container">
@@ -54,7 +78,7 @@ export function Calculator({ standalone = false, base = './' }: { standalone?: b
         <div><p className="eyebrow">Калькулятор</p><h2>Сколько листов нужно?</h2></div>
         <p className="lead">Посчитайте панели для каждой стены или зоны и соберите материалы в одну подборку.</p>
       </div>}
-      <div className="calc-project-groups">
+      <div className="calc-project-groups" onChange={reportStart}>
         {groups.map((id, index) => <section key={id} aria-label={'Материал ' + (index + 1)}>
           {groups.length > 1 && <div className="calc-group-heading">
             <h2>Материал {index + 1}</h2>
@@ -62,7 +86,7 @@ export function Calculator({ standalone = false, base = './' }: { standalone?: b
               <X size={14} aria-hidden="true" /> Убрать
             </button>}
           </div>}
-          <MaterialCalculation id={id} standalone={standalone} base={base} report={report} />
+          <MaterialCalculation id={id} standalone={standalone} base={base} report={report} onStart={reportStart} />
         </section>)}
         <button type="button" className="secondary-action" disabled={groups.length >= 10} onClick={() => {
           const id = nextGroup.current++
@@ -81,14 +105,22 @@ export function Calculator({ standalone = false, base = './' }: { standalone?: b
             onClick={() => { if (complete && fits) order.forEach(({ product, quantity }) => add(product, quantity)) }}>
             Добавить все материалы в подборку <ArrowRight size={16} aria-hidden="true" />
           </button>
+          {calculation.length === groups.length && <div className="calc-followup">
+            <LeadAction intent="calculation" className="secondary-action" context="Сводный расчёт по нескольким материалам"
+              details={{ calculation }}>Отправить весь расчёт в заявку</LeadAction>
+            <SocialContacts placement="product" base={base} drafts={{
+              telegram: buildTelegramDraftUrl(CONTACTS.telegram, combinedDraft),
+              whatsapp: whatsappCalculatorDraft(combinedDraft),
+            }} />
+          </div>}
         </section>}
       </div>
     </div>
   </section>
 }
 
-function MaterialCalculation({ id, standalone, base, report }: {
-  id: number; standalone: boolean; base: string; report: (id: number, estimate: MaterialEstimate) => void
+function MaterialCalculation({ id, standalone, base, report, onStart }: {
+  id: number; standalone: boolean; base: string; report: (id: number, estimate: MaterialEstimate) => void; onStart: () => void
 }) {
   const suffix = id ? '-' + id : ''
   const initialSearch = ""
@@ -104,18 +136,19 @@ function MaterialCalculation({ id, standalone, base, report }: {
   }, [id])
   const nextWall = useRef(1)
   const [openings, setOpenings] = useState('0')
+  const [cutouts, setCutouts] = useState<Array<WallDimensions & { id: number }>>([])
+  const nextCutout = useRef(0)
   const [reserve, setReserve] = useState('10')
   const [vertical, setVertical] = useState(false)
   const setDimension = (id: number, field: keyof WallDimensions, value: string) =>
     setWalls(previous => previous.map(wall => wall.id === id ? { ...wall, [field]: value } : wall))
 
   const res = useMemo(() => {
-    const estimate = calculateProjectPanels(walls, vertical ? '0' : openings, reserve, selectedPanel)
+    const openingArea = vertical ? 0 : openingsArea(cutouts, openings)
+    const estimate = calculateProjectPanels(walls, openingArea, reserve, selectedPanel)
     const sheets = vertical && estimate.valid ? calculateWallLayout(walls, reserve, selectedPanel) ?? 0 : estimate.sheets
-    return { ...estimate, sheets, panel: selectedPanel }
-  }, [walls, openings, reserve, selectedPanel, vertical])
-
-  useEffect(() => report(id, res), [id, report, res])
+    return { ...estimate, sheets, panel: selectedPanel, openingArea }
+  }, [walls, cutouts, openings, reserve, selectedPanel, vertical])
   const price = res.panel ? res.sheets * res.panel.priceRub : 0
   const completed = Boolean(res.panel && res.valid && res.sheets > 0)
   const reportedCompletion = useRef(false)
@@ -129,9 +162,22 @@ function MaterialCalculation({ id, standalone, base, report }: {
     ? formatCalculatorTelegramMessage({ area: res.area, sheets: res.sheets, panel: res.panel, total: price }) + '\n\n' + method + '. Запас: ' + reserve + '%.'
     : null
   const telegramDraftUrl = draft ? buildTelegramDraftUrl(CONTACTS.telegram, draft) : null
-  const whatsappDraftUrl = draft && contactLinks.whatsapp
-    ? contactLinks.whatsapp + '?text=' + encodeURIComponent(draft)
-    : null
+  const whatsappDraftUrl = draft ? whatsappCalculatorDraft(draft) : undefined
+  const calculation = useMemo((): LeadCalculation | null => {
+    if (!selectedPanel || !completed || res.openingArea === null || res.sheets > MAX_QTY) return null
+    return {
+      id: selectedPanel.id,
+      walls: walls.map(({ length, height }) => ({
+        length: Number(length.trim().replace(',', '.')),
+        height: Number(height.trim().replace(',', '.')),
+      })),
+      openings: res.openingArea,
+      reserve: Number(reserve.trim().replace(',', '.')),
+      method: vertical ? 'vertical' : 'area',
+    }
+  }, [selectedPanel, completed, res.openingArea, res.sheets, walls, reserve, vertical])
+
+  useEffect(() => report(id, { ...res, calculation }), [id, report, res, calculation])
 
   const input = (
     w: string,
@@ -166,7 +212,7 @@ function MaterialCalculation({ id, standalone, base, report }: {
             <div className="modern-form">
               <div className="form-group">
                 <label htmlFor={'calculator-material' + suffix}>Листовой материал</label>
-                <StoreSelect id={'calculator-material' + suffix} label="Листовой материал" value={materialId} onChange={setMaterialId}>
+                <StoreSelect id={'calculator-material' + suffix} label="Листовой материал" value={materialId} onChange={value => { onStart(); setMaterialId(value) }}>
                   <option value="">Выберите материал</option>
                   {sheetProducts.map(p => <option key={p.id} value={p.id}>{p.name} — {p.priceRub.toLocaleString('ru-RU')} ₽/{p.unit}</option>)}
                 </StoreSelect>
@@ -186,14 +232,31 @@ function MaterialCalculation({ id, standalone, base, report }: {
                 setWalls(previous => [...previous, { id, length: '', height: '' }])
               }}><Plus size={16} aria-hidden="true" /> Добавить стену</button>
               </div>
+              {!vertical && <div className="calc-walls">
+                {cutouts.map((cutout, index) => <fieldset key={cutout.id} className="calc-wall">
+                  <legend>Окно или дверь {index + 1}</legend>
+                  {input(cutout.length, value => setCutouts(previous => previous.map(opening =>
+                    opening.id === cutout.id ? { ...opening, length: value } : opening)), 'Ширина проёма ' + (index + 1), 'м')}
+                  {input(cutout.height, value => setCutouts(previous => previous.map(opening =>
+                    opening.id === cutout.id ? { ...opening, height: value } : opening)), 'Высота проёма ' + (index + 1), 'м')}
+                  <button type="button" className="secondary-action calc-remove-wall"
+                    onClick={() => setCutouts(previous => previous.filter(opening => opening.id !== cutout.id))}>
+                    <X size={14} aria-hidden="true" /> Убрать проём {index + 1}
+                  </button>
+                </fieldset>)}
+                <button type="button" className="secondary-action" disabled={cutouts.length >= 20} onClick={() => {
+                  const id = nextCutout.current++
+                  setCutouts(previous => [...previous, { id, length: '', height: '' }])
+                }}><Plus size={16} aria-hidden="true" /> Добавить окно или дверь</button>
+              </div>}
               <div className="calc-adjustments">
-              {!vertical && input(openings, setOpenings, 'Общая площадь проёмов', 'м²')}
+              {!vertical && input(openings, setOpenings, cutouts.length > 0 ? 'Площадь остальных проёмов' : 'Общая площадь проёмов', 'м²')}
               {input(reserve, setReserve, 'Запас на подрезку', '%')}
               </div>
               <div className="form-group">
                 <label htmlFor={'calculator-method' + suffix}>Способ оценки</label>
                 <StoreSelect id={'calculator-method' + suffix} label="Способ оценки" value={vertical ? 'vertical' : 'area'}
-                  onChange={value => setVertical(value === 'vertical')}>
+                  onChange={value => { onStart(); setVertical(value === 'vertical') }}>
                   <option value="area">По площади с вычетом проёмов</option>
                   <option value="vertical">По вертикальной раскладке</option>
                 </StoreSelect>
@@ -245,15 +308,15 @@ function MaterialCalculation({ id, standalone, base, report }: {
               <div className="calc-followup">
                 <p className="eyebrow" style={{ margin: 0 }}>Точный расчёт с профилями</p>
                 <p>Менеджер поможет уточнить раскладку и комплектацию.</p>
-                {res.panel && res.valid && res.sheets > 0 && res.sheets <= 9999 && (
-                  <LeadAction intent="calculation" className="secondary-action"
+                {res.panel && calculation && (
+                  <LeadAction intent="calculation" className="secondary-action" details={{ calculation: [calculation] }}
                     context={[res.panel.name, res.panel.sku && res.panel.sku !== res.panel.name ? 'Артикул: ' + res.panel.sku : '',
                       res.sheets + ' лист.', price.toLocaleString('ru-RU') + ' ₽', method, 'Запас: ' + reserve + '%'].filter(Boolean).join(' · ')}>
                     Отправить расчёт в заявку
                   </LeadAction>
                 )}
                 <SocialContacts placement="product" base={base}
-                  drafts={telegramDraftUrl ? { telegram: telegramDraftUrl, whatsapp: whatsappDraftUrl ?? undefined } : undefined} />
+                  drafts={telegramDraftUrl ? { telegram: telegramDraftUrl, whatsapp: whatsappDraftUrl } : undefined} />
               </div>
             </div>
           </motion.div>

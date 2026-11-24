@@ -1,12 +1,12 @@
 import { storefrontImageSize } from '../data/storefrontImageSizes'
-import { useRoute } from '../router'
 import { CONTACTS } from '../data/products'
 import type { SeoPage } from '../data/seoRoutes'
 import { MapEmbed } from '../components/MapEmbed'
 import { Calculator } from '../components/Calculator'
 import { Reviews } from '../components/Reviews'
 import { Showroom } from '../components/Showroom'
-import { buildTelegramDraftUrl } from '../lib/telegramLink'
+import { LeadAction } from '../components/LeadProvider'
+import type { LeadIntent } from '../lib/leadIntents'
 import { HomePage } from './HomePage'
 import { CatalogPage } from './CatalogPage'
 import { ProductPage } from './ProductPage'
@@ -14,21 +14,23 @@ import { OfferPage } from './OfferPage'
 import { ArticlePage, JournalPage } from './JournalPage'
 import { InstallationPage } from './InstallationPage'
 
-const actionMap: Record<string, [string, string]> = {
-  '/dostavka/': [buildTelegramDraftUrl(CONTACTS.telegram, 'Здравствуйте! Хочу уточнить условия доставки материалов ДЕКОРАЙ.'), 'Уточнить доставку'],
+const linkActions: Record<string, [string, string]> = {
   '/kontakty/': ['tel:' + CONTACTS.phoneRaw, 'Позвонить ' + CONTACTS.phone],
   '/proekty/': ['/catalog/derevo/', 'Смотреть древесные фактуры'],
-  '/opt/': [buildTelegramDraftUrl(CONTACTS.telegram, 'Здравствуйте! Хочу обсудить поставку материалов ДЕКОРАЙ для объекта.'), 'Обсудить поставку'],
-  '/dizayneram/': ['/showroom/', 'Посмотреть образцы в шоуруме'],
-  '/obraztsy/': [buildTelegramDraftUrl(CONTACTS.telegram, 'Здравствуйте! Хочу запросить образцы ДЕКОРАЙ. Материалы или артикулы: '), 'Запросить образцы в Telegram'],
+}
+
+const inquiryActions: Record<string, [LeadIntent, string]> = {
+  '/dostavka/': ['delivery', 'Уточнить доставку'],
+  '/opt/': ['wholesale', 'Обсудить поставку'],
+  '/dizayneram/': ['designer', 'Узнать условия сотрудничества'],
+  '/obraztsy/': ['samples', 'Запросить образцы'],
 }
 
 const href = (base: string, path: string) => path.startsWith('/') ? base + path.slice(1) : path
 
 export function StorefrontRoute({ page, base, path }: { page?: SeoPage; base: string; path: string }) {
-  const legacy = useRoute()
-  if (page?.kind === 'home') return legacy === '/offer' ? <OfferPage /> : <HomePage />
-  if (path === '/offer/') return <OfferPage />
+  if (page?.kind === 'home') return <HomePage />
+  if (path === '/usloviya-priobreteniya/') return <OfferPage base={base} />
   if (!page) return <section className="container page-section">
     <h1>Страница не найдена</h1><p>Проверьте адрес или перейдите в каталог материалов.</p>
     <a className="btn btn-outline interactive" href={base + 'catalog/'}>Каталог</a>
@@ -45,7 +47,8 @@ export function StorefrontRoute({ page, base, path }: { page?: SeoPage; base: st
     <Showroom base={base} heading={page.heading} />
   </div>
 
-  const action = actionMap[page.path]
+  const action = linkActions[page.path]
+  const inquiry = inquiryActions[page.path]
   const venue = page.path === '/kontakty/'
   const copy = 'copy' in page ? page.copy : undefined
   const calculator = page.path === '/kalkulyator/'
@@ -57,6 +60,7 @@ export function StorefrontRoute({ page, base, path }: { page?: SeoPage; base: st
     <header className="page-intro">
       <h1>{page.heading}</h1><p className="lead">{page.description}</p>
       {action && <a className="btn btn-outline interactive" href={href(base, action[0])}>{action[1]}</a>}
+      {inquiry && <LeadAction className="btn btn-outline interactive" intent={inquiry[0]}>{inquiry[1]}</LeadAction>}
     </header>
     {calculator && <Calculator standalone base={base} />}
     {venue && <Showroom base={base} />}
@@ -78,7 +82,7 @@ export function StorefrontRoute({ page, base, path }: { page?: SeoPage; base: st
         <section key={heading}><h2>{heading}</h2><p>{text}</p></section>)}</div>
     </>}
     <div className="page-links">
-      {copy?.links?.filter(({ path }) => path !== action?.[0] && !(action && path === '/#lead') && !(venue && path === '/#showroom'))
+      {copy?.links?.filter(({ path }) => path !== action?.[0] && !((action || inquiry) && path === '/#lead') && !(venue && path === '/#showroom'))
         .map(link => <a key={link.path} className={calculator ? 'secondary-action' : undefined} href={href(base, link.path)}>{link.label}</a>)}
     </div>
   </div>

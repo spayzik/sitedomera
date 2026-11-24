@@ -25,7 +25,7 @@ test('the production gate accepts a real build and blocks unexpected paths and d
       [main, '/* Codex handoff: draft */', /Internal work marker/],
       [main, 'const data = {warehouseId: "test-only"}', /Private integration marker/],
       [main, 'const AVITO_CLIENT_SECRET = "test-only"', /Private\/config marker/],
-      ['generated/inventory.json', '{}', /Unapproved public path/],
+      ['generated/inventory.json', '{}', /Inventory snapshots can only be embedded in a staging build/],
       ['generated/avito-reviews.json', '{"source":"avito","reviews":[],"raw":"private"}', /only the approved public fields/],
       ['catalog/hero/hero.webp', 'private document renamed', /Invalid public binary type/],
     ]) {
