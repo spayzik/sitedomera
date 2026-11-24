@@ -166,10 +166,16 @@ final class MoySklad
         if (($lead['context'] ?? '') !== '') {
             $lines[] = 'Контекст клиента: ' . $lead['context'];
         }
-        foreach (($lead['intent'] ?? null) === null ? [] : $lead['items'] as $item) {
-            $lines[] = 'Материал: ' . $this->itemLabel($item['id']) . ' — ' . $item['qty'];
-        }
         $total = 0;
+        foreach (($lead['intent'] ?? null) === null ? [] : $lead['items'] as $item) {
+            $line = 'Материал: ' . $this->itemLabel($item['id']) . ' — ' . $item['qty'];
+            if ($lead['intent'] === 'calculation') {
+                $price = $this->config['catalogFacts'][$item['id']]['priceMinor'];
+                $total += $item['qty'] * $price;
+                $line .= ' × ' . self::rubles($price);
+            }
+            $lines[] = $line;
+        }
         foreach ($lead['calculation'] ?? [] as $group) {
             $walls = array_map(static fn (array $wall): string => $wall['length'] . ' × ' . $wall['height'], $group['walls']);
             $total += $group['qty'] * $group['priceMinor'];

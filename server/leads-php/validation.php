@@ -120,6 +120,13 @@ function validateLead(mixed $raw, array $config): array
         if ($raw->intent === 'order' && $items === []) {
             throw new LeadError(422, 'invalid_items');
         }
+        if ($raw->intent === 'calculation') {
+            foreach ($items as $item) {
+                if (!in_array($facts[$item['id']]['kind'], ['slat', 'profile'], true)) {
+                    throw new LeadError(422, 'invalid_items');
+                }
+            }
+        }
         $result = [
             'name' => $name, 'phone' => $phone, 'email' => $email, 'comment' => $comment,
             'version' => $version, 'items' => $items, 'intent' => $raw->intent, 'context' => $context,

@@ -92,6 +92,13 @@ export function Calculator({ standalone = false, base = './' }: { standalone?: b
     trackAnalyticsGoal('calculator_start')
   }
   const validLineQuantities = order.every(({ quantity }) => quantity <= MAX_QTY)
+  const hasResult = complete && validLineQuantities && order.length > 0
+  const reportedCompletion = useRef(false)
+  useEffect(() => {
+    if (!hasResult || reportedCompletion.current) return
+    reportedCompletion.current = true
+    trackAnalyticsGoal('calculator_complete')
+  }, [hasResult])
   const fits = order.every(({ product, quantity }) =>
     quantity + (items.find(item => item.product.id === product.id)?.qty ?? 0) <= MAX_QTY)
 
@@ -142,7 +149,7 @@ export function Calculator({ standalone = false, base = './' }: { standalone?: b
             onClick={() => { if (complete && fits) order.forEach(({ product, quantity }) => add(product, quantity)) }}>
             Добавить все материалы в подборку <ArrowRight size={16} aria-hidden="true" />
           </button>
-          {complete && validLineQuantities && order.length > 0 && <div className="calc-followup">
+          {hasResult && <div className="calc-followup">
             {linearPlans.length > 0 && <p>Клей и работы в стоимость не включены. Расход клея зависит от основания и инструкции к материалу.</p>}
             <LeadAction intent="calculation" className="secondary-action"
               context={cuts ? 'Отрезки по плану: ' + cuts : 'Сводный расчёт по нескольким материалам'}
@@ -192,12 +199,6 @@ function MaterialCalculation({ id, standalone, base, report, onStart }: {
   }, [walls, cutouts, openings, reserve, selectedPanel, vertical])
   const price = res.panel ? res.sheets * res.panel.priceRub : 0
   const completed = Boolean(res.panel && res.valid && res.sheets > 0)
-  const reportedCompletion = useRef(false)
-  useEffect(() => {
-    if (!completed || reportedCompletion.current) return
-    reportedCompletion.current = true
-    trackAnalyticsGoal('calculator_complete')
-  }, [completed])
   const method = vertical ? 'Вертикальная раскладка без вычета проёмов и повторного использования обрезков' : 'Оценка по площади с вычетом проёмов'
   const draft = res.panel && res.valid && res.sheets > 0
     ? formatCalculatorTelegramMessage({ area: res.area, sheets: res.sheets, panel: res.panel, total: price }) + '\n\n' + method + '. Запас: ' + reserve + '%.'

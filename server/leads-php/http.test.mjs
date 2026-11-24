@@ -236,6 +236,30 @@ test('typed quote requests preserve sample IDs and recalculate prices and sheets
   assert.match(app.attempts.at(-1).description, /A9001.*2/u)
 })
 
+
+test('linear calculation includes canonical accessory prices in the submitted total', async t => {
+  const access = 'C'.repeat(48)
+  const app = await fixture({ staging: { access, port: 0 } })
+  t.after(() => app.close())
+  const headers = { Origin: 'https://spayzik.github.io', 'X-Dekoray-Test-Access': access }
+  const request = {
+    ...contact, name: 'Тест Декорай', phone: '+12025550101', email: 'dekoray@example.test',
+    intent: 'calculation', items: [{ id: 'pdf2026-p23-r1c1', qty: 2 }],
+  }
+  const group = { id, walls: [{ length: 1.22, height: 3 }], openings: 0, reserve: 0, method: 'area' }
+  const linear = await post(app, request, undefined, headers)
+  assert.equal(linear.status, 201)
+  assert.match((await linear.json()).requestId, /^[a-f0-9-]{36}$/)
+  assert.match(app.attempts.at(-1).description, /Предварительная стоимость материалов: 3000,00 ₽/u)
+  const mixed = await post(app, { ...request, calculation: [group] }, undefined, headers)
+  assert.equal(mixed.status, 201)
+  assert.match((await mixed.json()).requestId, /^[a-f0-9-]{36}$/)
+  assert.match(app.attempts.at(-1).description, /Предварительная стоимость материалов: 11000,00 ₽/u)
+  assert.equal(app.attempts.at(-1).positions, undefined)
+  await check(await post(app, { ...request, items: [{ id, qty: 2 }], calculation: [group] }, undefined, headers),
+    422, { error: 'invalid_items' })
+})
+
 test('protected staging allows only authorized synthetic submissions from the exact preview origin and stores one delivery', async t => {
   const access = 'A'.repeat(48)
   const app = await fixture({staging:{access,port:0}})
