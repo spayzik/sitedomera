@@ -447,6 +447,8 @@
   .page-section { padding-bottom: 2.25rem; }
   .page-crumbs { gap: .3rem .6rem; }
   .page-crumbs > * + *::before { margin-right: .55rem; }
+  .product-page .page-crumbs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; padding-block: .2rem; }
+  .product-page .page-crumbs > * { flex: 0 0 auto; white-space: nowrap; }
   .reading-layout, .material-layout { gap: 1.1rem; }
   .installation-service-process, .journal-list { margin-top: var(--section-gap); }
 }

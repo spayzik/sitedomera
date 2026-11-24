@@ -72,6 +72,7 @@ export function previewDocument(document) {
     .replace(/<meta name="robots"[^>]*>/gi, '')
     .replace(/<link rel="canonical"[^>]*>/gi, '')
     .replace(/<\/head>/i, '<meta name="robots" content="' + previewRobots + '"></head>')
+    .replace(/<\/body>/i, '<span style="position:fixed;bottom:6px;left:8px;z-index:99;padding:4px 8px;border:1px solid #9b7b51;background:#17120d;color:#f0d3b0;font:12px system-ui;pointer-events:none">Тестовая версия</span></body>')
 }
 
 export const jsonLd = page => '<script type="application/ld+json">' + schema(page) + '</script>'
