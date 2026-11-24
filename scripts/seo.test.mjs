@@ -5,7 +5,8 @@ import { SEO, metadataForRoute } from '../src/data/seo.ts'
 import { readFileSync } from 'node:fs'
 import { domainToASCII } from 'node:url'
 import { legacyRedirects, canonicalUrl, categoryPath, productPath, seoAssetPrefix, seoPageFile, seoPages } from '../src/data/seoRoutes.ts'
-import { previewRobots, renderSitemap, renderYml } from './seo-static.mjs'
+import { previewRobots, renderSitemap } from './seo-static.mjs'
+import { renderYml } from './product-feed.mjs'
 import { indexNowKey, indexNowPayload } from './indexnow.mjs'
 
 test('launch uses the owner-provided brand and IDN hostname', () => {
@@ -122,7 +123,7 @@ test('privacy and seven substantive article routes remain available without JS',
 
 test('price feed uses stable ids and verified product facts without inventing stock or business terms', () => {
   const feed = renderYml(new Date('2026-11-20T12:30:00.000Z'))
-  assert.match(feed, /<yml_catalog date="2026-11-20 12:30">/)
+  assert.match(feed, /<yml_catalog date="2026-11-20 15:30">/)
   const offers = [...feed.matchAll(/<offer id="([a-f0-9]{20})" available="false">/g)].map(match => match[1])
   assert.equal(offers.length, products.length)
   assert.equal(new Set(offers).size, offers.length)
@@ -133,7 +134,7 @@ test('price feed uses stable ids and verified product facts without inventing st
 
 
 test('selection pages and contact routes keep verified data and shared components', () => {
-  for (const thickness of [5, 8]) {
+  for (const thickness of [5, 7, 8]) {
     const path = '/catalog/' + thickness + '-mm/'
     const page = seoPages.find(page => page.path === path)
     assert.deepEqual(page.items, products.filter(product => product.kind === 'panel' && product.thicknessMm === thickness))

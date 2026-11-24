@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 import { collections, formatDimensions, productDetails, products, type Product } from '../data/products'
 import { categoryPath, productPath } from '../data/seoPaths'
 import { useCart } from '../context/CartContext'
-import { useStockAvailability } from '../context/inventoryState'
+import { useOfferAvailability } from '../context/inventoryState'
 import { CatalogCard } from '../components/CatalogCard'
 import { LeadAction } from '../components/LeadProvider'
 import { ProductEstimate } from '../components/ProductEstimate'
@@ -78,7 +78,7 @@ const materialStories = {
 
 export function ProductPage({ product, base }: { product: Product; base: string }) {
   const { add } = useCart()
-  const availability = useStockAvailability(product.id)
+  const availability = useOfferAvailability(product.id)
   const category = collections.find(item => item.id === product.categoryId)!
   const context = [product.name, product.sku && product.sku !== product.name ? 'Артикул: ' + product.sku : '',
     formatDimensions(product)].filter(Boolean).join(' · ')
@@ -102,10 +102,10 @@ export function ProductPage({ product, base }: { product: Product; base: string 
     const schema = JSON.parse(data.textContent)
     const offer = schema['@graph']?.find((node: { '@type': string }) => node['@type'] === 'Product')?.offers
     if (!offer) return
-    if (availability.status === 'unknown') delete offer.availability
-    else offer.availability = availability.status === 'in_stock' ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock'
+    if (!availability) delete offer.availability
+    else offer.availability = 'https://schema.org/' + availability
     data.textContent = JSON.stringify(schema)
-  }, [availability.status])
+  }, [availability])
 
   return <div className="container page-section product-page" data-analytics-product={product.id} data-analytics-price={product.priceRub}>
     <nav className="page-crumbs" aria-label="Хлебные крошки">
@@ -152,7 +152,7 @@ export function ProductPage({ product, base }: { product: Product; base: string 
           <strong>{product.priceRub.toLocaleString('ru-RU')} ₽</strong><span> / {product.unit === 'шт' ? 'шт.' : product.unit}</span>
           <SheetUnitPrice product={product} />
         </div>
-        <StockAvailability productId={product.id} />
+        <StockAvailability productId={product.id} purchase={availability === 'InStock' ? 'confirmed' : 'unconfirmed'} />
         <div className="page-links material-actions">
           <button className="btn btn-primary interactive" type="button" onClick={() => add(product)}>Добавить в подборку</button>
           <LeadAction className="secondary-action" intent="consultation" context={context} details={{ items: [{ id: product.id, qty: 1 }] }}>Задать вопрос <ArrowUpRight size={15} aria-hidden="true" /></LeadAction>

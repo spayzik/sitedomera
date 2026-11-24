@@ -157,7 +157,7 @@ export async function importInventory({ reader, products, storeId, manual = {}, 
   }
 }
 
-async function atomicWrite(path, json, mode) {
+export async function atomicWrite(path, json, mode) {
   const temp = join(dirname(path), '.' + basename(path) + '.' + randomUUID() + '.tmp')
   const file = await open(temp, 'wx', mode)
   try {

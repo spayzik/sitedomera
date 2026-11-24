@@ -27,6 +27,11 @@ try {
     foreach ($name in @('bootstrap.php','config.php','config.example.json','http.php','ledger.php','moysklad.php','preflight.php','retry.php','validation.php')) {
         $files['private-runtime/' + $name] = Join-Path $php $name
     }
+    $files['api-entry/payment.php'] = Join-Path $php 'payment-entry.php'
+    foreach ($file in (Get-ChildItem -LiteralPath $php -Filter 'payment-*.php' -File | Sort-Object Name)) {
+        if ($file.Name -ne 'payment-entry.php') { $files['private-runtime/' + $file.Name] = $file.FullName }
+    }
+    $files['api-entry/commerce.php'] = (Resolve-Path 'server/inventory/commerce-entry.php').Path
     $files['host-settings/apache.htaccess'] = Join-Path $php 'release.htaccess'
     $files['host-settings/php.ini.snippet'] = Join-Path $php 'release-php.ini'
     $catalog = node --input-type=module -e "import {products} from './src/data/products.ts'; process.stdout.write(JSON.stringify(Object.fromEntries(products.map(p=>[p.id,{sku:p.sku ?? null,unit:p.unit,priceMinor:p.priceRub*100,kind:p.kind,widthMm:p.dimensions.widthMm ?? null,lengthMm:p.dimensions.lengthMm}]))))"

@@ -69,6 +69,59 @@ final class MoySklad
         return $accepted->id;
     }
 
+    /** Confirm the separately approved sale and reservation without changing CRM data. */
+    public function verifyReservedSale(string $id, string $stateId, string $currencyId, int $total, array $expected): void
+    {
+        $denied = new LeadError(409, 'order_not_ready');
+        if (!preg_match(UUID, $id)) {
+            throw $denied;
+        }
+        $path = 'customerorder/' . $id;
+        $order = $this->request($path);
+        $state = self::reference('state', $stateId, 'customerorder/metadata/states')['meta']['href'];
+        if (!self::isEntity($order, 'customerorder') || strtolower($order->id) !== strtolower($id) ||
+            ($order->applicable ?? null) !== true || ($order->archived ?? false) !== false ||
+            self::referenceId($order->organization ?? null, 'organization') !== $this->config['organizationId'] ||
+            ($order->state->meta->type ?? null) !== 'state' || ($order->state->meta->href ?? null) !== $state ||
+            self::referenceId($order->rate->currency ?? null, 'currency') !== $currencyId ||
+            !in_array($order->rate->value ?? null, [1, 1.0], true) ||
+            !in_array($order->sum ?? null, [$total, (float) $total], true) ||
+            !in_array($order->payedSum ?? null, [0, 0.0], true) || !in_array($order->shippedSum ?? null, [0, 0.0], true)) {
+            throw $denied;
+        }
+
+        $response = $this->request($path . '/positions?limit=100');
+        $rows = $this->rows($response, 'rows');
+        if (($response->meta->size ?? null) !== count($expected) || count($rows) !== count($expected)) {
+            throw $denied;
+        }
+        $positions = [];
+        foreach ($expected as $position) {
+            $positions[$position['id']] = $position;
+        }
+        foreach ($rows as $row) {
+            $type = $row->assortment->meta->type ?? null;
+            if (!in_array($type, ['product', 'variant', 'bundle', 'service'], true)) {
+                throw $denied;
+            }
+            $id = self::referenceId($row->assortment, $type);
+            $position = $positions[$id] ?? null;
+            if ($position === null || $type !== $position['type']) {
+                throw $denied;
+            }
+            $qty = $position['quantity'];
+            $price = $position['priceMinor'];
+            if (!in_array($row->quantity ?? null, [$qty, (float) $qty], true) ||
+                !in_array($row->price ?? null, [$price, (float) $price], true) ||
+                !in_array($row->discount ?? null, [0, 0.0], true) ||
+                ($position['reserved'] && (!in_array($row->reserve ?? null, [$qty, (float) $qty], true) ||
+                    !in_array($row->shipped ?? null, [0, 0.0], true)))) {
+                throw $denied;
+            }
+            unset($positions[$id]);
+        }
+    }
+
     /** Read-only access check for a fully configured intake. */
     public function preflight(): array
     {

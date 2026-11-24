@@ -141,7 +141,7 @@ export function AnalyticsSettings({ inDialog = false }: { inDialog?: boolean }) 
       {!inDialog && <h2>Настройки cookie</h2>}
       <dl className="cookie-categories">
         <div><dt>Необходимые данные</dt><dd>Сохраняют корзину и настройки сайта.</dd></div>
-        <div><dt>Аналитика</dt><dd>Яндекс Метрика для статистики сайта. Включается по вашему выбору.</dd></div>
+        <div><dt>Аналитика</dt><dd>Яндекс Метрика собирает статистику сайта и может записывать действия на страницах после вашего согласия.</dd></div>
       </dl>
       <p role="status">{configured ? `Аналитика: ${status}.` : 'Аналитика в этой версии сайта отключена.'}</p>
       {configured && <>

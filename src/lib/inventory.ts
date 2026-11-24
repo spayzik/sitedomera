@@ -24,6 +24,24 @@ export interface Inventory {
   items: ReadonlyMap<string, Entry>
 }
 
+export type CommerceAvailability = { updatedAt: string; saleable: ReadonlySet<string> }
+
+export function parseCommerceAvailability(value: unknown, catalog: readonly StockProduct[]): CommerceAvailability | null {
+  if (value === null) return null
+  const productIds = new Set(catalog.map(({ id }) => id))
+  if (!record(value) || Object.keys(value).length !== 2 || typeof value.updatedAt !== 'string' ||
+      !Array.isArray(value.saleable) || value.saleable.length > productIds.size ||
+      !value.saleable.every(id => typeof id === 'string' && productIds.has(id)) ||
+      new Set(value.saleable).size !== value.saleable.length) throw new Error('Invalid commerce status')
+  return { updatedAt: value.updatedAt, saleable: new Set(value.saleable) }
+}
+
+export function offerAvailability(stock: StockAvailability, productId: string, commerce: CommerceAvailability | null) {
+  if (stock.status === 'out_of_stock') return 'OutOfStock'
+  if (stock.status === 'in_stock' && stock.quantity >= 1 && stock.updatedAt === commerce?.updatedAt && commerce.saleable.has(productId)) return 'InStock'
+  return undefined
+}
+
 export const STOCK_MAX_AGE_MS = 45 * 60_000
 const MAX_CLOCK_SKEW_MS = 2 * 60_000
 

@@ -3,10 +3,12 @@ import { mkdir, readFile, unlink, writeFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { build } from 'vite'
-import { indexNowKey } from './indexnow.mjs'
+import { indexNowKey, writeIndexNowRelease } from './indexnow.mjs'
+import { searchOwnership } from './search-ownership.mjs'
 import { optionalPublicReleaseFiles } from '../src/data/publicReleaseFiles.ts'
 import { legacyRedirects, seoAssetPrefix, seoPageFile, seoPages } from '../src/data/seoRoutes.ts'
-import { jsonLd, previewDocument, renderRoot, renderSeoPage, renderLegacyRedirect, renderSitemap, renderYml } from './seo-static.mjs'
+import { jsonLd, previewDocument, renderRoot, renderSeoPage, renderLegacyRedirect, renderSitemap } from './seo-static.mjs'
+import { renderYml } from './product-feed.mjs'
 
 const ssrDirectory = resolve('node_modules/.cache/dekoray-ssg')
 await build({
@@ -23,6 +25,8 @@ const writeDocument = (path, html) => {
   const document = html.replace('</head>', withoutJavaScript + '</head>')
   return writeFile(path, preview ? previewDocument(document) : document)
 }
+const ownership = await searchOwnership()
+for (const [file, bytes] of ownership.files) await writeFile(join(dist, file), bytes)
 const rootFile = join(dist, 'index.html')
 const index = await readFile(rootFile, 'utf8')
 const manifestPath = join(dist, '.asset-manifest.json')
@@ -46,6 +50,7 @@ for (const { from, to } of legacyRedirects) {
   await writeDocument(path, renderLegacyRedirect(from, to))
 }
 await writeDocument(rootFile, index
+  .replace('</head>', () => ownership.tags.join('') + '</head>')
   .replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/, () => jsonLd(seoPages[0]))
   .replace('<div id="root"></div>', () => renderRoot('/', './', ui)))
 await writeDocument(join(dist, '404.html'), renderSeoPage(null, preview ? '/dekoray-preview/' : '/', assets, ui))
@@ -58,13 +63,18 @@ if (preview) {
     if (html !== undefined) await writeDocument(path, html)
   }
 }
-const key = indexNowKey()
-if (key) await writeFile(join(dist, key + '.txt'), key + '\n')
+const key = indexNowKey({ ...process.env, VITE_DEKORAY_PREVIEW: preview ? '1' : '0' })
+if (key) {
+  await writeFile(join(dist, key + '.txt'), key + '\n')
+  await writeIndexNowRelease(dist)
+}
 await writeFile(join(dist, 'sitemap.xml'), renderSitemap())
 const robotsPath = join(dist, 'robots.txt')
 const robots = await readFile(robotsPath, 'utf8')
 await writeFile(robotsPath, preview ? 'User-agent: *\nAllow: /\n' : robots)
 const epoch = process.env.SOURCE_DATE_EPOCH
 assert(epoch === undefined || (/^\d+$/.test(epoch) && Number.isFinite(new Date(Number(epoch) * 1000).valueOf())), 'Invalid SOURCE_DATE_EPOCH')
-await writeFile(join(dist, 'yml.xml'), renderYml(epoch === undefined ? undefined : new Date(Number(epoch) * 1000)))
-console.log('Prerendered ' + seoPages.length + ' React routes, sitemap, 404 and price feed.')
+const feedDate = epoch === undefined ? new Date() : new Date(Number(epoch) * 1000)
+await writeFile(join(dist, 'yml.xml'), renderYml(feedDate, { channel: 'search' }))
+await writeFile(join(dist, 'yml-direct.xml'), renderYml(feedDate))
+console.log('Prerendered ' + seoPages.length + ' React routes, sitemap, 404 and YML fallbacks.')

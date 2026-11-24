@@ -97,9 +97,9 @@ export function LeadProvider({ children }: { children: ReactNode }) {
               </button>}
             </>}
           <div className="lead-dialog-links">
-            <a className="contact-inline-phone" href={inquiryTelegramLink(request.intent, request.context)}
+            <a className="contact-inline-phone ym-hide-content" href={inquiryTelegramLink(request.intent, request.context)}
               target="_blank" rel="noopener noreferrer">Написать в Telegram</a>
-            {whatsapp && <a className="contact-inline-phone" href={whatsapp}
+            {whatsapp && <a className="contact-inline-phone ym-hide-content" href={whatsapp}
               target="_blank" rel="noopener noreferrer">Написать в WhatsApp</a>}
             <a className="contact-inline-phone" href={contactLinks.phone}>Позвонить {contactLinks.phoneLabel}</a>
           </div>
@@ -118,10 +118,11 @@ type ActionProps = {
   children?: ReactNode
 }
 
-export function LeadAction({ intent, context, details, children, ...attributes }: ActionProps) {
+export function LeadAction({ intent, context, details, children, className, ...attributes }: ActionProps) {
   const service = useLeadService()
   const content = children ?? leadIntents[intent].title
-  return <a {...attributes} href={inquiryTelegramLink(intent, context)} target="_blank" rel="noopener noreferrer"
+  return <a {...attributes} className={className ? className + ' ym-hide-content' : 'ym-hide-content'}
+    href={inquiryTelegramLink(intent, context)} target="_blank" rel="noopener noreferrer"
     aria-haspopup={service ? 'dialog' : undefined} onClick={event => {
       if (!service || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
       event.preventDefault()

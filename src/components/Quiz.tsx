@@ -79,7 +79,7 @@ export function Quiz() {
                     <p>Ответы остаются в браузере. По запросу передадим менеджеру выбранный материал.</p>
                     {product && <LeadAction intent="selection" className="btn btn-outline interactive"
                       context={product.name} details={{ items: [{ id: product.id, qty: 1 }] }}>Спросить о материале</LeadAction>}
-                    {draft && <a className="btn btn-outline interactive" href={draft} target="_blank" rel="noreferrer">Обсудить материал в Telegram <ArrowRight size={16} /></a>}
+                    {draft && <a className="btn btn-outline interactive ym-hide-content" href={draft} target="_blank" rel="noreferrer">Обсудить материал в Telegram <ArrowRight size={16} /></a>}
                   </div>
                 </div>
               </motion.div>

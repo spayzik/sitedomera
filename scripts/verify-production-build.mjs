@@ -6,7 +6,8 @@ import { CONTACTS, products, sourceInventory } from '../src/data/products.ts'
 import { SEO } from '../src/data/seo.ts'
 import { legacyRedirects, canonicalUrl, seoPageFile, seoPages } from '../src/data/seoRoutes.ts'
 import { escape, previewRobots } from './seo-static.mjs'
-import { indexNowKey } from './indexnow.mjs'
+import { indexNowKey, indexNowReleaseFile, readIndexNowRelease } from './indexnow.mjs'
+import { searchOwnership } from './search-ownership.mjs'
 import { parseInventory } from '../src/lib/inventory.ts'
 import { publicReleaseFiles, optionalPublicReleaseFiles } from '../src/data/publicReleaseFiles.ts'
 import { assertPublicAvitoSnapshot } from './public-avito-snapshot.mjs'
@@ -183,7 +184,11 @@ async function verify() {
       assert(!Object.hasOwn(record.offers, 'availability'), file + ' static availability cannot be assumed')
     }
   }
-  const feed = await readFile(await requireFile('yml.xml'), 'utf8')
+  const searchFeed = await readFile(await requireFile('yml.xml'), 'utf8')
+  assert.match(searchFeed, /<yml_catalog date="\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z">/)
+  assert.doesNotMatch(searchFeed, /<offer id=/, 'Search feed fallback can only contain offered products after runtime verification')
+  const feed = await readFile(await requireFile('yml-direct.xml'), 'utf8')
+  assert.match(feed, /<yml_catalog date="\d{4}-\d{2}-\d{2} \d{2}:\d{2}">/)
   assert.equal([...feed.matchAll(/<offer id="/g)].length, products.length, 'Feed must match the published catalog')
   assert.equal([...feed.matchAll(/<offer id="[a-f0-9]{20}" available="false">/g)].length, products.length,
     'Every static offer must explicitly disable unverified availability')
@@ -238,13 +243,22 @@ async function verify() {
   const avito = JSON.parse(await readFile(await requireFile('generated/avito-reviews.json'), 'utf8'))
   assertPublicAvitoSnapshot(avito, { allowFallback: true })
 
-  const required = new Set(['404.html', 'yml.xml', ...seoPages.map(page => seoPageFile(page.path)), ...legacyRedirects.map(({ from }) => seoPageFile(from)), ...publicReleaseFiles])
-  const key = indexNowKey()
+  const required = new Set(['404.html', 'yml.xml', 'yml-direct.xml', ...seoPages.map(page => seoPageFile(page.path)), ...legacyRedirects.map(({ from }) => seoPageFile(from)), ...publicReleaseFiles])
+  const key = indexNowKey({ ...process.env, VITE_DEKORAY_PREVIEW: preview ? '1' : '0' })
   if (key) {
     const keyFile = key + '.txt'
     required.add(keyFile)
+    required.add(indexNowReleaseFile)
+    const release = readIndexNowRelease(await readFile(await requireFile(indexNowReleaseFile), 'utf8'))
+    assert.deepEqual(Object.keys(release), seoPages.map(page => page.path))
     assert.equal((await readFile(await requireFile(keyFile), 'utf8')).trim(), key)
   }
+  const ownership = await searchOwnership()
+  for (const [file, bytes] of ownership.files) {
+    assert.deepEqual(await readFile(await requireFile(file)), bytes)
+    required.add(file)
+  }
+  for (const tag of ownership.tags) assert(html.includes(tag), 'Missing search ownership meta tag')
   for (const path of required) await requireFile(path)
   const internalNames = /(?:^|[/_.-])(?:requirements?|roadmap|handoff|evidence|screenshots?|private|internal|codex|debug|fixtures?|test|spec|backup|manifest)(?:[/_.-]|$)/i
   const blockedText = /__SITE_[A-Z_]+__|AVITO_CLIENT_(?:SECRET|ID)|client_secret|access_token|Authorization:\s*Bearer|api\.telegram\.org\/bot|TELEGRAM_BOT_TOKEN|(?:S?FTP|REG(?:RU)?)[_ -]?(?:PASSWORD|TOKEN)|-----BEGIN [^-]*PRIVATE KEY-----|gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|(?:AKIA|ASIA)[A-Z0-9]{16}|sourceMappingURL|\bdomera\.ru\b|\blocalhost\b|\b127\.0\.0\.1\b|(?:[a-z]:[\\/]Users[\\/]|\/home\/[^/\s]+\/|file:\/\/)/i

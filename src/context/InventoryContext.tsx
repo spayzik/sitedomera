@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { CONTACTS, products } from '../data/products'
-import { parseInventory, stagingInventoryUrl } from '../lib/inventory'
+import { parseCommerceAvailability, parseInventory, stagingInventoryUrl } from '../lib/inventory'
 import { InventoryContext, initialInventoryState, type StockState } from './inventoryState'
 
 const REFRESH_MS = 2 * 60_000
@@ -10,7 +10,9 @@ const remotePreviewUrl = import.meta.env.VITE_DEKORAY_PREVIEW === '1'
   ? stagingInventoryUrl(import.meta.env.VITE_DEKORAY_STAGING_STOCK_URL, CONTACTS.hostname)
   : null
 
-export function InventoryProvider({ children, snapshotUrl = defaultSnapshotUrl }: { children: ReactNode; snapshotUrl?: string }) {
+export function InventoryProvider({ children, snapshotUrl = defaultSnapshotUrl, commerceUrl }: {
+  children: ReactNode; snapshotUrl?: string; commerceUrl?: string
+}) {
   const endpoint = remotePreviewUrl ?? snapshotUrl
   const [state, setState] = useState(initialInventoryState)
   const [expired, setExpired] = useState(false)
@@ -24,6 +26,10 @@ export function InventoryProvider({ children, snapshotUrl = defaultSnapshotUrl }
       const request = new AbortController()
       activeRequest = request
       const timeout = window.setTimeout(() => request.abort(), 10_000)
+      const commerceRequest = commerceUrl && import.meta.env.VITE_DEKORAY_PREVIEW !== '1' ? fetch(commerceUrl, {
+        cache: 'no-store', credentials: 'omit', redirect: 'error', signal: request.signal,
+      }).then(async response => response.ok ? parseCommerceAvailability(await response.json(), products) : null).catch(() => null)
+        : Promise.resolve(null)
       let unavailable: StockState['unavailable'] = 'api_unavailable'
       try {
         const response = await fetch(endpoint, {
@@ -35,11 +41,13 @@ export function InventoryProvider({ children, snapshotUrl = defaultSnapshotUrl }
         const inventory = parseInventory(await response.json(), products)
         if (!lifetime.signal.aborted) {
           setState(previous => previous.inventory && previous.inventory.updatedAt > inventory.updatedAt
-            ? previous : { inventory, unavailable: 'api_unavailable' })
+            ? previous : { ...previous, inventory, unavailable: 'api_unavailable' })
         }
       } catch {
-        if (!lifetime.signal.aborted) setState(previous => previous.inventory ? previous : { inventory: null, unavailable })
+        if (!lifetime.signal.aborted) setState(previous => previous.inventory ? previous : { ...previous, inventory: null, unavailable })
       } finally {
+        const commerce = await commerceRequest
+        if (!lifetime.signal.aborted) setState(previous => previous.commerce === commerce ? previous : { ...previous, commerce })
         window.clearTimeout(timeout)
         activeRequest = undefined
       }
@@ -53,7 +61,7 @@ export function InventoryProvider({ children, snapshotUrl = defaultSnapshotUrl }
       window.clearInterval(interval)
       document.removeEventListener('visibilitychange', refresh)
     }
-  }, [endpoint])
+  }, [endpoint, commerceUrl])
 
   const expiresAt = state.inventory?.expiresAt
   useEffect(() => {

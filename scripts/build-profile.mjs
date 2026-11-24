@@ -13,12 +13,13 @@ const staging = profile === 'staging'
 const env = {
   ...process.env,
   VITE_DEKORAY_PREVIEW: staging ? '1' : '0',
+  VITE_DEKORAY_STAGING_PAYMENT_API: staging ? process.env.VITE_DEKORAY_STAGING_PAYMENT_API ?? '' : '',
   VITE_DEKORAY_LEAD_API: staging ? '' : '/api/lead',
   VITE_DEKORAY_STAGING_LEAD_API: staging ? process.env.VITE_DEKORAY_STAGING_LEAD_API ?? '' : '',
   VITE_DEKORAY_STAGING_STOCK_URL: staging ? process.env.VITE_DEKORAY_STAGING_STOCK_URL ?? '' : '',
   VITE_YM_STAGING_ID: staging ? process.env.VITE_YM_STAGING_ID ?? '' : '',
-  VITE_YM_ID: process.env.VITE_YM_ID ?? '',
-  VITE_YM_WEBVISOR: process.env.VITE_YM_WEBVISOR ?? '0',
+  VITE_YM_ID: staging ? '' : process.env.VITE_YM_ID || '114347066',
+  VITE_YM_WEBVISOR: staging ? process.env.VITE_YM_WEBVISOR ?? '0' : '1',
 }
 
 if (staging && env.VITE_DEKORAY_STAGING_LEAD_API) {
@@ -29,8 +30,16 @@ if (staging && env.VITE_DEKORAY_STAGING_LEAD_API) {
     throw new Error('Staging requires a separate HTTPS /api/lead endpoint')
   }
 }
+if (staging && env.VITE_DEKORAY_STAGING_PAYMENT_API) {
+  const endpoint = new URL(env.VITE_DEKORAY_STAGING_PAYMENT_API)
+  if (endpoint.protocol !== 'https:' || endpoint.pathname !== '/api/payment' ||
+      endpoint.username || endpoint.password || endpoint.search || endpoint.hash ||
+      /(^|\.)xn--80ahdrdyo\.xn--p1ai$/i.test(endpoint.hostname.replace(/\.$/, ''))) {
+    throw new Error('Staging requires a separate HTTPS /api/payment endpoint in test mode')
+  }
+}
 if (staging && env.VITE_YM_STAGING_ID &&
-    [env.VITE_YM_ID, '114347066'].some(id => Number(id) === Number(env.VITE_YM_STAGING_ID))) {
+    [process.env.VITE_YM_ID, '114347066'].some(id => Number(id) === Number(env.VITE_YM_STAGING_ID))) {
   throw new Error('Staging cannot use the production analytics counter')
 }
 const stockUrl = stagingInventoryUrl(env.VITE_DEKORAY_STAGING_STOCK_URL, CONTACTS.hostname)

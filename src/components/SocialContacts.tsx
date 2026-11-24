@@ -65,7 +65,7 @@ export function SocialContacts({ placement, base = './', onFollow, drafts, hideP
       const draft = id === 'telegram' || id === 'whatsapp' ? drafts?.[id] : undefined
       const destination = maxByPhone ? base + 'kontakty/#max-contact' : draft ?? href
       if (!destination) return null
-      return (<a key={label} href={destination} className="social-contact" data-channel={id} onClick={onFollow}
+      return (<a key={label} href={destination} className={draft ? 'social-contact ym-hide-content' : 'social-contact'} data-channel={id} onClick={onFollow}
         target={id === 'phone' || maxByPhone ? undefined : '_blank'} rel={id === 'phone' || maxByPhone ? undefined : 'noreferrer'}
         aria-label={id === 'phone' ? 'Позвонить ' + detail : label} title={circular ? label : undefined}>
         <ChannelIcon id={id} />

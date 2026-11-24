@@ -24,12 +24,12 @@ function StorefrontWidgets({ base }: { base: string }) {
   </>
 }
 
-export function SiteLayout({ base, path, children }: { base: string; path: string; children: ReactNode }) {
+export function SiteLayout({ base, path, children, showCommerce }: { base: string; path: string; children: ReactNode; showCommerce: boolean }) {
   const [ready, setReady] = useState(false)
   useEffect(() => setReady(true), [])
   return <MotionConfig reducedMotion="user">
     <PrivacyProvider>
-      <InventoryProvider snapshotUrl={base + 'generated/inventory.json'}>
+      <InventoryProvider snapshotUrl={base + 'generated/inventory.json'} commerceUrl={showCommerce ? base + 'generated/commerce.json' : undefined}>
         <LeadProvider>
           <CartProvider>
             <ScrollGlow />

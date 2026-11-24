@@ -1,7 +1,6 @@
-import { createHash } from 'node:crypto'
-import { CONTACTS, collections, products, faq } from '../src/data/products.ts'
+import { CONTACTS, faq } from '../src/data/products.ts'
 import { productDescription } from '../src/lib/productPresentation.ts'
-import { canonicalUrl, categoryPath, productPath, seoAssetPrefix, seoPages } from '../src/data/seoRoutes.ts'
+import { canonicalUrl, categoryPath, seoAssetPrefix, seoPages } from '../src/data/seoRoutes.ts'
 
 export const escape = value => String(value).replace(/[&<>"']/g, character => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
@@ -113,23 +112,4 @@ export function renderSitemap() {
   // Canonical content dates come from the route inventory, never runtime stock or the build clock.
   return '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
     seoPages.map(({ path, lastmod }) => '  <url><loc>' + escape(canonicalUrl(path)) + '</loc><lastmod>' + escape(lastmod) + '</lastmod></url>').join('\n') + '\n</urlset>\n'
-}
-
-export function renderYml(now = new Date()) {
-  // A static feed cannot attest to current stock or online purchase availability.
-  const xml = value => escape(value)
-  const categories = collections.map((category, index) => `<category id="${index + 1}">${xml(category.name)}</category>`).join('')
-  const offers = products.map(product => `<offer id="${createHash('sha256').update(product.id).digest('hex').slice(0, 20)}" available="false">
-    <name>${xml(product.name)}</name><url>${xml(canonicalUrl(productPath(product)))}</url>
-    <price>${product.priceRub}</price><currencyId>RUR</currencyId><categoryId>${collections.findIndex(category => category.id === product.categoryId) + 1}</categoryId>
-    <picture>${xml(canonicalUrl('/' + product.image))}</picture><description>${xml(productDescription(product))}</description>
-    ${product.sku ? `<vendorCode>${xml(product.sku)}</vendorCode>` : ''}
-  </offer>`).join('\n')
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<yml_catalog date="${now.toISOString().slice(0, 16).replace('T', ' ')}"><shop>
-<name>${xml(CONTACTS.brand)}</name><company>${xml(CONTACTS.brand)}</company><url>${xml(canonicalUrl('/'))}</url>
-<currencies><currency id="RUR" rate="1"/></currencies><categories>${categories}</categories>
-<!-- Catalog prices only. No availability claims or delivery terms. -->
-<offers>${offers}</offers></shop></yml_catalog>
-`
 }

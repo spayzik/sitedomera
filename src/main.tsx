@@ -4,6 +4,7 @@ import App from './App'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { legacyProductPath, parseCatalogHash } from './lib/catalogNavigation'
 import { categoryPath } from './data/seoPaths'
+import { readPaymentFragment } from './lib/paymentClient'
 
 const root = document.getElementById('root')!
 const base = root.dataset.assetBase ?? (import.meta.env.DEV ? '/' : './')
@@ -32,6 +33,8 @@ function migrateLegacyRoute() {
   window.location.replace(base + target.slice(1) + (query.size ? '?' + query : ''))
   return true
 }
+
+if (path === '/usloviya-priobreteniya/') readPaymentFragment()
 
 if (!migrateLegacyRoute()) {
   window.addEventListener('hashchange', migrateLegacyRoute)

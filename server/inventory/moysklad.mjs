@@ -176,6 +176,41 @@ export function createStockReader(token, fetchImpl = fetch, { minimumIntervalMs 
     return stocks
   }
 
+  async function sellableStock(storeId, assortmentIds) {
+    const allowed = new Set(assortmentIds)
+    if (!isUuid(storeId) || !allowed.size || !assortmentIds.every(isUuid) || allowed.size !== assortmentIds.length) {
+      throw new InventoryError('INVALID_STOCK_FILTER')
+    }
+    // Include the null store row, which carries reservations without a warehouse assignment.
+    const result = await get(STOCK_ENDPOINT, {
+      filter: 'assortmentId=' + assortmentIds.join(','),
+      stockType: 'freeStock', include: 'zeroLines', withRecalculate: 'true',
+    })
+    if (!Array.isArray(result)) throw new InventoryError('MOYSKLAD_INVALID_SELLABLE_STOCK')
+    const quantities = new Map()
+    const unassigned = new Map()
+    const seen = new Set()
+    for (const row of result) {
+      const id = isUuid(row?.assortmentId) ? row.assortmentId.toLowerCase() : undefined
+      const rowStore = row?.storeId === null ? null : isUuid(row?.storeId) ? row.storeId.toLowerCase() : undefined
+      const key = id + ':' + rowStore
+      const count = row?.freeStock
+      if (!allowed.has(id) || rowStore === undefined || seen.has(key) ||
+          !(count === null || (Number.isFinite(count) && Math.abs(count) <= Number.MAX_SAFE_INTEGER)) ||
+          (rowStore === null && count > 0)) {
+        throw new InventoryError('MOYSKLAD_INVALID_SELLABLE_STOCK')
+      }
+      seen.add(key)
+      if (rowStore === storeId) quantities.set(id, count)
+      else if (rowStore === null) unassigned.set(id, count)
+    }
+    for (const [id, quantity] of quantities) {
+      const reserved = unassigned.has(id) ? unassigned.get(id) : 0
+      quantities.set(id, quantity === null || reserved === null ? null : Math.max(0, quantity + reserved))
+    }
+    return quantities
+  }
+
   async function reconciliationSources() {
     const archivedAssortment = await list('entity/assortment', true)
     const activeProducts = await list('entity/product')
@@ -186,5 +221,5 @@ export function createStockReader(token, fetchImpl = fetch, { minimumIntervalMs 
   }
 
   return { stores: () => list('entity/store'), assortment: () => list('entity/assortment'),
-    units: () => list('entity/uom'), stock, reconciliationSources }
+    units: () => list('entity/uom'), stock, sellableStock, reconciliationSources }
 }

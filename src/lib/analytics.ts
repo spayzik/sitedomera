@@ -1,3 +1,6 @@
+import { feedOfferId } from '../data/feedOfferIds.ts'
+import { CONTACTS } from '../data/products.ts'
+
 export type AnalyticsConsent = 'unknown' | 'accepted' | 'rejected'
 
 const goals = [
@@ -6,7 +9,7 @@ const goals = [
   'catalog_search', 'catalog_filter', 'calculator_start', 'cart_remove', 'cart_view',
   'lead_start', 'lead_submit', 'lead_error', 'sample_request', 'installation_request', 'b2b_request',
 ] as const
-type AnalyticsGoal = typeof goals[number]
+type AnalyticsGoal = typeof goals[number] | 'begin_checkout'
 
 const consentKey = 'domera-analytics-consent-v1'
 const scriptUrl = 'https://mc.yandex.ru/metrika/tag.js'
@@ -30,6 +33,8 @@ let scriptState: 'idle' | 'loading' | 'ready' | 'failed' = 'idle'
 let allowed = false
 let lastHitUrl = ''
 let pendingCalls: unknown[][] | undefined
+let counterReady: Promise<boolean> | undefined
+let resolveCounterReady: ((ready: boolean) => void) | undefined
 const attributionSources = new Set(['yandex', 'google', 'avito', 'telegram', 'vk', '2gis', 'direct'])
 const attributionMedia = new Set(['organic', 'cpc', 'referral', 'social', 'email', 'display', 'qr'])
 
@@ -99,7 +104,7 @@ function referringOrigin(): string {
 
 export function startAnalytics(consent: AnalyticsConsent): void {
   if (consent !== 'accepted' || counterId === null || scriptState !== 'idle' ||
-    (!preview && window.location.hostname.endsWith('.github.io')) ||
+    (!preview && window.location.origin !== CONTACTS.origin) ||
     document.getElementById('root')?.dataset.path === '/404/') return
   allowed = true
   const metrikaWindow = window as MetrikaWindow
@@ -123,16 +128,23 @@ export function startAnalytics(consent: AnalyticsConsent): void {
   const script = document.createElement('script')
   script.src = scriptUrl
   script.async = true
+  script.referrerPolicy = 'origin'
+  counterReady = new Promise(resolve => { resolveCounterReady = resolve })
   script.onload = () => {
     pendingCalls = undefined
     if (!allowed || typeof metrikaWindow.ym !== 'function') {
       scriptState = 'failed'
+      resolveCounterReady?.(false)
       return
     }
     scriptState = 'ready'
     trackAnalyticsPage() // Send one sanitized initial page view after deferred init.
+    resolveCounterReady?.(true)
   }
-  script.onerror = () => { scriptState = 'failed' }
+  script.onerror = () => {
+    scriptState = 'failed'
+    resolveCounterReady?.(false)
+  }
   scriptState = 'loading'
   document.head.appendChild(script)
 }
@@ -157,7 +169,8 @@ export function trackAnalyticsPage(): void {
 }
 
 export function trackAnalyticsGoal(goal: AnalyticsGoal): void {
-  if (!allowed || scriptState !== 'ready' || counterId === null || !goals.includes(goal)) return
+  if (!allowed || scriptState !== 'ready' || counterId === null ||
+    (goal !== 'begin_checkout' && !goals.includes(goal))) return
   // The method takes only a fixed identifier. Never pass links or customer input.
   try { (window as MetrikaWindow).ym?.(counterId, 'reachGoal', goal) } catch { /* Analytics is optional. */ }
 }
@@ -178,13 +191,23 @@ export function trackAnalyticsLink(event: MouseEvent): void {
 }
 
 type AnalyticsProduct = { id: string; priceRub: number }
+type AnalyticsOrderItem = AnalyticsProduct & { quantity: number }
+type AnalyticsOrder = { transactionId: string; valueRub: number; items: readonly AnalyticsOrderItem[] }
+type VerifiedAnalyticsPurchase = AnalyticsOrder & { status: 'succeeded'; verified: true }
+const orderIdPattern = /^[a-f\d]{8}-(?:[a-f\d]{4}-){3}[a-f\d]{12}$/i
+
+function ecommerceDataLayer(): unknown[] | undefined {
+  if (!allowed || scriptState !== 'ready' || counterId === null) return
+  return (window as MetrikaWindow).dataLayer
+}
 
 function trackEcommerce(action: 'detail' | 'add' | 'remove', product: AnalyticsProduct, quantity?: number): void {
-  if (!allowed || scriptState !== 'ready' || counterId === null ||
-    !/^[a-z0-9_-]{1,100}$/i.test(product.id) || !Number.isFinite(product.priceRub) || product.priceRub < 0) return
-  const item = { id: product.id, price: product.priceRub, ...(quantity === undefined ? {} : { quantity }) }
-  const dataLayer = (window as MetrikaWindow).dataLayer
-  dataLayer?.push({ ecommerce: { currencyCode: 'RUB', [action]: { products: [item] } } })
+  const dataLayer = ecommerceDataLayer()
+  if (!dataLayer) return
+  const id = feedOfferId(product.id)
+  if (!id || !Number.isFinite(product.priceRub) || product.priceRub < 0) return
+  const item = { id, price: product.priceRub, ...(quantity === undefined ? {} : { quantity }) }
+  dataLayer.push({ ecommerce: { currencyCode: 'RUB', [action]: { products: [item] } } })
 }
 
 export function trackAnalyticsProductView(product: AnalyticsProduct): void {
@@ -198,9 +221,82 @@ export function trackAnalyticsCart(action: 'add' | 'remove', product: AnalyticsP
   trackEcommerce(action, product, quantity)
 }
 
+function orderProducts(order: AnalyticsOrder) {
+  const total = Math.round(order.valueRub * 100)
+  if (!orderIdPattern.test(order.transactionId) || !Number.isSafeInteger(total) || total <= 0 ||
+    order.items.length === 0) return
+  const products: { id: string; price: number; quantity: number }[] = []
+  let merchandise = 0
+  for (const { id: productId, priceRub, quantity } of order.items) {
+    const id = feedOfferId(productId)
+    const unitPrice = Math.round(priceRub * 100)
+    if (!id || !Number.isSafeInteger(unitPrice) || unitPrice <= 0 ||
+      !Number.isSafeInteger(quantity) || quantity < 1) return
+    merchandise += unitPrice * quantity
+    products.push({ id, price: unitPrice / 100, quantity })
+  }
+  if (!Number.isSafeInteger(merchandise) || merchandise > total) return
+  return { products, total: total / 100, merchandise: merchandise / 100 }
+}
+
+function claimCommerceEvent(key: string): boolean {
+  if (localStorage.getItem(key)) return false
+  localStorage.setItem(key, '1')
+  return true
+}
+
+export function trackAnalyticsCheckout(order: AnalyticsOrder): boolean {
+  const dataLayer = ecommerceDataLayer()
+  const details = orderProducts(order)
+  if (!dataLayer || !details) return false
+  const items = details.products.map(({ id, price, quantity }) => ({ item_id: id, price, quantity }))
+  // Metrika accepts GA4 ecommerce. The JS goal makes checkout selectable in its funnel.
+  const event = { event: 'begin_checkout', ecommerce: { currency: 'RUB', value: details.merchandise, items } }
+  if (JSON.stringify(event).length > 8192) return false
+  try {
+    if (!claimCommerceEvent(`dekoray-metrika-checkout:${counterId}:${order.transactionId.toLowerCase()}`)) return false
+    dataLayer.push(event)
+    trackAnalyticsGoal('begin_checkout')
+    return true
+  } catch {
+    return false
+  }
+}
+
+export async function trackAnalyticsPurchase(order: VerifiedAnalyticsPurchase): Promise<boolean> {
+  if (order.status !== 'succeeded' || order.verified !== true) return false
+  const details = orderProducts(order)
+  if (!details) return false
+  if (scriptState === 'idle') startAnalytics(readAnalyticsConsent())
+  if (!allowed || !(await counterReady)) return false
+
+  const transactionId = order.transactionId.toLowerCase()
+  const event = {
+    ecommerce: {
+      currencyCode: 'RUB',
+      purchase: { actionField: { id: transactionId, revenue: details.total }, products: details.products },
+    },
+  }
+  if (JSON.stringify(event).length > 8192) return false
+  const key = `dekoray-metrika-purchase:${counterId}:${transactionId}`
+  function sendOnce() {
+    const dataLayer = ecommerceDataLayer()
+    if (!dataLayer || !claimCommerceEvent(key)) return false
+    dataLayer.push(event)
+    return true
+  }
+  try {
+    // A second checkout tab can observe the same payment before its storage event arrives.
+    return navigator.locks ? await navigator.locks.request(key, sendOnce) : sendOnce()
+  } catch {
+    return false
+  }
+}
+
 export function stopAnalytics(): void {
   if (!allowed) return
   allowed = false
+  resolveCounterReady?.(false)
   if (pendingCalls) pendingCalls.length = 0
   if (counterId !== null) {
     // Yandex's opt-out flag also covers revocation during tag.js loading.

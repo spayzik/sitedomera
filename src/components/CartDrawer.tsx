@@ -12,6 +12,7 @@ import { CartLeadForm, type LeadAttempt } from './CartLeadForm'
 import { LeadAction } from './LeadProvider'
 import { contactLinks } from '../lib/contactLinks'
 import { CartComparison } from './CartComparison'
+import { hasPaymentOrder } from '../lib/paymentClient'
 
 export function CartDrawer({ assetBase = import.meta.env.BASE_URL }: { assetBase?: string }) {
   const { open, setOpen, items, total, setQty, remove, migrationNotice, dismissMigrationNotice } = useCart()
@@ -105,8 +106,9 @@ export function CartDrawer({ assetBase = import.meta.env.BASE_URL }: { assetBase
               </div>
               <p className="drawer-contact-note">Подборка хранится в этом браузере и не отправляется автоматически.</p>
               <div className="drawer-contact-actions">
+                {hasPaymentOrder() && <a className="btn btn-outline btn-full interactive" href={assetBase + "usloviya-priobreteniya/#oplata"}>Подтверждённый заказ</a>}
                 {telegramDraftUrl && (
-                  <a className="btn btn-primary btn-full interactive" href={telegramDraftUrl} target="_blank" rel="noreferrer">
+                  <a className="btn btn-primary btn-full interactive ym-hide-content" href={telegramDraftUrl} target="_blank" rel="noreferrer">
                     Обсудить подборку в Telegram <ArrowRight size={16} />
                   </a>
                 )}

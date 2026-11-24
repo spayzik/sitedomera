@@ -1,4 +1,5 @@
 import { CONTACTS, priceSummary } from '../data/products'
+import { OrderPayment } from '../components/OrderPayment'
 
 const sections = [
   {
@@ -41,6 +42,7 @@ export function OfferPage({ base }: { base: string }) {
           Здесь собрана информация о покупке материалов «Декорай».
           Через сайт можно запросить товары и расчёт. Договорённость о покупке и оплата оформляются с продавцом.
         </p>
+        <OrderPayment />
         <div className="legal-list">
           {sections.map((s) => (
             <div className="legal-block" key={s.h}>
