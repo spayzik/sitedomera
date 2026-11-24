@@ -156,7 +156,6 @@ test('editorial landings contain the presented catalog products without JavaScri
     ['/catalog/bezhevye/', ['Ясень песочный', 'Лён кремовый', 'Песочный', 'Венецианская, песок']],
     ['/catalog/dlya-tv-zony/', ['Орех дымчатый', '8425-P', 'Рейка, фактура ткань', 'Рейка, металлик']],
     ['/catalog/dlya-spalni/', ['Рогожка белая', 'Лён кремовый', 'Лён светло-серый', 'Песочный']],
-    ['/catalog/1220x3000/', ['Ясень серый', 'Рогожка белая', 'A9001']],
   ]) {
     const route = seoPages.find(page => page.path === path)
     assert.ok(route)
@@ -164,6 +163,19 @@ test('editorial landings contain the presented catalog products without JavaScri
     assert.equal((htmlFor(path).match(/data-catalog-product=/g) ?? []).length, expectedNames.length)
     assert.match(htmlFor(path), /aria-label="Хлебные крошки"/)
   }
+})
+
+test('1220 × 3000 landing publishes every matching panel and excludes other kinds', () => {
+  const path = '/catalog/1220x3000/'
+  const route = seoPages.find(page => page.path === path)
+  assert.equal(route?.kind, 'selection')
+  assert.equal(route.items.length, 30)
+  for (const name of ['Ясень серый', 'Рогожка белая', 'A9001']) assert(route.items.some(item => item.name === name))
+  assert(route.items.every(item => item.kind === 'panel' &&
+    item.dimensions.widthMm === 1220 && item.dimensions.lengthMm === 3000))
+  const html = htmlFor(path)
+  assert.equal((html.match(/data-catalog-product=/g) ?? []).length, 30)
+  assert.match(html, /aria-label="Хлебные крошки"/)
 })
 
 test('IndexNow accepts production canonical paths only and excludes preview ownership files', () => {
