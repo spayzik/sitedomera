@@ -178,6 +178,11 @@ test('1220 × 3000 landing publishes every matching panel and excludes other kin
   assert.match(html, /aria-label="Хлебные крошки"/)
 })
 
+test('all canonical pages have distinct descriptions within the SEO target', () => {
+  assert.equal(new Set(seoPages.map(page => page.description)).size, seoPages.length)
+  for (const page of seoPages) assert.ok(page.description.length >= 140 && page.description.length <= 160, page.path)
+})
+
 test('IndexNow accepts production canonical paths only and excludes preview ownership files', () => {
   assert.equal(indexNowKey({ VITE_DEKORAY_PREVIEW: '1', DEKORAY_INDEXNOW_KEY: 'synthetic-only' }), undefined)
   assert.equal(indexNowKey({}), undefined)
