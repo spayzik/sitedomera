@@ -341,11 +341,6 @@
   .installation-service-hero, .reading-layout { grid-template-columns: minmax(0, 1fr); }
 }
 
-@media (max-width: 768px) {
-  .product-page .material-gallery { display: contents; }
-  .product-page .seo-material { order: -2; }
-  .product-page .material-purchase { order: -1; }
-}
 
 .site-lead { padding-block: clamp(2rem, 6vw, 5rem); }
 .site-lead-panel {
