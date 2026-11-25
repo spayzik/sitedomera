@@ -28,7 +28,7 @@ const inquiryActions: Record<string, [LeadIntent, string]> = {
 
 const href = (base: string, path: string) => path.startsWith('/') ? base + path.slice(1) : path
 
-export function StorefrontRoute({ page, base, path }: { page?: SeoPage; base: string; path: string }) {
+export function StorefrontRoute({ page, base, path }: { page?: SeoPage & { lastmod: string }; base: string; path: string }) {
   if (page?.kind === 'home') return <HomePage />
   if (path === '/usloviya-priobreteniya/') return <OfferPage base={base} />
   if (!page) return <section className="container page-section">

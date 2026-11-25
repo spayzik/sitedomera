@@ -2,6 +2,7 @@ import { SiteLayout } from './components/SiteLayout'
 import { seoPages } from './data/seoRoutes'
 import { StorefrontRoute } from './pages/StorefrontRoute'
 import './storefront.css'
+import './detail-pages.css'
 
 export default function App({ base = './', path = '/' }: { base?: string; path?: string }) {
   const page = seoPages.find(item => item.path === path)

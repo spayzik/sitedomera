@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Check, Clock3, Lightbulb } from 'lucide-react'
 import { seoPages, type SeoPage } from '../data/seoRoutes'
 import { storefrontImageSize } from '../data/storefrontImageSizes'
 
@@ -19,7 +19,9 @@ function articleCover(path: string) {
   return covers[path.split('/')[2]] ?? ['Отделка', 'catalog/hero/hero-catalog.webp'] as const
 }
 
-function ArticleCard({ article, base, featured = false }: { article: SeoPage; base: string; featured?: boolean }) {
+function ArticleCard({ article, base, featured = false, compact = false }: {
+  article: SeoPage & { lastmod: string }; base: string; featured?: boolean; compact?: boolean
+}) {
   const [topic, image, small] = articleCover(article.path)
   return <article className={featured ? 'journal-card journal-featured' : 'journal-card'}>
     <a href={base + article.path.slice(1)}>
@@ -31,8 +33,10 @@ function ArticleCard({ article, base, featured = false }: { article: SeoPage; ba
       <div className="journal-card-body">
         <p className="eyebrow journal-topic">{topic}</p>
         {featured ? <h2>{article.heading}</h2> : <h3>{article.heading}</h3>}
-        <p className="journal-summary">{article.description}</p>
-        <span className="journal-read" aria-hidden="true">Читать статью <ArrowRight size={15} /></span>
+        {!compact && <p className="journal-summary">{article.description}</p>}
+        {compact
+          ? <span className="journal-read"><time dateTime={article.lastmod}>{dateLabel.format(new Date(article.lastmod))}</time><ArrowRight size={15} aria-hidden="true" /></span>
+          : <span className="journal-read" aria-hidden="true">Читать статью <ArrowRight size={15} /></span>}
       </div>
     </a>
   </article>
@@ -78,45 +82,99 @@ const readerNotes: Record<string, string> = {
   "stenovye-paneli-dlya-kommercheskih-pomescheniy": "У входа, в проходах и в зоне ожидания стены используются по-разному. Соберите по каждой зоне отдельные требования к отделке и условиям уборки. Сверьте их с проектной документацией и запросите подтверждения для выбранного артикула до согласования поставки."
 }
 
-export function ArticlePage({ page, base }: { page: Extract<SeoPage, { copy: unknown }>; base: string }) {
+const dateLabel = new Intl.DateTimeFormat('ru-RU', { dateStyle: 'long', timeZone: 'UTC' })
+
+const textureLinks = [
+  ['Под дерево', 'derevo', 'wood'], ['Под камень', 'bambuk-pod-kamen', 'bamboo_stone'],
+  ['Под ткань', 'tkan', 'fabric'], ['Софт-тач', 'soft-tach', 'soft'],
+] as const
+
+export function ArticlePage({ page, base }: { page: Extract<SeoPage, { copy: unknown }> & { lastmod: string }; base: string }) {
   const [topic, image, small] = articleCover(page.path)
   const slug = page.path.split('/')[2]
   const guide = practicalGuides[slug]
   const note = readerNotes[slug]
+  const ownsTextures = slug === 'kak-vybrat-fakturu'
+  const comparesStone = slug === 'paneli-ili-gibkiy-kamen'
+  const candidates = articles.filter(article => article.path !== page.path)
+  const related = [...candidates.filter(article => articleCover(article.path)[0] === topic),
+    ...candidates.filter(article => articleCover(article.path)[0] !== topic)].slice(0, 3)
+  const words = [page.description, note, ...page.copy.blocks.map(({ text }) => text), guide?.example,
+    ...(guide?.checks ?? [])].filter(Boolean).join(' ').trim().split(/\s+/).length
+  const readTime = Math.max(1, Math.ceil(words / 180))
   return <article className="container page-section reading-page">
     <nav className="page-crumbs" aria-label="Хлебные крошки">
-      <a href={base}>ДЕКОРАЙ</a><a href={base + 'news/'}>Статьи</a><span aria-current="page">{topic}</span>
+      <a href={base}>ДЕКОРАЙ</a><a href={base + 'news/'}>Статьи</a><span aria-current="page">{page.heading}</span>
     </nav>
     <header className="page-intro reading-intro">
-      <p className="eyebrow">{topic}</p>
+      <div className="reading-meta">
+        <span className="reading-topic">{topic}</span>
+        <time dateTime={page.lastmod}>Обновлено {dateLabel.format(new Date(page.lastmod))}</time>
+        <span><Clock3 size={14} aria-hidden="true" /> {readTime} мин чтения</span>
+      </div>
       <h1>{page.heading}</h1>
       <p className="lead">{page.description}</p>
     </header>
     <div className="reading-cover">
       <img src={base + image} {...storefrontImageSize(image)} alt="" decoding="async"
         srcSet={small ? base + small + ' 480w, ' + base + image + ' ' + storefrontImageSize(image).width + 'w' : undefined}
-        sizes="(max-width: 760px) 100vw, 85vw" />
+        sizes="(max-width: 760px) 100vw, 72rem" fetchPriority="high" />
     </div>
     <div className="reading-layout">
-      <nav className="reading-toc" aria-label="В этой статье">
-        <h2>В этой статье</h2>
-        <ol>{page.copy.blocks.map(({ heading }, index) =>
-          <li key={heading}><a href={'#part-' + (index + 1)}>{heading}</a></li>)}{guide && <li><a href="#practice">Практический пример</a></li>}</ol>
+      <nav className="reading-toc" aria-labelledby="reading-contents">
+        <h2 id="reading-contents">Содержание статьи</h2>
+        <ol>
+          {ownsTextures && <li><a href="#textures">Фактуры в каталоге</a></li>}
+          {page.copy.blocks.map(({ heading }, index) =>
+            <li key={heading}><a href={'#part-' + (index + 1)}>{heading}</a></li>)}
+          {comparesStone && <li><a href="#comparison">Сравнение материалов</a></li>}
+          {guide && <><li><a href="#practice">Практический пример</a></li><li><a href="#checklist">Перед покупкой</a></li></>}
+        </ol>
       </nav>
       <div className="reading-body">
         {note && <p className="reading-opening">{note}</p>}
+        {ownsTextures && <section id="textures">
+          <h2>Фактуры в каталоге</h2>
+          <div className="reading-textures">{textureLinks.map(([label, route, collection]) => {
+            const texture = 'catalog/hero/collection-' + collection + '.webp'
+            return <a key={route} href={base + 'catalog/' + route + '/'}>
+              <img src={base + texture} {...storefrontImageSize(texture)} alt="" loading="lazy" decoding="async" />
+              <span>{label} <ArrowRight size={14} aria-hidden="true" /></span>
+            </a>
+          })}</div>
+        </section>}
         {page.copy.blocks.map(({ heading, text }, index) =>
           <section id={'part-' + (index + 1)} key={heading}><h2>{heading}</h2><p>{text}</p></section>)}
-        {guide && <section id="practice" className="reading-practice">
-          <h2>Практический пример</h2><p>{guide.example}</p>
-          <h3>Перед покупкой</h3><ul>{guide.checks.map(check => <li key={check}>{check}</li>)}</ul>
+        {comparesStone && <section id="comparison">
+          <h2>Сравнение материалов</h2>
+          <table className="reading-comparison">
+            <thead><tr><th scope="col">Материал</th><th scope="col">Что проверить на образце</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Панели под камень</th><td>Масштаб рисунка и вид стыка на плоской стене.</td></tr>
+              <tr><th scope="row">Гибкий камень</th><td>Пригодность к изгибу, допустимый радиус и требования к основанию для выбранного артикула.</td></tr>
+            </tbody>
+          </table>
         </section>}
+        {guide && <>
+          <section id="practice" className="reading-practice">
+            <Lightbulb size={22} aria-hidden="true" />
+            <div><h2>Практический пример</h2><p>{guide.example}</p></div>
+          </section>
+          <section id="checklist" className="reading-checklist">
+            <h2>Перед покупкой</h2>
+            <ul>{guide.checks.map(check => <li key={check}><Check size={17} aria-hidden="true" />{check}</li>)}</ul>
+          </section>
+        </>}
         <nav className="reading-actions" aria-label="По теме статьи">
           {page.copy.links?.map(link => <a key={link.path} className="secondary-action"
             href={link.path.startsWith('/') ? base + link.path.slice(1) : link.path}>{link.label}<ArrowRight size={14} aria-hidden="true" /></a>)}
         </nav>
-        <a className="secondary-action" href={base + 'news/'}><ArrowLeft size={15} aria-hidden="true" /> Все статьи</a>
       </div>
     </div>
+    <section className="journal-list reading-related" aria-labelledby="related-articles">
+      <div><h2 id="related-articles">Похожие статьи</h2>
+        <a className="secondary-action" href={base + 'news/'}><ArrowLeft size={15} aria-hidden="true" /> Все статьи</a></div>
+      <div className="journal-grid">{related.map(article => <ArticleCard key={article.path} article={article} base={base} compact />)}</div>
+    </section>
   </article>
 }

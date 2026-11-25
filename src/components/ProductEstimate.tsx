@@ -3,13 +3,13 @@ import { useId, useState } from 'react'
 import type { Product } from '../data/products'
 import { calculatorQuery, calculateProjectPanels } from '../lib/calculator'
 
-export function ProductEstimate({ product, calculatorBase = import.meta.env.BASE_URL }: { product: Product; calculatorBase?: string }) {
+export function ProductEstimate({ product, calculatorBase = import.meta.env.BASE_URL, expanded = false }: { product: Product; calculatorBase?: string; expanded?: boolean }) {
   const id = useId()
   const [length, setLength] = useState('')
   const [height, setHeight] = useState('')
   const result = calculateProjectPanels([{ length, height }], '0', '10', product)
   return (
-    <details className="product-estimate">
+    <details className="product-estimate" open={expanded || undefined}>
       <summary><Calculator size={16} aria-hidden="true" /> Рассчитать для одной стены</summary>
       <div className="product-estimate-fields">
         <label htmlFor={id + '-width'}>Ширина, м
