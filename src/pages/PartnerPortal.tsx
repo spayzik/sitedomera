@@ -356,7 +356,7 @@ export function PartnerPortal({ base, manager }: { base: string; manager: boolea
     {session === 'loading' && <p className="partner-empty" role="status">Проверяем доступность кабинета…</p>}
     {session === 'unavailable' && <div className="partner-contact-card partner-gate">
       <LockKeyhole size={26} aria-hidden="true" /><h2>{partnerPreview ? 'Защищённый кабинет на основном сайте' : 'Кабинет пока недоступен'}</h2>
-      <p>{partnerPreview ? 'На демонстрационной витрине доступны обзор программы и контакты. Условия и заказы открываются только после входа в защищённый кабинет.' : 'Перед повторной попыткой проверьте подключение или уточните доступ у менеджера.'}</p>
+      <p>{partnerPreview ? 'Условия и заказы доступны после входа в защищённый кабинет.' : 'Перед повторной попыткой проверьте подключение или уточните доступ у менеджера.'}</p>
       <a className="btn btn-outline interactive" href={base + 'partners/'}>О партнёрской программе <ArrowRight size={16} aria-hidden="true" /></a>
     </div>}
     {typeof session === 'object' && <div className="partner-protected ym-hide-content">

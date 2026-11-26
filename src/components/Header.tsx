@@ -88,12 +88,13 @@ export function Header({ base = './', path = '/' }: { base?: string; path?: stri
           <div className="header-actions">
             <SocialContacts base={base} placement="header" />
             <button
+              type="button"
               className="cart-btn"
               onClick={() => setOpen(true)}
-              aria-label="Корзина"
+              aria-label={mounted && count > 0 ? `Корзина, товаров: ${count}` : "Корзина"}
+              title="Корзина"
             >
-              <ShoppingBag size={16} style={{ marginRight: '0.4rem' }} />
-              Корзина
+              <ShoppingBag size={18} aria-hidden="true" />
               {mounted && count > 0 && <span className="badge">{count}</span>}
             </button>
             <button

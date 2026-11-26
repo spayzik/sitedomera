@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { LeadAction } from './LeadProvider'
+import { InquiryForm } from './LeadProvider'
 import { MessageCircle, X, Send } from 'lucide-react'
 import { faq, CONTACTS, products, collections, priceSummary } from '../data/products'
 
@@ -54,6 +54,7 @@ function answer(input: string): string {
 
 export function ChatBot() {
   const [open, setOpen] = useState(false)
+  const [view, setView] = useState<'form' | 'chat'>('form')
   const [input, setInput] = useState('')
   const [msgs, setMsgs] = useState<Msg[]>([
     {
@@ -61,11 +62,21 @@ export function ChatBot() {
       text: 'Здравствуйте! Я помогу с панелями ДЕКОРАЙ: размеры, цены, коллекции, монтаж. Задайте вопрос или выберите быстрый.',
     },
   ])
+  const trigger = useRef<HTMLButtonElement>(null)
+  const heading = useRef<HTMLDivElement>(null)
   const endRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [msgs, open])
+    if (view === 'chat') endRef.current?.scrollIntoView({ block: 'nearest' })
+  }, [msgs, open, view])
+
+  useEffect(() => { if (open) heading.current?.focus({ preventScroll: true }) }, [open])
+
+  function close() {
+    setOpen(false)
+    setView('form')
+    trigger.current?.focus({ preventScroll: true })
+  }
 
   const send = (text: string) => {
     const t = text.trim()
@@ -82,60 +93,69 @@ export function ChatBot() {
   return (
     <div className={`chatbot ${open ? 'open' : ''}`}>
       {open && (
-        <div className="chat-panel ym-hide-content" id="domera-chat-panel">
+        <div className="chat-panel ym-hide-content" id="domera-chat-panel" role="region" aria-label="Помощник ДЕКОРАЙ"
+          onKeyDown={event => { if (event.key === 'Escape') close() }}>
           <div className="chat-head">
-            <div>
+            <div ref={heading} tabIndex={-1}>
               <strong>Помощник ДЕКОРАЙ</strong>
-              <span>автоответы на сайте</span>
             </div>
-            <button type="button" className="icon-btn" onClick={() => setOpen(false)} aria-label="Закрыть чат">
+            <button type="button" className="icon-btn" onClick={close} aria-label="Закрыть помощника">
               <X size={16} />
             </button>
           </div>
-          <div className="chat-msgs">
-            {msgs.map((m, i) => (
-              <div key={i} className={`bubble ${m.from}`}>
-                {m.text}
-              </div>
-            ))}
-            <div ref={endRef} />
+          <div className="chat-switch" role="group" aria-label="Раздел помощника">
+            <button type="button" aria-pressed={view === 'form'} onClick={() => setView('form')}>Менеджер</button>
+            <button type="button" aria-pressed={view === 'chat'} onClick={() => setView('chat')}>Быстрые ответы</button>
           </div>
-          <div className="chat-quick">
-            <LeadAction intent="feedback" context="Обратная связь из помощника сайта">Связаться с менеджером</LeadAction>
-            {quick.map((q) => (
-              <button key={q} type="button" onClick={() => send(q)}>
-                {q}
+          <div className="chat-request" hidden={view !== 'form'}>
+            <InquiryForm fields={{ intent: 'feedback', context: 'Обратная связь из помощника сайта' }} />
+          </div>
+          {view === 'chat' && <>
+            <div className="chat-msgs">
+              {msgs.map((m, i) => (
+                <div key={i} className={`bubble ${m.from}`}>
+                  {m.text}
+                </div>
+              ))}
+              <div ref={endRef} />
+            </div>
+            <div className="chat-quick">
+              {quick.map((q) => (
+                <button key={q} type="button" onClick={() => send(q)}>
+                  {q}
+                </button>
+              ))}
+            </div>
+            <form
+              className="chat-input"
+              onSubmit={(e) => {
+                e.preventDefault()
+                send(input)
+              }}
+            >
+              <input
+                className="ym-disable-keys"
+                aria-label="Вопрос для локального автоответа"
+                maxLength={1000}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Вопрос для автоответа..."
+              />
+              <button type="submit" aria-label="Получить автоответ">
+                <Send size={16} />
               </button>
-            ))}
-          </div>
-          <form
-            className="chat-input"
-            onSubmit={(e) => {
-              e.preventDefault()
-              send(input)
-            }}
-          >
-            <input
-              className="ym-disable-keys"
-              aria-label="Вопрос для локального автоответа"
-              maxLength={1000}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Вопрос для автоответа..."
-            />
-            <button type="submit" aria-label="Получить автоответ">
-              <Send size={16} />
-            </button>
-          </form>
+            </form>
+          </>}
         </div>
       )}
       <button
         type="button"
         className="chat-fab"
-        onClick={() => setOpen((v) => !v)}
-        aria-label="Чат"
+        ref={trigger}
+        onClick={() => open ? close() : setOpen(true)}
+        aria-label={open ? "Закрыть окно помощника" : "Открыть помощника и форму связи"}
         aria-expanded={open}
-        aria-controls="domera-chat-panel"
+        aria-controls={open ? "domera-chat-panel" : undefined}
       >
         {open ? <X size={20} /> : <MessageCircle size={20} />}
       </button>

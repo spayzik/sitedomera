@@ -5,6 +5,7 @@ import { CONTACTS } from '../data/products'
 import { storefrontImageSize } from '../data/storefrontImageSizes'
 import { isPartnerProgram, partnerPrograms, type PartnerProgram } from '../data/partnerPrograms'
 import { useCart } from '../context/CartContext'
+import { MessageDraftForm } from '../components/MessageDraftForm'
 import { readMarketingAttribution, trackAnalyticsGoal } from '../lib/analytics'
 import { loadPartnerSession, partnerError, partnerPreview, readPartnerCode, sendPartnerCommand, type PartnerSession } from '../lib/partnersClient'
 import './partner-pages.css'
@@ -137,8 +138,9 @@ function PublicRequest({ base, initial }: { base: string; initial: PartnerProgra
     {session === 'loading' && <p role="status">Проверяем доступность формы…</p>}
     {session === 'unavailable' && <div className="partner-contact-card">
       <h3>{partnerPreview ? 'Запрос через менеджера' : 'Свяжитесь с менеджером'}</h3>
-      <p>{partnerPreview ? 'На демонстрационной витрине можно посмотреть направления и связаться с менеджером по официальным контактам.' : 'Онлайн-форма сейчас недоступна. Отправьте менеджеру список материалов и короткое описание проекта.'}</p>
-      <a className="btn btn-outline interactive" href={base + 'kontakty/'}>Контакты ДЕКОРАЙ <ArrowRight size={16} aria-hidden="true" /></a>
+      <p>Отправьте менеджеру список материалов и короткое описание проекта.</p>
+      <MessageDraftForm key={program} fields={{ intent: program === 'wholesale' || program === 'designer' ? program : 'feedback',
+        context: partnerPrograms[program].title }} />
     </div>}
     {typeof session === 'object' && <form className="partner-form ym-hide-content" onSubmit={submit}>
       <div className="partner-mode" aria-label="Тип обращения">
@@ -185,7 +187,7 @@ function PortalEntry({ base, manager }: { base: string; manager: boolean }) {
     <nav className="page-crumbs" aria-label="Хлебные крошки"><a href={base}>ДЕКОРАЙ</a><a href={base + 'partners/'}>Партнёрам</a><span aria-current="page">{title}</span></nav>
     <header className="page-intro"><h1>{title}</h1></header>
     <div className="partner-contact-card partner-gate">
-      <p>{partnerPreview ? 'На демонстрационной витрине доступны обзор программы и контакты. Партнёрский доступ открывается после согласования условий и подключения защищённого сервиса.' : 'Для входа нужна учётная запись, выданная менеджером.'}</p>
+      <p>{partnerPreview ? 'Партнёрский доступ открывается после согласования условий и подключения защищённого сервиса.' : 'Для входа нужна учётная запись, выданная менеджером.'}</p>
       <a className="btn btn-outline interactive" href={base + 'partners/'}>О партнёрской программе <ArrowRight size={16} aria-hidden="true" /></a>
     </div>
   </div>

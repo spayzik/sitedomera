@@ -3,6 +3,7 @@ import type { LeadTerms } from './leadClient'
 import type { LeadDetails, LeadIntent } from './leadIntents'
 
 type LeadService = {
+  loading: boolean
   terms: LeadTerms | null
   open: (intent: LeadIntent, context?: string, details?: LeadDetails) => void
 }

@@ -8,6 +8,7 @@ import { LeadContext, useLeadService } from '../lib/leadState'
 import { trackAnalyticsGoal } from '../lib/analytics'
 import { useDialog } from '../lib/useDialog'
 import { LeadForm } from './LeadForm'
+import { MessageDraftForm, type InquiryFields } from './MessageDraftForm'
 import './LeadDialog.css'
 
 type Inquiry = { intent: LeadIntent; context: string; details?: LeadDetails; fromHash?: boolean }
@@ -18,7 +19,6 @@ export function LeadProvider({ children }: { children: ReactNode }) {
   const [retry, setRetry] = useState(0)
   const [request, setRequest] = useState<Inquiry | null>(null)
   const opener = useRef<HTMLElement | null>(null)
-  const attempt = useRef<LeadAttempt | null>(null)
   const dialog = useDialog(Boolean(request), close)
 
   useEffect(() => {
@@ -69,10 +69,9 @@ export function LeadProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const formAvailable = request && leadEndpoint && terms?.intents.includes(request.intent)
   const whatsapp = request && inquiryWhatsAppLink(request.intent, request.context)
 
-  return <LeadContext.Provider value={{ terms, open }}>
+  return <LeadContext.Provider value={{ terms, loading, open }}>
     {children}
     {request && createPortal(
       <div className="lead-layer" onClick={event => { if (event.target === event.currentTarget) close() }}>
@@ -84,18 +83,11 @@ export function LeadProvider({ children }: { children: ReactNode }) {
             </button>
           </header>
           {request.context && <p className="lead-dialog-context ym-hide-content">{request.context}</p>}
-          {formAvailable && leadEndpoint && terms
-            ? <LeadForm key={request.intent} endpoint={leadEndpoint} terms={terms} attempt={attempt}
-                fields={{ intent: request.intent, context: request.context, ...request.details }} />
-            : <>
-              <p className="lead-dialog-note" role="status">{loading
-                ? 'Проверяем доступность формы…'
-                : 'Заявка через сайт сейчас недоступна. Напишите нам в Telegram или позвоните.'}</p>
-              {leadEndpoint && !terms && !loading && <button type="button" className="secondary-action"
-                onClick={() => { setLoading(true); setRetry(attemptNumber => attemptNumber + 1) }}>
-                Проверить ещё раз
-              </button>}
-            </>}
+          <InquiryForm key={request.intent} fields={{ intent: request.intent, context: request.context, ...request.details }} />
+          {leadEndpoint && !terms && !loading && <button type="button" className="secondary-action"
+            onClick={() => { setLoading(true); setRetry(attemptNumber => attemptNumber + 1) }}>
+            Проверить отправку через сайт
+          </button>}
           <div className="lead-dialog-links">
             <a className="contact-inline-phone ym-hide-content" href={inquiryTelegramLink(request.intent, request.context)}
               target="_blank" rel="noopener noreferrer">Написать в Telegram</a>
@@ -107,6 +99,16 @@ export function LeadProvider({ children }: { children: ReactNode }) {
       </div>, document.body,
     )}
   </LeadContext.Provider>
+}
+
+export function InquiryForm({ fields }: { fields: InquiryFields }) {
+  const service = useLeadService()
+  const attempt = useRef<LeadAttempt | null>(null)
+  if (service?.loading) return <p className="lead-dialog-note" role="status">Открываем форму…</p>
+  if (leadEndpoint && service?.terms?.intents.includes(fields.intent)) {
+    return <LeadForm endpoint={leadEndpoint} terms={service.terms} fields={fields} attempt={attempt} />
+  }
+  return <MessageDraftForm fields={fields} />
 }
 
 type ActionProps = {
