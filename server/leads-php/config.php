@@ -95,7 +95,18 @@ function loadConfig(string $private, string $webroot): array
             'uomId' => $uomId, 'unit' => $item->unit];
         $claimed[$crmId] = true;
     }
+    $marketing = $raw['marketingFields'] ?? new \stdClass();
+    if (!$marketing instanceof \stdClass) throw new RuntimeException('marketing_configuration_invalid');
+    $marketingFields = [];
+    foreach (get_object_vars($marketing) as $field => $id) {
+        if (!in_array($field, ['clientId', 'yclid', 'source', 'medium', 'campaign'], true) ||
+            !is_string($id) || !preg_match(UUID, $id) || in_array(strtolower($id), $marketingFields, true)) {
+            throw new RuntimeException('marketing_configuration_invalid');
+        }
+        $marketingFields[$field] = strtolower($id);
+    }
     return $config + [
+        'marketingFields' => $marketingFields,
         'origin' => SITE_ORIGIN, 'catalog' => $catalog, 'catalogFacts' => $catalogFacts, 'enableGeneralLeads' => true,
         'retentionDays' => $days, 'ledgerPath' => $ledger,
         'enabled' => ($raw['enabled'] ?? false) === true && ($raw['crmSafetyVerified'] ?? false) === true,

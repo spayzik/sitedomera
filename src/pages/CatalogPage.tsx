@@ -1,3 +1,4 @@
+import { categoryFaq } from '../data/categoryFaq'
 import { storefrontImageSize } from '../data/storefrontImageSizes'
 import { useContext, useEffect, useState } from 'react'
 import { ArrowDown, SlidersHorizontal } from 'lucide-react'
@@ -80,6 +81,7 @@ export function CatalogPage({ page, base }: { page: CatalogView; base: string })
         <div className="catalog-page-cta hero-enter-actions">
           <a className="btn btn-white interactive" href="#products">Посмотреть материалы <ArrowDown size={16} aria-hidden="true" /></a>
           <a className="btn btn-outline interactive" href={base + 'kalkulyator/'}>Рассчитать проект</a>
+          {page.kind === 'catalog' && <a className="btn btn-outline interactive" href={base + 'partners/?program=wholesale#partner-application'}>Оптовые условия</a>}
         </div>
       </div>
       <CatalogFacts />
@@ -126,6 +128,12 @@ export function CatalogPage({ page, base }: { page: CatalogView; base: string })
           <div className="page-links">{page.copy.links?.map(link =>
             <a key={link.path} href={base + link.path.slice(1)}>{link.label}</a>)}</div>
         </div>}
+        {page.kind === 'category' && <section className="page-copy" aria-labelledby="category-faq">
+          <h2 id="category-faq">Частые вопросы</h2>
+          {categoryFaq[page.categoryId].map(({ q, a }) => <details key={q} className="category-faq-item">
+            <summary>{q}</summary><p>{a}</p>
+          </details>)}
+        </section>}
         <div className="catalog-page-cta-strip">
           <h2>Подберём материалы под ваш интерьер</h2>
           <a href={base + 'showroom/'} className="btn btn-primary interactive">Контакты шоурума</a>

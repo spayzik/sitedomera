@@ -2,6 +2,10 @@ import { CONTACTS, collections, formatDimensions, products, type CollectionId, t
 import { sheetPricePerSquareMeter } from '../lib/calculator.ts'
 import { buildTelegramDraftUrl } from '../lib/telegramLink.ts'
 import { privacyCopy } from './privacyCopy.ts'
+import { isPrivatePartnerPath, partnerRoutes } from './partnerRoutes.ts'
+import { editorialSelections } from './editorialSelections.ts'
+import { editorialArticles } from './editorialArticles.ts'
+import { projectPages } from './verifiedProjects.ts'
 import { SEO } from './seo.ts'
 import { categoryPath, productPath } from './seoPaths.ts'
 export { categoryPath, productPath } from './seoPaths.ts'
@@ -155,7 +159,7 @@ const commercial = [
       { heading: 'От идеи к подборке материала', text: 'Выберите образец в коллекции и сравните цвет в шоуруме. Измерьте стену, проверьте размеры выбранного изделия и обсудите раскладку с менеджером.' },
       { heading: 'Что проверить на своём объекте', text: 'Примерьте образец к полу и мебели, снимите фото при дневном и вечернем освещении и отметьте на плане, где заканчивается рисунок. Для реализованного проекта полезно записать точный артикул и сохранить фотографии монтажа и готовой стены.' },
     ],
-    links: [{ path: '/catalog/derevo/', label: 'Древесные фактуры каталога' }, { path: '/#interiors', label: 'Другие интерьерные идеи' }],
+    links: [...projectPages.map(({ path, heading }) => ({ path, label: heading })), { path: '/catalog/derevo/', label: 'Древесные фактуры каталога' }, { path: '/#interiors', label: 'Другие интерьерные идеи' }],
   }),
 ]
 
@@ -383,18 +387,24 @@ const pages: readonly (SeoPage & { lastmod?: string })[] = [
     description: categoryMeta[id],
   })),
   ...selections,
+  ...editorialSelections,
   ...productPages,
   ...commercial,
+  ...projectPages,
+  ...partnerRoutes,
   { kind: 'info', path: '/usloviya-priobreteniya/', heading: 'Условия приобретения', ...SEO.offer, copy: { blocks: [] }, lastmod: '2026-11-24' },
   { kind: 'info', path: '/privacy/', heading: 'Политика конфиденциальности', ...SEO.privacy, copy: privacyCopy },
   { kind: 'articles', path: '/news/', heading: 'Статьи', title: 'Статьи', description: 'Как выбрать фактуру, рассчитать материалы и продумать отделку для дома или коммерческого пространства. Примеры раскладки и ссылки на материалы каталога.' },
   ...articles,
+  ...editorialArticles,
 ]
 
 export const seoPages = pages.map(page => ({
   ...page,
   lastmod: page.lastmod ?? (page.kind === 'product' || page.kind === 'article' || page.kind === 'articles' ? '2026-11-25' : page.path === '/montazh/' ? '2026-11-22' : revisedPages.has(page.path) || ['home', 'category'].includes(page.kind) ? w4ContentRevision : revisionDate),
 }))
+
+export const indexableSeoPages = seoPages.filter(page => !isPrivatePartnerPath(page.path))
 
 export const legacyNewsRedirects = seoPages
   .filter(page => page.kind === 'articles' || page.kind === 'article')

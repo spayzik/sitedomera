@@ -1,3 +1,4 @@
+import { isPrivatePartnerPath } from '../data/partnerRoutes.ts'
 import { feedOfferId } from '../data/feedOfferIds.ts'
 import { CONTACTS } from '../data/products.ts'
 
@@ -8,6 +9,7 @@ const goals = [
   'telegram_click', 'whatsapp_click', 'max_click', 'phone_click', 'external_click',
   'catalog_search', 'catalog_filter', 'calculator_start', 'cart_remove', 'cart_view',
   'lead_start', 'lead_submit', 'lead_error', 'sample_request', 'installation_request', 'b2b_request',
+  'wholesale_request', 'dealer_request', 'partner_application', 'designer_request', 'dropshipping_request',
 ] as const
 type AnalyticsGoal = typeof goals[number] | 'begin_checkout'
 
@@ -38,8 +40,14 @@ let resolveCounterReady: ((ready: boolean) => void) | undefined
 const attributionSources = new Set(['yandex', 'google', 'avito', 'telegram', 'vk', '2gis', 'direct'])
 const attributionMedia = new Set(['organic', 'cpc', 'referral', 'social', 'email', 'display', 'qr'])
 
+function privatePartnerDocument() {
+  if (typeof document === 'undefined' || typeof window === 'undefined') return false
+  const path = document.getElementById('root')?.dataset.path ?? window.location.pathname.replace(/^\/dekoray-preview(?=\/)/, '')
+  return isPrivatePartnerPath(path)
+}
+
 export function isAnalyticsConfigured(): boolean {
-  return counterId !== null
+  return counterId !== null && !privatePartnerDocument()
 }
 
 export function readAnalyticsConsent(): AnalyticsConsent {
@@ -54,6 +62,7 @@ export function readAnalyticsConsent(): AnalyticsConsent {
 export function saveAnalyticsConsent(value: 'accepted' | 'rejected'): void {
   try {
     localStorage.setItem(consentKey, value)
+    if (value === 'rejected') sessionStorage.removeItem(marketingKey)
   } catch {
     // The choice still applies to this page when browser storage is unavailable.
   }
@@ -90,6 +99,8 @@ function initialAttribution(url: string): string {
   // Use numeric campaign identifiers; arbitrary campaign text may contain personal data.
   const campaign = query.get('utm_campaign')
   if (campaign && /^[0-9]{1,9}$/.test(campaign)) result.searchParams.set('utm_campaign', campaign)
+  const yclid = query.get('yclid')
+  if (yclid && /^[0-9]{1,32}$/.test(yclid)) result.searchParams.set('yclid', yclid)
   return result.href
 }
 
@@ -103,9 +114,10 @@ function referringOrigin(): string {
 }
 
 export function startAnalytics(consent: AnalyticsConsent): void {
-  if (consent !== 'accepted' || counterId === null || scriptState !== 'idle' ||
+  if (consent !== 'accepted' || counterId === null || scriptState !== 'idle' || privatePartnerDocument() ||
     (!preview && window.location.origin !== CONTACTS.origin) ||
     document.getElementById('root')?.dataset.path === '/404/') return
+  readMarketingTouch()
   allowed = true
   const metrikaWindow = window as MetrikaWindow
   if (typeof metrikaWindow.ym !== 'function') {
@@ -294,6 +306,7 @@ export async function trackAnalyticsPurchase(order: VerifiedAnalyticsPurchase): 
 }
 
 export function stopAnalytics(): void {
+  try { sessionStorage.removeItem(marketingKey) } catch { /* Browser storage can be unavailable. */ }
   if (!allowed) return
   allowed = false
   resolveCounterReady?.(false)
@@ -310,4 +323,54 @@ export function stopAnalytics(): void {
     }
   }
   window.location.reload() // Unload the third-party script already running in this tab.
+}
+
+type MarketingAttribution = { clientId?: string; yclid?: string; source?: string; medium?: string; campaign?: string }
+const marketingKey = 'dekoray-marketing-tab-v1'
+
+function readMarketingTouch(): MarketingAttribution {
+  if (readAnalyticsConsent() !== 'accepted') return {}
+  try {
+    const query = new URLSearchParams(window.location.search)
+    const source = query.get('utm_source')?.toLowerCase()
+    const medium = query.get('utm_medium')?.toLowerCase()
+    const campaign = query.get('utm_campaign') ?? ''
+    const yclid = query.get('yclid') ?? ''
+    const current: MarketingAttribution = {
+      ...(source && attributionSources.has(source) ? { source } : {}),
+      ...(medium && attributionMedia.has(medium) ? { medium } : {}),
+      ...(/^\d{1,9}$/.test(campaign) ? { campaign } : {}),
+      ...(/^\d{1,32}$/.test(yclid) ? { yclid } : {}),
+    }
+    if (Object.keys(current).length) {
+      sessionStorage.setItem(marketingKey, JSON.stringify(current))
+      return current
+    }
+    const saved = JSON.parse(sessionStorage.getItem(marketingKey) ?? '{}') as MarketingAttribution
+    return {
+      ...(saved.source && attributionSources.has(saved.source) ? { source: saved.source } : {}),
+      ...(saved.medium && attributionMedia.has(saved.medium) ? { medium: saved.medium } : {}),
+      ...(saved.campaign && /^\d{1,9}$/.test(saved.campaign) ? { campaign: saved.campaign } : {}),
+      ...(saved.yclid && /^\d{1,32}$/.test(saved.yclid) ? { yclid: saved.yclid } : {}),
+    }
+  } catch { return {} }
+}
+
+export async function readMarketingAttribution(): Promise<MarketingAttribution | undefined> {
+  if (privatePartnerDocument()) return undefined
+  const touch = readMarketingTouch()
+  if (readAnalyticsConsent() !== 'accepted') return undefined
+  const ym = (window as MetrikaWindow).ym
+  const clientId = allowed && scriptState === 'ready' && counterId && ym
+    ? await new Promise<string | undefined>(resolve => {
+      const timer = window.setTimeout(() => resolve(undefined), 300)
+      try {
+        ym(counterId, 'getClientID', (value: unknown) => {
+          window.clearTimeout(timer)
+          resolve(typeof value === 'string' && /^\d{1,32}$/.test(value) ? value : undefined)
+        })
+      } catch { window.clearTimeout(timer); resolve(undefined) }
+    }) : undefined
+  if (readAnalyticsConsent() !== 'accepted') return undefined
+  return clientId ? { ...touch, clientId } : Object.keys(touch).length ? touch : undefined
 }

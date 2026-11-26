@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState, type FormEvent, type RefObject } from 'react'
-import { trackAnalyticsGoal } from '../lib/analytics'
+import { readAnalyticsConsent, readMarketingAttribution, trackAnalyticsGoal } from '../lib/analytics'
 import { postLead, trackLeadReceipt, type LeadAttempt, type LeadReceipt, type LeadTerms } from '../lib/leadClient'
 import type { LeadDetails, LeadIntent } from '../lib/leadIntents'
 import { products } from '../data/products'
@@ -36,10 +36,12 @@ export function LeadForm({ endpoint, terms, fields, attempt }: Props) {
   const cart = !('intent' in fields) || fields.intent === 'order'
   const staging = terms.mode === 'staging'
   const started = useRef(false)
+  const marketing = useRef<Awaited<ReturnType<typeof readMarketingAttribution>>>(undefined)
   const [samples, setSamples] = useState<string[]>([])
   const chooseSamples = 'intent' in fields && fields.intent === 'samples' && !fields.items?.length
 
   useEffect(() => () => running.current?.abort(), [])
+  useEffect(() => { if (terms.marketingAttribution) void readMarketingAttribution().then(value => { marketing.current = value }) }, [terms.marketingAttribution])
   useEffect(() => { if (receipt) successRef.current?.focus() }, [receipt])
   useEffect(() => { if (error) errorRef.current?.focus() }, [error])
 
@@ -55,6 +57,7 @@ export function LeadForm({ endpoint, terms, fields, attempt }: Props) {
       email: String(form.get('email') ?? '').trim(),
       comment: String(form.get('comment') ?? '').trim(),
       website: String(form.get('website') ?? ''),
+      ...(terms.marketingAttribution && readAnalyticsConsent() === 'accepted' && marketing.current ? { attribution: marketing.current } : {}),
       ...fields,
       ...(chooseSamples ? { items: [...samples].sort().map(id => ({ id, qty: 1 })) } : {}),
       consent: { accepted: true, version: terms.consentVersion },

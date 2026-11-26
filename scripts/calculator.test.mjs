@@ -92,3 +92,13 @@ test('measured rail and profile runs use real stock length and selling unit', ()
   for (const count of ['0', '2.5', '10000', '1e2']) assert.equal(calculateLinearPieces(profile, '2', count), null)
   for (const run of ['', '0', 'NaN', '0x10']) assert.equal(calculateLinearPieces(profile, run, '2'), null)
 })
+
+
+test('glue estimate uses explicit rate and pack size and keeps estimated cost separate', async () => {
+  const { calculateGluePackages } = await import('../src/lib/calculator.ts')
+  assert.deepEqual(calculateGluePackages('7,5', '180', '300', '540,50'), { grams: 1350, packages: 5, costRub: 2702.5 })
+  assert.deepEqual(calculateGluePackages('3,6', '300', '360'), { grams: 1080, packages: 3, costRub: null })
+  for (const inputs of [['7.5', '', '300'], ['7.5', '180', '0'], ['7e2', '180', '300'], ['7.5', '180', '300', '-5']]) {
+    assert.equal(calculateGluePackages(...inputs), null)
+  }
+})

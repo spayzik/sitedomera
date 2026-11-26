@@ -10,6 +10,7 @@ import type { LeadIntent } from '../lib/leadIntents'
 import { HomePage } from './HomePage'
 import { CatalogPage } from './CatalogPage'
 import { ProductPage } from './ProductPage'
+import { PartnerLink, PartnerPage } from './PartnerPage'
 import { OfferPage } from './OfferPage'
 import { ArticlePage, JournalPage } from './JournalPage'
 import { InstallationPage } from './InstallationPage'
@@ -30,6 +31,7 @@ const href = (base: string, path: string) => path.startsWith('/') ? base + path.
 
 export function StorefrontRoute({ page, base, path }: { page?: SeoPage & { lastmod: string }; base: string; path: string }) {
   if (page?.kind === 'home') return <HomePage />
+  if (page && path.startsWith('/partners/')) return <PartnerPage path={path} base={base} />
   if (path === '/usloviya-priobreteniya/') return <OfferPage base={base} />
   if (!page) return <section className="container page-section">
     <h1>Страница не найдена</h1><p>Проверьте адрес или перейдите в каталог материалов.</p>
@@ -62,6 +64,7 @@ export function StorefrontRoute({ page, base, path }: { page?: SeoPage & { lastm
       {action && <a className="btn btn-outline interactive" href={href(base, action[0])}>{action[1]}</a>}
       {inquiry && <LeadAction className="btn btn-outline interactive" intent={inquiry[0]}>{inquiry[1]}</LeadAction>}
     </header>
+    {(page.path === '/opt/' || page.path === '/dizayneram/') && <PartnerLink base={base} wholesale={page.path === '/opt/'} />}
     {calculator && <Calculator standalone base={base} />}
     {venue && <Showroom base={base} />}
     {page.path === '/otzyvy/' && <>

@@ -2,9 +2,10 @@ import assert from 'node:assert/strict'
 import { readFile, readdir, stat } from 'node:fs/promises'
 import { extname, join, relative, resolve, sep } from 'node:path'
 import sharp from 'sharp'
-import { CONTACTS, products, sourceInventory } from '../src/data/products.ts'
+import { CONTACTS, collections, products, sourceInventory } from '../src/data/products.ts'
 import { SEO } from '../src/data/seo.ts'
-import { legacyRedirects, canonicalUrl, seoPageFile, seoPages } from '../src/data/seoRoutes.ts'
+import { isPrivatePartnerPath } from '../src/data/partnerRoutes.ts'
+import { legacyRedirects, canonicalUrl, indexableSeoPages, seoPageFile, seoPages } from '../src/data/seoRoutes.ts'
 import { escape, previewRobots } from './seo-static.mjs'
 import { indexNowKey, indexNowReleaseFile, readIndexNowRelease } from './indexnow.mjs'
 import { searchOwnership } from './search-ownership.mjs'
@@ -109,7 +110,7 @@ async function verify() {
   assert.equal(business.image, ogImage, 'JSON-LD image URL mismatch')
   assert.equal(tags(html, 'h1').length, 1, 'Home must have one server-rendered H1')
   checkNoLegacyLinks(html, 'Home')
-  assert.match(html, /Каталог<\/dt><dd>45 позиций · 9 категорий<\/dd>/)
+  assert(html.includes('Каталог</dt><dd>' + products.length + ' позиций · ' + collections.length + ' категорий</dd>'), 'Homepage catalogue count mismatch')
   assert.match(await readFile(await requireFile('catalog/index.html'), 'utf8'), /Коллекций и серий<\/dt><dd>9<\/dd>/)
 
   const robots = await readFile(await requireFile('robots.txt'), 'utf8')
@@ -118,9 +119,9 @@ async function verify() {
   if (preview) assert(!/^Sitemap:|^Disallow:/mi.test(robots), 'Preview must let bots see the noindex meta without advertising a sitemap')
   else assert(robots.includes(`Sitemap: ${origin}/sitemap.xml`), 'robots.txt sitemap URL mismatch')
   const locations = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1])
-  assert.deepEqual(locations, seoPages.map(page => canonicalUrl(page.path)), 'Sitemap must list exactly the generated pages')
+  assert.deepEqual(locations, indexableSeoPages.map(page => canonicalUrl(page.path)), 'Sitemap must list exactly the generated pages')
   const lastmod = [...sitemap.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)].map(match => match[1])
-  assert.deepEqual(lastmod, seoPages.map(page => page.lastmod), 'Sitemap modification dates must match content revisions')
+  assert.deepEqual(lastmod, indexableSeoPages.map(page => page.lastmod), 'Sitemap modification dates must match content revisions')
   const publicPaths = new Set(seoPages.map(page => page.path))
   const titles = new Set([title])
   const descriptions = new Set([namedMeta('description')])
@@ -137,7 +138,7 @@ async function verify() {
     assert.equal(description, escape(page.description), file + ' description mismatch')
     assert(!descriptions.has(description), file + ' duplicate description')
     descriptions.add(description)
-    assert.equal(metaValue('name', 'robots'), robotsMeta)
+    assert.equal(metaValue('name', 'robots'), isPrivatePartnerPath(page.path) ? previewRobots : robotsMeta)
     assert.equal(metaValue('property', 'og:url'), canonicalUrl(page.path))
     await requireFile(localPath(metaValue('property', 'og:image'), canonical))
     const documentLinks = tags(document, 'link')
@@ -226,7 +227,7 @@ async function verify() {
     }
   }
 
-  assert.equal(sourceInventory.length, 46, 'Source inventory count mismatch')
+  assert.equal(sourceInventory.filter(item => 'pdfPage' in item.source).length, 46, 'Original PDF source inventory count mismatch')
   assert(products.length > 0 && new Set(products.map(p => p.id)).size === products.length, 'Missing/duplicate published product IDs')
   for (const p of products) {
     const source = sourceInventory.find(item => item.id === p.id)
@@ -250,7 +251,7 @@ async function verify() {
     required.add(keyFile)
     required.add(indexNowReleaseFile)
     const release = readIndexNowRelease(await readFile(await requireFile(indexNowReleaseFile), 'utf8'))
-    assert.deepEqual(Object.keys(release), seoPages.map(page => page.path))
+    assert.deepEqual(Object.keys(release), indexableSeoPages.map(page => page.path))
     assert.equal((await readFile(await requireFile(keyFile), 'utf8')).trim(), key)
   }
   const ownership = await searchOwnership()

@@ -48,6 +48,10 @@ final class MoySklad
             'applicable' => false,
             'description' => $this->description($lead, $operation['consentAt']),
         ];
+        foreach (($lead['attribution'] ?? []) as $field => $value) {
+            $id = $this->config['marketingFields'][$field] ?? null;
+            if ($id !== null) $order['attributes'][] = self::reference('attributemetadata', $id, 'customerorder/metadata/attributes') + ['value' => $value];
+        }
         if (!isset($lead['intent'])) {
             $order['positions'] = [];
             foreach ($lead['items'] as $item) {

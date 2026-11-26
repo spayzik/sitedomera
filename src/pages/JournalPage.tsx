@@ -3,6 +3,11 @@ import { seoPages, type SeoPage } from '../data/seoRoutes'
 import { storefrontImageSize } from '../data/storefrontImageSizes'
 
 const covers: Record<string, readonly [string, string, string?]> = {
+  'paneli-mdf-pvh': ['Бюджет', 'catalog/hero/hero-catalog.webp'],
+  'montazh-paneley-poshagovo': ['Монтаж', 'catalog/rooms/montage.webp'],
+  'paneli-v-vannoy': ['Монтаж', 'catalog/hero/collection-bamboo_stone.webp'],
+  'paneli-pod-kamen-ili-keramogranit': ['Бюджет', 'catalog/hero/collection-bamboo_stone.webp'],
+  'kley-dlya-stenovyh-paneley': ['Монтаж', 'catalog/rooms/montage.webp'],
   'kak-vybrat-fakturu': ['Выбор материала', 'catalog/rooms/interior-living.webp', 'catalog/rooms/interior-living-480.webp'],
   'kak-sravnit-stoimost-otdelki': ['Бюджет', 'catalog/rooms/concept-wood.webp'],
   'kak-rasschitat-paneli': ['Расчёт', 'catalog/hero/hero-catalog.webp'],
@@ -145,6 +150,10 @@ export function ArticlePage({ page, base }: { page: Extract<SeoPage, { copy: unk
         </section>}
         {page.copy.blocks.map(({ heading, text }, index) =>
           <section id={'part-' + (index + 1)} key={heading}><h2>{heading}</h2><p>{text}</p></section>)}
+        {slug === 'kak-rasschitat-paneli' && <figure className="reading-layout-example" aria-label="Схема раскладки стены шириной 4 метра">
+          <div aria-hidden="true"><span>1,22 м</span><span>1,22 м</span><span>1,22 м</span><span>Остаток</span></div>
+          <figcaption>Стена 4 м: три целых листа по 1,22 м и участок 0,34 м. Последняя часть требует раскроя четвёртого листа, если нет подходящего обрезка.</figcaption>
+        </figure>}
         {comparesStone && <section id="comparison">
           <h2>Сравнение материалов</h2>
           <table className="reading-comparison">

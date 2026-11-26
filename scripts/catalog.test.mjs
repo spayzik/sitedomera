@@ -89,12 +89,12 @@ const counts = { wood: 11, fabric: 11, metal: 3, bamboo_stone: 2, soft: 2, flexi
 
 test('independently reviewed source inventory retains all 46 cards and nine categories', () => {
   assert.ok(Array.isArray(catalog.sourceInventory), 'source inventory must be exported')
-  assert.equal(catalog.sourceInventory.length, 46)
-  assert.equal(new Set(catalog.sourceInventory.map(p => p.id)).size, 46)
+  assert.equal(catalog.sourceInventory.filter(item => 'pdfPage' in item.source).length, 46)
+  assert.equal(new Set(catalog.sourceInventory.map(p => p.id)).size, catalog.sourceInventory.length)
   for (const [id, count] of Object.entries(counts)) {
-    assert.equal(catalog.sourceInventory.filter(p => p.categoryId === id).length, count, id)
+    assert.equal(catalog.sourceInventory.filter(p => 'pdfPage' in p.source && p.categoryId === id).length, count, id)
   }
-  assert.equal(catalog.products.length, 45)
+  assert.equal(catalog.products.filter(p => 'pdfPage' in p.source).length, 45)
   assert.equal(catalog.collections.length, 9)
   const unresolved = catalog.sourceInventory.filter(p => p.status === 'owner_review_required')
   assert.equal(unresolved.length, 1)
@@ -106,7 +106,7 @@ test('independently reviewed source inventory retains all 46 cards and nine cate
 })
 
 test('prices, units and numeric specifications are explicit per source card', () => {
-  const published = catalog.products
+  const published = catalog.products.filter(product => 'pdfPage' in product.source)
   assert.equal(published.length, 45)
   const skus = published.filter(p => p.sku !== null).map(p => p.sku)
   assert.equal(skus.length, new Set(skus).size)
@@ -141,19 +141,19 @@ test('prices, units and numeric specifications are explicit per source card', ()
 
 test('filters search optional SKU safely and count only published products', () => {
   assert.equal(typeof catalog.filterProducts, 'function')
-  assert.equal(catalog.filterProducts('all', '').length, 45)
-  assert.equal(catalog.filterProducts('fabric', '').length, 10)
+  assert.equal(catalog.filterProducts('all', '').length, catalog.products.length)
+  assert.equal(catalog.filterProducts('fabric', '').filter(p => 'pdfPage' in p.source).length, 10)
   assert.equal(catalog.filterProducts('all', 'ясень серый').length, 1)
   assert.equal(catalog.filterProducts('all', 'c807601-36')[0].sku, 'C807601-36')
-  assert.equal(catalog.filterProducts('profiles', '').length, 8)
+  assert.equal(catalog.filterProducts('profiles', '').filter(p => 'pdfPage' in p.source).length, 8)
   assert.equal(catalog.filterProducts('all', '919-4').length, 0)
   assert.equal(catalog.filterProducts('wood', 'not-a-product').length, 0)
 })
 
 test('every product image has source evidence and exists; retired assets remain intact', () => {
-  assert.equal(catalog.products.length, 45)
+  assert.equal(catalog.products.filter(p => 'pdfPage' in p.source).length, 45)
   for (const p of catalog.products) {
-    assert.ok(['confirmed_reused', 'pdf_preview'].includes(p.imageStatus))
+    assert.ok(['confirmed_reused', 'pdf_preview', 'original_approved'].includes(p.imageStatus))
     assert.ok(p.imageEvidence)
     assert.ok(existsSync(new URL(`../public/${p.image}`, import.meta.url)), p.image)
     assert.equal(p.swatch, p.image)

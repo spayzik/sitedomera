@@ -24,6 +24,7 @@ export type LeadTerms = {
   mode: 'production' | 'staging'
   consentPath: string
   consentVersion: string
+  marketingAttribution?: boolean
   cart: boolean
   intents: readonly LeadIntent[]
 }
@@ -53,6 +54,7 @@ export async function fetchLeadTerms(endpoint: string, controller: AbortControll
       mode: preview ? 'staging' : 'production',
       consentPath: policyUrl.href,
       consentVersion: json.consentVersion,
+      marketingAttribution: json.marketingAttribution === true,
       cart: json.cart === undefined || json.cart === true,
       intents: Array.isArray(json.intents) ? json.intents.filter(isLeadIntent) : [],
     }

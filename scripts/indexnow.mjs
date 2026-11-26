@@ -1,7 +1,8 @@
+import { isPrivatePartnerPath } from '../src/data/partnerRoutes.ts'
 import { createHash } from 'node:crypto'
 import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { canonicalUrl, seoPageFile, seoPages } from '../src/data/seoRoutes.ts'
+import { canonicalUrl, seoPageFile, indexableSeoPages } from '../src/data/seoRoutes.ts'
 import { CONTACTS } from '../src/data/products.ts'
 
 export const indexNowReleaseFile = 'indexnow-release.json'
@@ -18,7 +19,7 @@ export function indexNowKey(env = process.env) {
 
 export async function writeIndexNowRelease(directory) {
   const routes = {}
-  for (const { path } of seoPages) {
+  for (const { path } of indexableSeoPages) {
     const bytes = await readFile(join(directory, seoPageFile(path)))
     routes[path] = createHash('sha256').update(bytes).digest('hex')
   }
@@ -41,8 +42,8 @@ export function changedIndexNowPaths(previous, current) {
 }
 
 export function indexNowPayload(key, paths, removed = []) {
-  const allowed = new Set([...seoPages.map(page => page.path), ...removed])
-  if (!paths.length || paths.some(path => !canonicalPath.test(path) || !allowed.has(path))) {
+  const allowed = new Set([...indexableSeoPages.map(page => page.path), ...removed])
+  if (!paths.length || paths.some(path => !canonicalPath.test(path) || isPrivatePartnerPath(path) || !allowed.has(path))) {
     throw new Error('Pass changed canonical storefront paths, without queries or fragments')
   }
   return { host: CONTACTS.hostname, key, urlList: [...new Set(paths)].map(canonicalUrl) }

@@ -4,7 +4,7 @@ import { CONTACTS, collections, products } from '../src/data/products.ts'
 import { SEO, metadataForRoute } from '../src/data/seo.ts'
 import { readFileSync } from 'node:fs'
 import { domainToASCII } from 'node:url'
-import { legacyRedirects, canonicalUrl, categoryPath, productPath, seoAssetPrefix, seoPageFile, seoPages } from '../src/data/seoRoutes.ts'
+import { legacyRedirects, canonicalUrl, categoryPath, productPath, seoAssetPrefix, seoPageFile, seoPages, indexableSeoPages } from '../src/data/seoRoutes.ts'
 import { previewRobots, renderSitemap } from './seo-static.mjs'
 import { renderYml } from './product-feed.mjs'
 import { indexNowKey, indexNowPayload } from './indexnow.mjs'
@@ -50,10 +50,10 @@ test('public SEO routes resolve the complete price and product inventory, withou
   assert.equal(seoPageFile('/'), 'index.html')
   assert.equal(seoAssetPrefix(entries[0].path), '../../../')
   const sitemap = renderSitemap()
-  assert.deepEqual([...sitemap.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)].map(match => match[1]), seoPages.map(page => page.lastmod))
+  assert.deepEqual([...sitemap.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)].map(match => match[1]), indexableSeoPages.map(page => page.lastmod))
   assert.equal(seoPages.find(page => page.path === '/privacy/').lastmod, '2026-11-20')
   assert.equal(seoPages.find(page => page.path === '/catalog/').lastmod, '2026-11-21')
-  assert.deepEqual([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1]), paths.map(canonicalUrl))
+  assert.deepEqual([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1]), indexableSeoPages.map(page => canonicalUrl(page.path)))
 })
 
 const htmlFor = path => readFileSync(new URL('../dist/' + seoPageFile(path), import.meta.url), 'utf8')
@@ -66,13 +66,13 @@ test('one React storefront emits native content for all direct routes', () => {
     assert.match(html, /class="site-header/)
     assert.match(html, /class="footer"/)
   }
-  assert.match(htmlFor('/'), /Каталог<\/dt><dd>45 позиций · 9 категорий<\/dd>/)
-  assert.match(htmlFor('/'), /manifest-stat-num">45<\/span><span class="manifest-stat-label">позиций в каталоге/)
+  assert.match(htmlFor('/'), new RegExp('Каталог</dt><dd>' + products.length + ' позиций · ' + collections.length + ' категорий</dd>'))
+  assert.match(htmlFor('/'), new RegExp('manifest-stat-num">' + products.length + '</span><span class="manifest-stat-label">позиций в каталоге'))
   assert.match(htmlFor('/'), /manifest-stat-num">9<\/span><span class="manifest-stat-label">категорий материалов/)
   assert.match(htmlFor('/usloviya-priobreteniya/'), /<h1[^>]*>/)
   const catalog = htmlFor('/catalog/')
   assert.match(catalog, /Коллекций и серий<\/dt><dd>9<\/dd>/)
-  assert.equal((catalog.match(/data-catalog-product=/g) ?? []).length, 45)
+  assert.equal((catalog.match(/data-catalog-product=/g) ?? []).length, products.length)
   assert.match(catalog, /Ясень серый/)
   assert.match(catalog.replaceAll('<!-- -->', ''), /1[\u00a0\u202f ]913 ₽/)
   assert.match(catalog, /hero-catalog\.webp/)
@@ -96,11 +96,17 @@ test('product route contains gallery, confirmed offer, links and calculation for
   }
 })
 
-test('privacy and seven substantive article routes remain available without JS', () => {
+test('privacy and twelve substantive article routes remain available without JS', () => {
   assert.match(htmlFor('/privacy/'), /<h1>Политика конфиденциальности<\/h1>/)
   assert.match(htmlFor('/privacy/'), /Яндекс\.Метрика/)
   const articles = seoPages.filter(page => page.kind === 'article')
-  assert.equal(articles.length, 7)
+  assert.equal(articles.length, 12)
+  for (const route of ['paneli-mdf-pvh', 'montazh-paneley-poshagovo', 'paneli-v-vannoy', 'paneli-pod-kamen-ili-keramogranit', 'kley-dlya-stenovyh-paneley']) {
+    const page = articles.find(article => article.path === '/news/' + route + '/')
+    assert(page?.copy.blocks.length >= 4, route)
+    assert(page.copy.links.length >= 3, route)
+  }
+  assert.match(htmlFor('/news/kak-rasschitat-paneli/'), /class="reading-layout-example"/)
   assert(articles.every(page => page.path.startsWith('/news/')))
   assert.match(htmlFor('/news/'), /<h1>Статьи<\/h1>/)
   const root = htmlFor('/')
@@ -170,18 +176,19 @@ test('1220 × 3000 landing publishes every matching panel and excludes other kin
   const path = '/catalog/1220x3000/'
   const route = seoPages.find(page => page.path === path)
   assert.equal(route?.kind, 'selection')
-  assert.equal(route.items.length, 30)
+  const matching = products.filter(item => item.kind === 'panel' && item.dimensions.widthMm === 1220 && item.dimensions.lengthMm === 3000)
+  assert.equal(route.items.length, matching.length)
   for (const name of ['Ясень серый', 'Рогожка белая', 'A9001']) assert(route.items.some(item => item.name === name))
   assert(route.items.every(item => item.kind === 'panel' &&
     item.dimensions.widthMm === 1220 && item.dimensions.lengthMm === 3000))
   const html = htmlFor(path)
-  assert.equal((html.match(/data-catalog-product=/g) ?? []).length, 30)
+  assert.equal((html.match(/data-catalog-product=/g) ?? []).length, matching.length)
   assert.match(html, /aria-label="Хлебные крошки"/)
 })
 
 test('all canonical pages have distinct descriptions within the SEO target', () => {
   assert.equal(new Set(seoPages.map(page => page.description)).size, seoPages.length)
-  for (const page of seoPages) assert.ok(page.description.length >= 140 && page.description.length <= 160, page.path)
+  for (const page of indexableSeoPages) assert.ok(page.description.length >= 140 && page.description.length <= 160, page.path)
 })
 
 test('IndexNow accepts production canonical paths only and excludes preview ownership files', () => {
@@ -192,7 +199,7 @@ test('IndexNow accepts production canonical paths only and excludes preview owne
   assert.deepEqual(indexNowPayload(key, ['/catalog/', '/catalog/']), {
     host: CONTACTS.hostname, key, urlList: [canonicalUrl('/catalog/')],
   })
-  for (const path of ['/catalog/?sort=price-desc', '/#/offer', 'https://spayzik.github.io/dekoray-preview/', '/stati/']) {
+  for (const path of ['/catalog/?sort=price-desc', '/#/offer', 'https://spayzik.github.io/dekoray-preview/', '/stati/', '/partners/account/', '/partners/manager/']) {
     assert.throws(() => indexNowPayload(key, [path]))
   }
 })

@@ -1,4 +1,5 @@
 import type { SourceProduct } from './catalogModel.ts'
+import { supplementalCatalog } from './catalogSupplement.ts'
 
 export const catalogSource = {
   filename: 'ДОМЭРА_каталог.pdf',
@@ -8,7 +9,7 @@ export const catalogSource = {
 } as const
 
 // Independently checked against each PDF card. Unknown facts remain absent.
-export const sourceInventory: readonly SourceProduct[] = [
+export const pdfSourceInventory: readonly SourceProduct[] = [
   {
     "id": "pdf2026-p06-r1c1",
     "sku": null,
@@ -1282,3 +1283,5 @@ export const sourceInventory: readonly SourceProduct[] = [
     "imageEvidence": "PDF p26 r2c2; crop from inspected page render below badge and above caption; 378x321px; no upscaling. Temporary preview, original photo required."
   }
 ]
+
+export const sourceInventory: readonly SourceProduct[] = [...pdfSourceInventory, ...supplementalCatalog]

@@ -31,6 +31,13 @@ try {
     foreach ($file in (Get-ChildItem -LiteralPath $php -Filter 'payment-*.php' -File | Sort-Object Name)) {
         if ($file.Name -ne 'payment-entry.php') { $files['private-runtime/' + $file.Name] = $file.FullName }
     }
+    $files['api-entry/partners.php'] = Join-Path $php 'partner-entry.php'
+    foreach ($file in (Get-ChildItem -LiteralPath $php -Filter 'partner-*.php' -File | Sort-Object Name)) {
+        if ($file.Name -ne 'partner-entry.php') { $files['private-runtime/' + $file.Name] = $file.FullName }
+    }
+    foreach ($name in @('reconcile-partner-sales.php', 'partners-operations-cli.php')) {
+        $files['private-runtime/' + $name] = Join-Path $php $name
+    }
     $files['api-entry/commerce.php'] = (Resolve-Path 'server/inventory/commerce-entry.php').Path
     $files['host-settings/apache.htaccess'] = Join-Path $php 'release.htaccess'
     $files['host-settings/php.ini.snippet'] = Join-Path $php 'release-php.ini'

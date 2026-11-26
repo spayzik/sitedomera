@@ -4,6 +4,7 @@ import { isPageRoute, useRoute } from '../router'
 import { isAnalyticsConfigured, observeAnalyticsConsent, readAnalyticsConsent, saveAnalyticsConsent, startAnalytics, stopAnalytics, trackAnalyticsLink, trackAnalyticsPage, type AnalyticsConsent } from '../lib/analytics'
 
 type ConsentContextValue = {
+  disabled: boolean
   consent: AnalyticsConsent
   choose: (value: 'accepted' | 'rejected') => void
 }
@@ -16,15 +17,16 @@ function useConsent(): ConsentContextValue {
   return context
 }
 
-export function PrivacyProvider({ children }: { children: ReactNode }) {
+export function PrivacyProvider({ children, disabled = false }: { children: ReactNode; disabled?: boolean }) {
   const [consent, setConsent] = useState<AnalyticsConsent>('unknown')
   useEffect(() => setConsent(readAnalyticsConsent()), [])
 
   useEffect(() => {
-    startAnalytics(consent)
-  }, [consent])
+    if (!disabled) startAnalytics(consent)
+  }, [consent, disabled])
 
   useEffect(() => {
+    if (disabled) return
     const unsubscribe = observeAnalyticsConsent(setConsent)
     window.addEventListener('hashchange', trackAnalyticsPage)
     document.addEventListener('click', trackAnalyticsLink)
@@ -33,7 +35,7 @@ export function PrivacyProvider({ children }: { children: ReactNode }) {
       window.removeEventListener('hashchange', trackAnalyticsPage)
       document.removeEventListener('click', trackAnalyticsLink)
     }
-  }, [])
+  }, [disabled])
 
   function choose(value: 'accepted' | 'rejected') {
     saveAnalyticsConsent(value)
@@ -41,13 +43,13 @@ export function PrivacyProvider({ children }: { children: ReactNode }) {
     setConsent(value)
   }
 
-  return <ConsentContext.Provider value={{ consent, choose }}>{children}</ConsentContext.Provider>
+  return <ConsentContext.Provider value={{ consent, choose, disabled }}>{children}</ConsentContext.Provider>
 }
 
 export function AnalyticsBanner({ privacyHref = '#/privacy' }: { privacyHref?: string }) {
-  const { consent, choose } = useConsent()
+  const { consent, choose, disabled } = useConsent()
   const standalone = isPageRoute(useRoute())
-  const eligible = isAnalyticsConfigured() && consent === 'unknown'
+  const eligible = !disabled && isAnalyticsConfigured() && consent === 'unknown'
   const [visible, setVisible] = useState(false)
   useEffect(() => {
     setVisible(false)
@@ -132,8 +134,8 @@ export function CookieSettingsLink() {
 }
 
 export function AnalyticsSettings({ inDialog = false }: { inDialog?: boolean }) {
-  const { consent, choose } = useConsent()
-  const configured = isAnalyticsConfigured()
+  const { consent, choose, disabled } = useConsent()
+  const configured = !disabled && isAnalyticsConfigured()
   const status = consent === 'accepted' ? 'разрешена' : consent === 'rejected' ? 'отключена' : 'решение не принято'
 
   return (

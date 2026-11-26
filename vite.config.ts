@@ -45,11 +45,11 @@ function siteMetadata(): Plugin {
 
 function publicCatalog(): Plugin {
   // Node keeps the full source for audit and warehouse matching.
-  // The browser gets only the 45 display records and their public fields.
+  // The browser gets only published display records and their public fields.
   const catalog = products.map(({
-    id, sku, name, categoryId, kind, priceRub, unit, dimensions, thicknessMm, weightKg, material, description, image,
+    id, sku, name, categoryId, kind, priceRub, unit, dimensions, thicknessMm, weightKg, material, description, image, gallery,
   }) => ({
-    id, sku, name, categoryId, kind, priceRub, unit, dimensions, thicknessMm, weightKg, material, description, image,
+    id, sku, name, categoryId, kind, priceRub, unit, dimensions, thicknessMm, weightKg, material, description, image, gallery,
     status: 'verified',
   }))
   return {

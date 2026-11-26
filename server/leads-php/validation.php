@@ -71,9 +71,29 @@ function normalizePhone(mixed $value): ?string
     return preg_match('~\A[78][0-9]{10}\z~', $digits) ? '+7' . substr($digits, 1) : null;
 }
 
+function validateMarketingAttribution(mixed $value): ?array
+{
+    if ($value === null) return null;
+    $patterns = [
+        'clientId' => '/^[0-9]{1,32}$/D', 'yclid' => '/^[0-9]{1,32}$/D',
+        'source' => '/^(yandex|google|avito|telegram|vk|2gis|direct)$/D',
+        'medium' => '/^(organic|cpc|referral|social|email|display|qr)$/D',
+        'campaign' => '/^[0-9]{1,9}$/D',
+    ];
+    if (!$value instanceof stdClass) throw new LeadError(422, 'invalid_attribution');
+    $result = [];
+    foreach (get_object_vars($value) as $field => $entry) {
+        if (!isset($patterns[$field]) || !is_string($entry) || !preg_match($patterns[$field], $entry)) {
+            throw new LeadError(422, 'invalid_attribution');
+        }
+        $result[$field] = $entry;
+    }
+    return $result === [] ? null : $result;
+}
+
 function validateLead(mixed $raw, array $config): array
 {
-    $commonFields = ['name', 'phone', 'email', 'comment', 'consent', 'website'];
+    $commonFields = ['name', 'phone', 'email', 'comment', 'consent', 'website', 'attribution'];
     $inquiry = $raw instanceof stdClass && property_exists($raw, 'intent');
     $fields = array_merge($commonFields, $inquiry ? ['intent', 'context', 'items', 'calculation'] : ['items']);
     if (!hasOnlyFields($raw, $fields) || ($raw->website ?? null) !== '' ||
@@ -108,6 +128,10 @@ function validateLead(mixed $raw, array $config): array
         throw new LeadError(422, 'invalid_contact');
     }
 
+    $attribution = validateMarketingAttribution($raw->attribution ?? null);
+    $marketing = $attribution && ($config['marketingFields'] ?? []) !== []
+        ? ['attribution' => array_intersect_key($attribution, $config['marketingFields'])] : [];
+
     if ($inquiry) {
         $context = normalizeLeadText($raw->context ?? '');
         if (leadTextLength($context) > 500 || preg_match(UNSUPPORTED_CONTROLS, $context)) {
@@ -137,11 +161,11 @@ function validateLead(mixed $raw, array $config): array
             }
             $result['calculation'] = validateCalculation($raw->calculation, $facts);
         }
-        return $result;
+        return $result + $marketing;
     }
 
     $items = validateLeadItems($raw->items, $config['catalog']);
-    return ['name' => $name, 'phone' => $phone, 'email' => $email, 'comment' => $comment, 'items' => $items, 'version' => $version];
+    return ['name' => $name, 'phone' => $phone, 'email' => $email, 'comment' => $comment, 'items' => $items, 'version' => $version] + $marketing;
 }
 
 function validateLeadItems(mixed $input, array $catalog): array

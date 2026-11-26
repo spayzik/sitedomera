@@ -27,14 +27,15 @@ function StorefrontWidgets({ base }: { base: string }) {
 export function SiteLayout({ base, path, children, showCommerce }: { base: string; path: string; children: ReactNode; showCommerce: boolean }) {
   const [ready, setReady] = useState(false)
   useEffect(() => setReady(true), [])
+  const partnerPortal = path === '/partners/account/' || path === '/partners/manage/' || path === '/partners/manager/'
   return <MotionConfig reducedMotion="user">
-    <PrivacyProvider>
+    <PrivacyProvider disabled={partnerPortal}>
       <InventoryProvider snapshotUrl={base + 'generated/inventory.json'} commerceUrl={showCommerce ? base + 'generated/commerce.json' : undefined}>
         <LeadProvider>
           <CartProvider>
             <ScrollGlow />
             <Header base={base} path={path} />
-            <main id="page-content">{children}<SiteLeadSection base={base} /></main>
+            <main id="page-content">{children}{!partnerPortal && <SiteLeadSection base={base} />}</main>
             <Footer base={base} />
             {ready && <StorefrontWidgets base={base} />}
           </CartProvider>

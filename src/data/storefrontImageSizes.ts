@@ -1,4 +1,6 @@
 // Intrinsic dimensions of the original storefront assets.
+import { supplementalImageSizes } from './catalogSupplement.ts'
+
 const imageSizes: Record<string, readonly [number, number]> = {
   "catalog/hero/collection-wood.webp": [1817, 866],
   "catalog/hero/collection-fabric.webp": [555, 310],
@@ -65,6 +67,6 @@ const imageSizes: Record<string, readonly [number, number]> = {
 }
 
 export function storefrontImageSize(path: string) {
-  const [width, height] = imageSizes[path] ?? []
+  const [width, height] = imageSizes[path] ?? supplementalImageSizes[path] ?? []
   return { width, height }
 }

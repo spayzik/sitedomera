@@ -48,5 +48,6 @@ const offerIds: Readonly<Record<string, string>> = {
 }
 
 export function feedOfferId(productId: string): string | undefined {
-  return Object.hasOwn(offerIds, productId) ? offerIds[productId] : undefined
+  if (Object.hasOwn(offerIds, productId)) return offerIds[productId]
+  return /^catalog-[a-f0-9]{20}$/.test(productId) ? productId.slice(8) : undefined
 }

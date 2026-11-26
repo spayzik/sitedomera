@@ -1,4 +1,5 @@
 import { collections, products } from './products.ts'
+import { projectReleaseFiles } from './verifiedProjects.ts'
 
 export const publicReleaseFiles = new Set([
   'favicon.svg', 'robots.txt', 'sitemap.xml', 'catalog/og-cover.jpg',
@@ -20,7 +21,8 @@ export const publicReleaseFiles = new Set([
   'catalog/hero/collection-soft-mobile.webp',
   'catalog/hero/collection-wood-mobile.webp',
   ...collections.map(({ id }) => 'catalog/categories/carousel-2026-' + id + '.webp'),
-  ...products.map(({ image }) => image),
+  ...projectReleaseFiles,
+  ...products.flatMap(({ image, gallery }) => [image, ...(gallery?.map(photo => photo.image) ?? [])]),
 ])
 
 // Public legal documents are optional while the associated service is disabled.

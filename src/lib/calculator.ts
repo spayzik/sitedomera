@@ -95,3 +95,13 @@ export function calculateLinearPieces(product: Product | null, length: string, c
   // Plan each visible run as a single unjoined piece and leave offcuts unallocated.
   return quantity
 }
+
+export function calculateGluePackages(area: string, rate: string, pack: string, price = '') {
+  const inputs = [area, rate, pack]
+  if (inputs.some(value => !validMeasure(value) || decimal(value) <= 0)) return null
+  if (price !== '' && (!validMeasure(price) || decimal(price) <= 0)) return null
+  const grams = decimal(area) * decimal(rate)
+  const packages = roundUpSheets(grams, decimal(pack))
+  if (!Number.isSafeInteger(packages) || packages < 1 || packages > MAX_QTY) return null
+  return { grams, packages, costRub: price === '' ? null : Math.round(packages * decimal(price) * 100) / 100 }
+}

@@ -1,6 +1,9 @@
 import { CONTACTS, faq } from '../src/data/products.ts'
 import { productDescription } from '../src/lib/productPresentation.ts'
-import { canonicalUrl, categoryPath, seoAssetPrefix, seoPages } from '../src/data/seoRoutes.ts'
+import { categoryFaq } from '../src/data/categoryFaq.ts'
+import { PUBLIC_PARTNER_FAQ } from '../src/data/partnerFaq.ts'
+import { isPrivatePartnerPath } from '../src/data/partnerRoutes.ts'
+import { canonicalUrl, categoryPath, indexableSeoPages, seoAssetPrefix, seoPages } from '../src/data/seoRoutes.ts'
 
 export const escape = value => String(value).replace(/[&<>"']/g, character => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
@@ -49,6 +52,18 @@ function schema(page) {
       '@type': 'ListItem', position: index + 1, name, item: canonicalUrl(path),
     })) })
   }
+  if (page.kind === 'category') graph.push({
+    '@type': 'FAQPage',
+    mainEntity: categoryFaq[page.categoryId].map(({ q, a }) => ({
+      '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a },
+    })),
+  })
+  if (page.path === '/partners/') graph.push({
+    '@type': 'FAQPage',
+    mainEntity: PUBLIC_PARTNER_FAQ.map(({ question, answer }) => ({
+      '@type': 'Question', name: question, acceptedAnswer: { '@type': 'Answer', text: answer },
+    })),
+  })
   if (page.kind === 'product') {
     const { product } = page
     graph.push({
@@ -89,7 +104,7 @@ export function renderSeoPage(page, base, assets, ui) {
     '<meta name="robots" content="noindex, follow"><title>Страница не найдена — ДЕКОРАЙ</title>' + css +
     '</head><body>' + renderRoot('/404/', base, ui) + script + '</body></html>'
   return '<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">' +
-    '<meta name="theme-color" content="#070707"><meta name="robots" content="index, follow"><title>' + escape(page.title) + '</title>' +
+    '<meta name="theme-color" content="#070707"><meta name="robots" content="' + (isPrivatePartnerPath(page.path) ? previewRobots : 'index, follow') + '"><title>' + escape(page.title) + '</title>' +
     '<meta name="description" content="' + escape(page.description) + '"><link rel="canonical" href="' + escape(canonicalUrl(page.path)) + '">' +
     '<link rel="icon" href="' + escape(base) + 'favicon.svg" type="image/svg+xml">' + css +
     '<meta property="og:type" content="' + (page.kind === 'article' ? 'article' : 'website') + '">' +
@@ -111,5 +126,5 @@ export function renderLegacyRedirect(from, to) {
 export function renderSitemap() {
   // Canonical content dates come from the route inventory, never runtime stock or the build clock.
   return '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
-    seoPages.map(({ path, lastmod }) => '  <url><loc>' + escape(canonicalUrl(path)) + '</loc><lastmod>' + escape(lastmod) + '</lastmod></url>').join('\n') + '\n</urlset>\n'
+    indexableSeoPages.map(({ path, lastmod }) => '  <url><loc>' + escape(canonicalUrl(path)) + '</loc><lastmod>' + escape(lastmod) + '</lastmod></url>').join('\n') + '\n</urlset>\n'
 }

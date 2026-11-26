@@ -30,6 +30,7 @@ async function browserHarness(t, env = { VITE_YM_ID: String(counter) }) {
   const scriptNodes = []
   const calls = []
   const storage = new Map()
+  const session = new Map()
   const listeners = new Map()
   const reloads = []
   const origin = 'https://xn--80ahdrdyo.xn--p1ai'
@@ -62,6 +63,7 @@ async function browserHarness(t, env = { VITE_YM_ID: String(counter) }) {
       getItem: (key) => storage.get(key),
       setItem: (key, value) => storage.set(key, value),
     },
+    sessionStorage: { getItem: key => session.get(key), setItem: (key, value) => session.set(key, value), removeItem: key => session.delete(key) },
     Element: TestLink,
   }
   browser.localStorage = mocks.localStorage
@@ -310,4 +312,20 @@ test('withdrawal suppresses a purchase waiting for initialization', async (t) =>
   finishScript()
   assert.equal(await queued, false)
   assert.deepEqual(browser.dataLayer, [])
+})
+
+test('advertising attribution requires consent and refuses free-form identifiers', async t => {
+  const { analytics, browser, scriptNodes } = await browserHarness(t)
+  browser.location.search = '?ref=PARTNER&yclid=123456789&clientId=9876&utm_source=yandex&utm_medium=cpc&utm_campaign=person@example.test'
+  assert.equal(await analytics.readMarketingAttribution(), undefined)
+  analytics.saveAnalyticsConsent('accepted')
+  assert.deepEqual(await analytics.readMarketingAttribution(), { yclid: '123456789', source: 'yandex', medium: 'cpc' })
+  browser.location.search = ''
+  assert.deepEqual(await analytics.readMarketingAttribution(), { yclid: '123456789', source: 'yandex', medium: 'cpc' })
+  browser.location.pathname = '/partners/manage/'
+  assert.equal(analytics.isAnalyticsConfigured(), false)
+  analytics.startAnalytics('accepted')
+  assert.equal(scriptNodes.length, 0)
+  analytics.saveAnalyticsConsent('rejected')
+  assert.equal(await analytics.readMarketingAttribution(), undefined)
 })

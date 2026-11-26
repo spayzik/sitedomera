@@ -1,6 +1,7 @@
 export type CollectionId = 'wood' | 'fabric' | 'metal' | 'bamboo_stone' | 'soft' | 'flexible_stone' | 'plaster' | 'slats' | 'profiles'
 export type ProductKind = 'panel' | 'flexible_stone' | 'slat' | 'profile'
 export interface Dimensions { lengthMm: number; widthMm?: number }
+export type ProductPhoto = { image: string; view: 'detail' | 'full' | 'angle' | 'installed' | 'comparison' }
 export interface SourceProduct {
   id: string
   sku: string | null
@@ -16,10 +17,11 @@ export interface SourceProduct {
   weightKg?: number
   material?: string
   description?: string
-  source: { pdfPage: number; slot: string }
+  source: { pdfPage: number; slot: string } | { reference: string }
   status: 'verified' | 'owner_review_required'
   image: string | null
-  imageStatus: 'confirmed_reused' | 'pdf_preview' | 'unavailable'
+  imageStatus: 'confirmed_reused' | 'pdf_preview' | 'original_approved' | 'unavailable'
+  gallery?: readonly ProductPhoto[]
   imageEvidence: string
   previewCrop?: readonly number[]
 }

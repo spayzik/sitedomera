@@ -26,6 +26,7 @@ export function Footer({ base = './' }: { base?: string }) {
               <a href={base + "montazh/"}>Монтаж</a>
               <a href={base + "kalkulyator/"}>Калькулятор</a>
               <a href={base + "news/"}>Статьи</a>
+              <a href={base + "partners/"}>Партнёрам</a>
             </div>
             <div className="footer-nav-col">
               <strong><a href={base + "showroom/"}>Шоурум</a></strong>

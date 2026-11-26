@@ -73,7 +73,7 @@ function serveLead(array $config, Ledger $ledger, MoySklad $crm, callable $log):
         }
         if ($method === 'GET') {
             reply(200, ['status' => 'ready', 'consentPath' => $config['consentPath'], 'consentVersion' => $config['consentVersion'],
-                'cart' => $config['catalog'] !== [], 'intents' => LEAD_INTENTS] + ($staging ? ['mode' => 'staging'] : []));
+                'cart' => $config['catalog'] !== [], 'intents' => LEAD_INTENTS] + (($config['marketingFields'] ?? []) !== [] ? ['marketingAttribution' => true] : []) + ($staging ? ['mode' => 'staging'] : []));
             return;
         }
         if ($method !== 'POST') {

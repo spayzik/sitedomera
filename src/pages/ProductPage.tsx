@@ -2,6 +2,7 @@ import { storefrontImageSize } from '../data/storefrontImageSizes'
 import { useEffect, useState } from 'react'
 import { MAX_QTY } from '../lib/cart'
 import { productSalesCopy } from '../data/productSalesCopy'
+import { projectRoutesForProduct } from '../data/verifiedProjects'
 import { collections, formatDimensions, productDetails, products, type Product } from '../data/products'
 import { categoryPath, productPath } from '../data/seoPaths'
 import { useCart } from '../context/CartContext'
@@ -14,6 +15,11 @@ import { StockAvailability } from '../components/StockAvailability'
 import { sheetArea } from '../lib/calculator'
 import { ArrowUpRight, Layers, Minus, Plus, Maximize2, Truck, Wrench, Ruler } from 'lucide-react'
 import { productDescription, productEditorialNote, relatedProducts, suggestedComplements } from '../lib/productPresentation'
+
+const photoLabels = {
+  detail: 'Фактура крупным планом', full: 'Общий вид изделия', angle: 'Фактура под углом',
+  installed: 'Материал в реализованном интерьере', comparison: 'Сравнение с соседними фактурами',
+}
 
 const visualizations = {
   bedroom: 'Акцентная стена в спальне',
@@ -88,7 +94,7 @@ export function ProductPage({ product, base }: { product: Product; base: string 
   const context = [product.name, product.sku && product.sku !== product.name ? 'Артикул: ' + product.sku : '',
     formatDimensions(product)].filter(Boolean).join(' · ')
   const images = scenes[product.categoryId] ?? []
-  const gallery = [
+  const gallery = product.gallery?.map(photo => ({ image: photo.image, label: photoLabels[photo.view] })) ?? [
     { image: product.image, label: 'Образец материала' },
     ...images.map(scene => ({
       image: 'catalog/rooms/interior-' + scene + '.webp',
@@ -98,6 +104,7 @@ export function ProductPage({ product, base }: { product: Product; base: string 
   const activeImage = gallery[selectedImage] ?? gallery[0]
   const changeQuantity = (value: number) => setQuantity(Math.min(MAX_QTY, Math.max(1, value)))
   const complements = suggestedComplements(product, products)
+  const projects = projectRoutesForProduct(product.id)
   const hasEstimate = sheetArea(product) > 0
   const sectionLinks = [
     ['opisanie', 'Описание'], ['harakteristiki', 'Характеристики'], ['montazh', 'Монтаж'],
@@ -216,6 +223,9 @@ export function ProductPage({ product, base }: { product: Product; base: string 
           })}
           <p>Интерьерные визуализации коллекции. Образец артикула показан отдельно.</p>
         </section>}
+      {projects.length > 0 && <section><h2>Этот материал в проектах</h2>
+        <div className="page-links">{projects.map(({ path, title }) => <a key={path} href={base + path.slice(1)}>{title}</a>)}</div>
+      </section>}
       {hasEstimate && <section id="raschet" className="product-calculation">
         <h2>Расчёт материалов</h2>
         <ProductEstimate product={product} calculatorBase={base} expanded />

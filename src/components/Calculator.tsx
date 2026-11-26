@@ -1,3 +1,4 @@
+import { GlueEstimate } from './GlueEstimate'
 import { StoreSelect } from './StoreSelect'
 import { contactLinks } from '../lib/contactLinks'
 import { SocialContacts } from './SocialContacts'
@@ -136,6 +137,7 @@ export function Calculator({ standalone = false, base = './' }: { standalone?: b
           const id = nextLinearPlan.current++
           setLinearPlans(previous => [...previous, { id, productId: '', length: '', runs: '1' }])
         }}><Plus size={16} aria-hidden="true" /> Добавить рейку или профиль</button>
+        {standalone && <GlueEstimate />}
         {(groups.length > 1 || linearPlans.length > 0) && <section className="calc-project-total">
           <h2>Итого по материалам</h2>
           {complete ? <>

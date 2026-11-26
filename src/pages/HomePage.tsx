@@ -14,6 +14,7 @@ import { Reviews } from '../components/Reviews'
 import { Showroom } from '../components/Showroom'
 import { Calculator } from '../components/Calculator'
 import { FAQ } from '../components/FAQ'
+import { PartnerLink } from './PartnerPage'
 
 const firstLazySectionIds = ['installation', 'interiors', 'calculator', 'reviews']
 const contactSectionIds = ['showroom']
@@ -47,6 +48,7 @@ export function HomePage() {
       <WhyUs />
       <CategoriesTeaser />
       <Catalog />
+      <div className="container"><PartnerLink base="./" /></div>
       <GradientLine />
       <Quiz />
       <Installation />
